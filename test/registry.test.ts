@@ -14,6 +14,10 @@ import {
 test("HTTP API serves only the committed static index, manifest, and files", async () => {
   const running = await startContentRegistryServer({ port: 0 });
   try {
+    const landing = await fetch(running.url);
+    assert.equal(landing.status, 200);
+    assert.match(await landing.text(), /Brain Registry/);
+
     const indexResponse = await fetch(`${running.url}/v1/index.json`);
     assert.equal(indexResponse.status, 200);
     const index = await indexResponse.json() as {

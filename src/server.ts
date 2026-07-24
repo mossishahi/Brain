@@ -260,13 +260,14 @@ function sendText(
   status: number,
   text: string,
   type = "text/plain; charset=utf-8",
+  contentSecurityPolicy = "default-src 'none'",
 ): void {
   res.writeHead(status, {
     "content-type": type,
     "content-length": Buffer.byteLength(text),
     "x-content-type-options": "nosniff",
     "referrer-policy": "no-referrer",
-    "content-security-policy": "default-src 'none'",
+    "content-security-policy": contentSecurityPolicy,
   });
   res.end(text);
 }
@@ -284,6 +285,37 @@ function sendStatic(res: ServerResponse, file: StaticFile): void {
     "content-security-policy": "default-src 'none'",
   });
   res.end(body);
+}
+
+function registryLandingPage(fileCount: number): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Brain Registry</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #111; color: #eee; }
+    main { width: min(560px, calc(100% - 48px)); padding: 32px; border: 1px solid #333; border-radius: 18px; background: #191919; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { color: #aaa; line-height: 1.6; }
+    code { color: #72c7ff; }
+    nav { display: flex; gap: 16px; margin-top: 24px; }
+    a { color: #72c7ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Brain Registry</h1>
+    <p>Central, immutable research-agent content served as read-only MCP resources.</p>
+    <p><strong>${fileCount}</strong> versioned registry files are currently available.</p>
+    <p>MCP endpoint: <code>/mcp</code></p>
+    <nav><a href="/health">Health</a><a href="/v1/index.json">Content index</a></nav>
+  </main>
+</body>
+</html>`;
 }
 
 export async function startContentRegistryServer(
@@ -332,6 +364,17 @@ export async function startContentRegistryServer(
     });
     try {
       const url = new URL(req.url ?? "/", `http://${host.includes(":") ? `[${host}]` : host}`);
+
+      if (req.method === "GET" && url.pathname === "/") {
+        sendText(
+          res,
+          200,
+          registryLandingPage(files.size),
+          "text/html; charset=utf-8",
+          "default-src 'none'; style-src 'unsafe-inline'",
+        );
+        return;
+      }
 
       if (req.method === "GET" && url.pathname === "/health") {
         sendText(
