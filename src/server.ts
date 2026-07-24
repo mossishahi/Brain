@@ -346,14 +346,14 @@ function registryLandingPage(fileCount: number): string {
       position: relative;
       display: grid;
       place-items: center;
-      width: 180px;
-      height: 150px;
+      width: 230px;
+      height: 190px;
       margin: 0 auto;
     }
     .brain-stage::before {
       position: absolute;
-      width: 116px;
-      height: 116px;
+      width: 158px;
+      height: 158px;
       border-radius: 50%;
       background: rgba(91, 192, 249, .11);
       content: "";
@@ -363,8 +363,8 @@ function registryLandingPage(fileCount: number): string {
     .brain-icon {
       position: relative;
       z-index: 2;
-      width: 92px;
-      height: 92px;
+      width: 128px;
+      height: 128px;
       color: #82d2ff;
       filter: drop-shadow(0 0 12px rgba(95, 196, 250, .2));
       animation: float 6s ease-in-out infinite;
@@ -372,20 +372,14 @@ function registryLandingPage(fileCount: number): string {
     .flow {
       position: absolute;
       left: 50%;
-      bottom: 15px;
-      width: 150px;
-      height: 1px;
-      overflow: hidden;
+      bottom: 3px;
+      width: 170px;
+      height: 24px;
+      border-radius: 50%;
       transform: translateX(-50%);
-      background: rgba(130, 210, 255, .08);
-    }
-    .flow::after {
-      display: block;
-      width: 55%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(130, 210, 255, .65), transparent);
-      content: "";
-      animation: flow 4.8s ease-in-out infinite;
+      background: radial-gradient(ellipse, rgba(130, 210, 255, .13), transparent 70%);
+      filter: blur(8px);
+      animation: flowGlow 5s ease-in-out infinite;
     }
     .type-line {
       min-height: 34px;
@@ -400,10 +394,7 @@ function registryLandingPage(fileCount: number): string {
       display: inline-block;
       width: 0;
       overflow: hidden;
-      border-right: 1px solid rgba(168, 220, 248, .8);
-      animation:
-        typing 2.9s steps(29, end) .55s forwards,
-        cursor 900ms step-end infinite;
+      animation: typing 2.9s steps(29, end) .55s forwards;
       white-space: nowrap;
     }
     .registry-meta {
@@ -417,7 +408,6 @@ function registryLandingPage(fileCount: number): string {
     a { color: #78bddf; font-size: 12px; text-decoration: none; }
     a:hover { color: #a8dcf8; }
     @keyframes typing { to { width: 29ch; } }
-    @keyframes cursor { 50% { border-color: transparent; } }
     @keyframes breathe {
       0%, 100% { opacity: .65; transform: scale(.94); }
       50% { opacity: 1; transform: scale(1.06); }
@@ -426,14 +416,13 @@ function registryLandingPage(fileCount: number): string {
       0%, 100% { transform: translateY(1px); }
       50% { transform: translateY(-3px); }
     }
-    @keyframes flow {
-      0% { opacity: 0; transform: translateX(-100%); }
-      22%, 78% { opacity: .8; }
-      100% { opacity: 0; transform: translateX(280%); }
+    @keyframes flowGlow {
+      0%, 100% { opacity: .45; transform: translateX(-50%) scaleX(.82); }
+      50% { opacity: .8; transform: translateX(-50%) scaleX(1.08); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .brain-stage::before, .brain-icon, .flow::after { animation: none; }
-      .typewriter { width: 29ch; border-right: 0; animation: none; }
+      .brain-stage::before, .brain-icon, .flow { animation: none; }
+      .typewriter { width: 29ch; animation: none; }
     }
   </style>
 </head>
