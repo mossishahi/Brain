@@ -42,6 +42,9 @@ HTTP:
 
 MCP is available at `/mcp` using **resources only** (`resources/list` and `resources/read`).
 Brain Registry advertises no executable MCP tools.
+Consumers read `index.json` and one manifest first, then request exact role/technique resources
+only when needed. The service applies safe-path checks, bounded request bodies/sessions, and a
+per-client rate limit.
 
 ## Running
 
@@ -58,7 +61,8 @@ node dist/src/main.js --host 0.0.0.0 --port 51011
 ```
 
 The generic transport itself currently has no authentication; do not expose it directly to the
-public internet. Put it behind an authenticated reverse proxy or object-storage/CDN policy.
+public internet without trusted TLS and edge hardening. The current content is public; deployment
+assets for HTTPS on a bare IP are documented in [`deploy/README.md`](deploy/README.md).
 
 ## Publishing a new version
 

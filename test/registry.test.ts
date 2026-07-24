@@ -30,9 +30,15 @@ test("HTTP API serves only the committed static index, manifest, and files", asy
     assert.equal(manifestResponse.status, 200);
     const manifest = await manifestResponse.json() as {
       schemaVersion: string;
+      entrypoints: { workflow: string; controls: string[] };
       files: Array<{ path: string }>;
     };
     assert.equal(manifest.schemaVersion, "content-registry-manifest/v1");
+    assert.equal(
+      manifest.entrypoints.workflow,
+      "workflows/brainstorm.workflow.json",
+    );
+    assert.ok(manifest.entrypoints.controls.length >= 6);
     assert.ok(
       manifest.files.some((file) => file.path === "skills/roles/brain.md"),
     );
@@ -76,6 +82,8 @@ test("MCP exposes static files as resources, with no executable tools", async ()
     );
 
     const resources = await client.listResources();
+    const templates = await client.listResourceTemplates();
+    assert.equal(templates.resourceTemplates[0]?.uriTemplate, "brain://file/{path}");
     const brain = resources.resources.find(
       (resource) =>
         resource.name ===
@@ -91,6 +99,22 @@ test("MCP exposes static files as resources, with no executable tools", async ()
     );
   } finally {
     await transport.close().catch(() => undefined);
+    await running.close();
+  }
+});
+
+test("rate limiting protects content while leaving health available", async () => {
+  const running = await startContentRegistryServer({
+    port: 0,
+    requestsPerMinute: 1,
+  });
+  try {
+    assert.equal((await fetch(`${running.url}/v1/index.json`)).status, 200);
+    const limited = await fetch(`${running.url}/v1/index.json`);
+    assert.equal(limited.status, 429);
+    assert.equal(limited.headers.get("retry-after"), "60");
+    assert.equal((await fetch(`${running.url}/health`)).status, 200);
+  } finally {
     await running.close();
   }
 });

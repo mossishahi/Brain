@@ -1,0 +1,35 @@
+[Unit]
+Description=Brain Registry MCP content service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=brain-registry
+Group=brain-registry
+WorkingDirectory=/opt/brain-registry
+ExecStart=/usr/bin/node /opt/brain-registry/dist/src/main.js --host 127.0.0.1 --port 51011
+Environment=BRAIN_REGISTRY_ACCESS_LOG=1
+Environment=BRAIN_REGISTRY_REQUESTS_PER_MINUTE=300
+Environment=BRAIN_REGISTRY_MAX_SESSIONS=500
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+SystemCallArchitectures=native
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
+  ListResourceTemplatesRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
   isInitializeRequest,
@@ -29,6 +30,23 @@ export interface ContentRegistryServerOptions {
   readonly host?: string;
   /** Root containing index.json and bundles/. */
   readonly contentRoot?: string;
+  /** Per-client request ceiling in a rolling minute. Default 300. */
+  readonly requestsPerMinute?: number;
+  /** Maximum JSON request body accepted by MCP. Default 1 MiB. */
+  readonly maxBodyBytes?: number;
+  /** Maximum simultaneous MCP sessions. Default 500. */
+  readonly maxSessions?: number;
+  /** Emits structured access records; disabled by default. */
+  readonly accessLog?: (record: ContentRegistryAccessRecord) => void;
+}
+
+export interface ContentRegistryAccessRecord {
+  readonly at: string;
+  readonly method: string;
+  readonly path: string;
+  readonly remoteAddress: string;
+  readonly status: number;
+  readonly durationMs: number;
 }
 
 export interface RunningContentRegistryServer {
@@ -48,6 +66,34 @@ interface StaticFile {
   readonly absolutePath: string;
   readonly bytes: number;
   readonly mediaType: string;
+}
+
+interface RateWindow {
+  count: number;
+  resetAt: number;
+}
+
+function remoteAddress(req: IncomingMessage): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.length > 0) {
+    return forwarded.split(",")[0]!.trim();
+  }
+  return req.socket.remoteAddress ?? "unknown";
+}
+
+function allowRequest(
+  windows: Map<string, RateWindow>,
+  address: string,
+  limit: number,
+  now = Date.now(),
+): boolean {
+  const current = windows.get(address);
+  if (!current || current.resetAt <= now) {
+    windows.set(address, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  current.count += 1;
+  return current.count <= limit;
 }
 
 export function defaultContentRoot(): string {
@@ -148,6 +194,16 @@ function createProtocolServer(
     })),
   }));
 
+  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+    resourceTemplates: [{
+      uriTemplate: "brain://file/{path}",
+      name: "versioned-content-file",
+      description:
+        "Read one exact path from the immutable Brain Registry content tree.",
+      mimeType: "application/octet-stream",
+    }],
+  }));
+
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const relativePath = pathFromResourceUri(request.params.uri);
     const file = resolveStaticFile(contentRoot, files, relativePath);
@@ -163,15 +219,26 @@ function createProtocolServer(
   return server;
 }
 
-function readJsonBody(req: IncomingMessage): Promise<unknown> {
+function readJsonBody(
+  req: IncomingMessage,
+  maxBodyBytes: number,
+): Promise<unknown> {
   if (req.method === "GET" || req.method === "DELETE") {
     return Promise.resolve(undefined);
   }
   return new Promise((resolveBody, reject) => {
     const chunks: Buffer[] = [];
-    req.on("data", (chunk) =>
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-    );
+    let size = 0;
+    req.on("data", (chunk) => {
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      size += buffer.length;
+      if (size > maxBodyBytes) {
+        reject(new Error(`request body exceeds ${maxBodyBytes} bytes`));
+        req.destroy();
+        return;
+      }
+      chunks.push(buffer);
+    });
     req.on("end", () => {
       const raw = Buffer.concat(chunks).toString("utf8");
       if (raw.length === 0) {
@@ -197,6 +264,9 @@ function sendText(
   res.writeHead(status, {
     "content-type": type,
     "content-length": Buffer.byteLength(text),
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+    "content-security-policy": "default-src 'none'",
   });
   res.end(text);
 }
@@ -209,6 +279,9 @@ function sendStatic(res: ServerResponse, file: StaticFile): void {
     "cache-control": file.relativePath === "index.json"
       ? "no-cache"
       : "public, max-age=31536000, immutable",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+    "content-security-policy": "default-src 'none'",
   });
   res.end(body);
 }
@@ -217,6 +290,18 @@ export async function startContentRegistryServer(
   options: ContentRegistryServerOptions = {},
 ): Promise<RunningContentRegistryServer> {
   const host = options.host ?? "127.0.0.1";
+  const requestsPerMinute = options.requestsPerMinute ?? 300;
+  const maxBodyBytes = options.maxBodyBytes ?? 1024 * 1024;
+  const maxSessions = options.maxSessions ?? 500;
+  for (const [name, value] of [
+    ["requestsPerMinute", requestsPerMinute],
+    ["maxBodyBytes", maxBodyBytes],
+    ["maxSessions", maxSessions],
+  ] as const) {
+    if (!Number.isSafeInteger(value) || value < 1) {
+      throw new Error(`${name} must be a positive integer`);
+    }
+  }
   const contentRoot = resolve(options.contentRoot ?? defaultContentRoot());
   const listed = listFiles(contentRoot);
   const files = new Map(listed.map((file) => [file.relativePath, file]));
@@ -228,8 +313,23 @@ export async function startContentRegistryServer(
     string,
     { transport: StreamableHTTPServerTransport; server: Server }
   >();
+  const rateWindows = new Map<string, RateWindow>();
 
   const httpServer = createServer(async (req, res) => {
+    const startedAt = Date.now();
+    const address = remoteAddress(req);
+    res.setHeader("x-content-type-options", "nosniff");
+    res.setHeader("referrer-policy", "no-referrer");
+    res.once("finish", () => {
+      options.accessLog?.({
+        at: new Date(startedAt).toISOString(),
+        method: req.method ?? "UNKNOWN",
+        path: req.url ?? "/",
+        remoteAddress: address,
+        status: res.statusCode,
+        durationMs: Date.now() - startedAt,
+      });
+    });
     try {
       const url = new URL(req.url ?? "/", `http://${host.includes(":") ? `[${host}]` : host}`);
 
@@ -240,6 +340,11 @@ export async function startContentRegistryServer(
           JSON.stringify({ ok: true, files: files.size }),
           "application/json; charset=utf-8",
         );
+        return;
+      }
+      if (!allowRequest(rateWindows, address, requestsPerMinute)) {
+        res.setHeader("retry-after", "60");
+        sendText(res, 429, "rate limit exceeded");
         return;
       }
 
@@ -260,7 +365,11 @@ export async function startContentRegistryServer(
       const known =
         typeof sessionId === "string" ? sessions.get(sessionId) : undefined;
       if (known) {
-        await known.transport.handleRequest(req, res, await readJsonBody(req));
+        await known.transport.handleRequest(
+          req,
+          res,
+          await readJsonBody(req, maxBodyBytes),
+        );
         return;
       }
       if (sessionId !== undefined) {
@@ -268,7 +377,11 @@ export async function startContentRegistryServer(
         return;
       }
 
-      const body = await readJsonBody(req);
+      if (sessions.size >= maxSessions) {
+        sendText(res, 503, "too many MCP sessions");
+        return;
+      }
+      const body = await readJsonBody(req, maxBodyBytes);
       if (req.method !== "POST" || !isInitializeRequest(body)) {
         sendText(res, 400, "a new session must start with initialize");
         return;
@@ -301,6 +414,13 @@ export async function startContentRegistryServer(
   httpServer.requestTimeout = 0;
   httpServer.headersTimeout = 60_000;
   httpServer.keepAliveTimeout = 120_000;
+  const rateCleanup = setInterval(() => {
+    const now = Date.now();
+    for (const [address, window] of rateWindows) {
+      if (window.resetAt <= now) rateWindows.delete(address);
+    }
+  }, 300_000);
+  rateCleanup.unref();
 
   const port = await new Promise<number>((resolvePort, reject) => {
     httpServer.once("error", reject);
@@ -322,6 +442,7 @@ export async function startContentRegistryServer(
     fileCount: files.size,
     httpServer,
     close: async () => {
+      clearInterval(rateCleanup);
       const records = [...sessions.values()];
       sessions.clear();
       await Promise.allSettled(records.map(({ server }) => server.close()));

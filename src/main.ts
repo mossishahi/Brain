@@ -17,6 +17,15 @@ function parsePort(raw: string | undefined): number {
   return port;
 }
 
+function parsePositive(raw: string | undefined, fallback: number, name: string): number {
+  if (raw === undefined) return fallback;
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new Error(`${name} must be a positive integer`);
+  }
+  return value;
+}
+
 async function main(): Promise<void> {
   if (process.argv.includes("--help") || process.argv.includes("-h")) {
     console.log(
@@ -28,6 +37,23 @@ async function main(): Promise<void> {
     host: flag("host") ?? "127.0.0.1",
     port: parsePort(flag("port")),
     ...(flag("content-root") ? { contentRoot: flag("content-root") } : {}),
+    requestsPerMinute: parsePositive(
+      flag("requests-per-minute") ?? process.env.BRAIN_REGISTRY_REQUESTS_PER_MINUTE,
+      300,
+      "requests-per-minute",
+    ),
+    maxSessions: parsePositive(
+      flag("max-sessions") ?? process.env.BRAIN_REGISTRY_MAX_SESSIONS,
+      500,
+      "max-sessions",
+    ),
+    ...(process.env.BRAIN_REGISTRY_ACCESS_LOG === "1"
+      ? {
+          accessLog: (record: unknown) => {
+            console.log(JSON.stringify(record));
+          },
+        }
+      : {}),
   });
   console.log(`CONTENT_REGISTRY_URL=${running.url}`);
 

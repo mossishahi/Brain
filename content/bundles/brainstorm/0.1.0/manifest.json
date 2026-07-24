@@ -3,6 +3,17 @@
   "bundle": "brainstorm",
   "version": "0.1.0",
   "runtimeProtocol": "brainstorm.workflow/v1",
+  "entrypoints": {
+    "workflow": "workflows/brainstorm.workflow.json",
+    "controls": [
+      "routes/model-routes.json",
+      "capabilities/capabilities.json",
+      "catalog/activity-handlers.json",
+      "catalog/input-types.json",
+      "catalog/verdicts.json",
+      "catalog/departments.json"
+    ]
+  },
   "files": [
     {
       "path": "capabilities/capabilities.json",

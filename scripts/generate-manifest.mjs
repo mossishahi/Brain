@@ -67,6 +67,7 @@ const manifest = {
   bundle,
   version,
   runtimeProtocol,
+  ...(existing.entrypoints ? { entrypoints: existing.entrypoints } : {}),
   files,
 };
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
