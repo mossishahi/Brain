@@ -16,7 +16,10 @@ test("HTTP API serves only the committed static index, manifest, and files", asy
   try {
     const landing = await fetch(running.url);
     assert.equal(landing.status, 200);
-    assert.match(await landing.text(), /Brain Registry/);
+    const landingHtml = await landing.text();
+    assert.match(landingHtml, /Brain Registry/);
+    assert.match(landingHtml, /You owe your intellect to me!/);
+    assert.match(landingHtml, /class="brain-icon"/);
 
     const indexResponse = await fetch(`${running.url}/v1/index.json`);
     assert.equal(indexResponse.status, 200);

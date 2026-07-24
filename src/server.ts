@@ -295,23 +295,152 @@ function registryLandingPage(fileCount: number): string {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Brain Registry</title>
   <style>
-    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #111; color: #eee; }
-    main { width: min(560px, calc(100% - 48px)); padding: 32px; border: 1px solid #333; border-radius: 18px; background: #191919; }
-    h1 { margin: 0 0 8px; font-size: 28px; }
-    p { color: #aaa; line-height: 1.6; }
-    code { color: #72c7ff; }
-    nav { display: flex; gap: 16px; margin-top: 24px; }
-    a { color: #72c7ff; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    :root {
+      color-scheme: dark;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: #0c0e11;
+      color: #edf4f8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(64, 161, 218, .07), transparent 35%),
+        #0c0e11;
+    }
+    main {
+      width: min(680px, calc(100% - 40px));
+      padding: 52px 32px 34px;
+      text-align: center;
+    }
+    .registry-label {
+      margin: 0 0 38px;
+      color: #71808a;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+    .brain-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 180px;
+      height: 150px;
+      margin: 0 auto;
+    }
+    .brain-stage::before {
+      position: absolute;
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: rgba(91, 192, 249, .11);
+      content: "";
+      filter: blur(26px);
+      animation: breathe 5s ease-in-out infinite;
+    }
+    .brain-icon {
+      position: relative;
+      z-index: 2;
+      width: 92px;
+      height: 92px;
+      color: #82d2ff;
+      filter: drop-shadow(0 0 12px rgba(95, 196, 250, .2));
+      animation: float 6s ease-in-out infinite;
+    }
+    .flow {
+      position: absolute;
+      left: 50%;
+      bottom: 15px;
+      width: 150px;
+      height: 1px;
+      overflow: hidden;
+      transform: translateX(-50%);
+      background: rgba(130, 210, 255, .08);
+    }
+    .flow::after {
+      display: block;
+      width: 55%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(130, 210, 255, .65), transparent);
+      content: "";
+      animation: flow 4.8s ease-in-out infinite;
+    }
+    .type-line {
+      min-height: 34px;
+      margin: 24px auto 0;
+      color: #a8dcf8;
+      font-family: "SFMono-Regular", "Cascadia Code", "Roboto Mono", "JetBrains Mono", ui-monospace, monospace;
+      font-size: clamp(14px, 2.5vw, 18px);
+      font-weight: 500;
+      letter-spacing: .025em;
+    }
+    .typewriter {
+      display: inline-block;
+      width: 0;
+      overflow: hidden;
+      border-right: 1px solid rgba(168, 220, 248, .8);
+      animation:
+        typing 2.9s steps(29, end) .55s forwards,
+        cursor 900ms step-end infinite;
+      white-space: nowrap;
+    }
+    .registry-meta {
+      margin: 34px 0 0;
+      color: #63717a;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+    .registry-meta strong { color: #91a4af; font-weight: 500; }
+    nav { display: flex; justify-content: center; gap: 18px; margin-top: 18px; }
+    a { color: #78bddf; font-size: 12px; text-decoration: none; }
+    a:hover { color: #a8dcf8; }
+    @keyframes typing { to { width: 29ch; } }
+    @keyframes cursor { 50% { border-color: transparent; } }
+    @keyframes breathe {
+      0%, 100% { opacity: .65; transform: scale(.94); }
+      50% { opacity: 1; transform: scale(1.06); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(1px); }
+      50% { transform: translateY(-3px); }
+    }
+    @keyframes flow {
+      0% { opacity: 0; transform: translateX(-100%); }
+      22%, 78% { opacity: .8; }
+      100% { opacity: 0; transform: translateX(280%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brain-stage::before, .brain-icon, .flow::after { animation: none; }
+      .typewriter { width: 29ch; border-right: 0; animation: none; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>Brain Registry</h1>
-    <p>Central, immutable research-agent content served as read-only MCP resources.</p>
-    <p><strong>${fileCount}</strong> versioned registry files are currently available.</p>
-    <p>MCP endpoint: <code>/mcp</code></p>
+    <p class="registry-label">Brain Registry</p>
+    <div class="brain-stage">
+      <svg class="brain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"
+        role="img" aria-label="Brain Registry">
+        <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path>
+        <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path>
+        <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"></path>
+        <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"></path>
+        <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"></path>
+        <path d="M3.477 10.896a4 4 0 0 1 .585-.396"></path>
+        <path d="M19.938 10.5a4 4 0 0 1 .585.396"></path>
+        <path d="M6 18a4 4 0 0 1-1.967-.516"></path>
+        <path d="M19.967 17.484A4 4 0 0 1 18 18"></path>
+      </svg>
+      <span class="flow" aria-hidden="true"></span>
+    </div>
+    <div class="type-line"><span class="typewriter">You owe your intellect to me!</span></div>
+    <p class="registry-meta"><strong>${fileCount}</strong> immutable resources · MCP <strong>/mcp</strong></p>
     <nav><a href="/health">Health</a><a href="/v1/index.json">Content index</a></nav>
   </main>
 </body>
