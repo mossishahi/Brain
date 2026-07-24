@@ -20,6 +20,10 @@ test("HTTP API serves only the committed static index, manifest, and files", asy
     assert.match(landingHtml, /Brain Registry/);
     assert.match(landingHtml, /You owe your intellect to me!/);
     assert.match(landingHtml, /class="brain-icon"/);
+    assert.match(landingHtml, /href="\/favicon\.svg"/);
+    const favicon = await fetch(`${running.url}/favicon.svg`);
+    assert.equal(favicon.status, 200);
+    assert.match(await favicon.text(), /opacity="\.5"/);
 
     const indexResponse = await fetch(`${running.url}/v1/index.json`);
     assert.equal(indexResponse.status, 200);
