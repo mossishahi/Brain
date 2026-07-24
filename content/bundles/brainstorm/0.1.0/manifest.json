@@ -53,7 +53,7 @@
     },
     {
       "path": "skills/roles/brain.md",
-      "sha256": "32f826d134e468e461f62a4847c9794660f47a619f7f9a830487cd3db747236d",
+      "sha256": "e1dec88a87832ad202b9c0e4aaa203ccdf660f0d0f4034d969031edef302bc35",
       "bytes": 6458,
       "mediaType": "text/markdown"
     },
@@ -101,8 +101,8 @@
     },
     {
       "path": "skills/techniques/deep-understanding.md",
-      "sha256": "1a48d37fd2640f98a0cacbab2a800830586fe08c6fc961384925697175cffb04",
-      "bytes": 1552,
+      "sha256": "f9367e35c887084aebd599796a4eee9e90d5f209a00f1689b70d53543123c1e5",
+      "bytes": 2694,
       "mediaType": "text/markdown"
     },
     {
