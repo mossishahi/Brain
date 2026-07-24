@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "content-registry-index/v1",
+  "bundles": [
+    {
+      "id": "brainstorm",
+      "latest": "0.1.0",
+      "versions": ["0.1.0"]
+    }
+  ]
+}

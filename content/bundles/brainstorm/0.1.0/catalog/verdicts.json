@@ -1,0 +1,22 @@
+{
+  "version": "0.1.0",
+  "verdicts": {
+    "Pass": {
+      "description": "The step is sound and complete enough: no point you could raise would definitely lead the thinker to materially better next steps. Use verdict \"Pass\", a substantive one-or-two-sentence reason (at least 30 characters — never placeholder text), an empty suggestion, and the fixed evidence object with kind \"none\" and every detail field empty.",
+      "requires": ["verdict", "reason", "suggestion", "evidence"]
+    },
+    "Build": {
+      "description": "The step is sound, but an important COMPLEMENTARY point would definitely improve the next steps. Use verdict \"Build\", a substantive reason (at least 30 characters), the concrete non-empty suggestion (at least 20 characters), and the fixed evidence object with kind \"none\" and every detail field empty.",
+      "requires": ["verdict", "reason", "suggestion", "evidence"]
+    },
+    "Interrupt": {
+      "description": "There is a real FLAW such that a wrong chain would be built on this step. Interrupt requires evidence: runnable script, self-contained math derivation, or real reference. Use verdict \"Interrupt\", the specific substantive reason (at least 30 characters), and the evidence object; leave the suggestion empty unless you have a concrete repair to hand the thinker. Without evidence choose Build or Pass.",
+      "requires": ["verdict", "reason", "suggestion", "evidence"]
+    }
+  },
+  "sequencing": {
+    "noImmediateRepeat": ["Build"],
+    "advanceOn": "Pass",
+    "redevelopOn": ["Build", "Interrupt"]
+  }
+}

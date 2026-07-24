@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+import process from "node:process";
+
+import { startContentRegistryServer } from "./server.js";
+
+function flag(name: string): string | undefined {
+  const index = process.argv.indexOf(`--${name}`);
+  return index >= 0 ? process.argv[index + 1] : undefined;
+}
+
+function parsePort(raw: string | undefined): number {
+  if (raw === undefined) return 0;
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port < 0 || port > 65_535) {
+    throw new Error(`--port must be an integer from 0 to 65535, got "${raw}"`);
+  }
+  return port;
+}
+
+async function main(): Promise<void> {
+  if (process.argv.includes("--help") || process.argv.includes("-h")) {
+    console.log(
+      "Usage: brain-content-registry [--host 127.0.0.1] [--port 0] [--content-root ./content]",
+    );
+    return;
+  }
+  const running = await startContentRegistryServer({
+    host: flag("host") ?? "127.0.0.1",
+    port: parsePort(flag("port")),
+    ...(flag("content-root") ? { contentRoot: flag("content-root") } : {}),
+  });
+  console.log(`CONTENT_REGISTRY_URL=${running.url}`);
+
+  let closing = false;
+  const close = (): void => {
+    if (closing) return;
+    closing = true;
+    void running.close().finally(() => {
+      process.exitCode = 0;
+    });
+  };
+  process.once("SIGINT", close);
+  process.once("SIGTERM", close);
+}
+
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});
