@@ -260,14 +260,13 @@ function sendText(
   status: number,
   text: string,
   type = "text/plain; charset=utf-8",
-  contentSecurityPolicy = "default-src 'none'",
 ): void {
   res.writeHead(status, {
     "content-type": type,
     "content-length": Buffer.byteLength(text),
     "x-content-type-options": "nosniff",
     "referrer-policy": "no-referrer",
-    "content-security-policy": contentSecurityPolicy,
+    "content-security-policy": "default-src 'none'",
   });
   res.end(text);
 }
@@ -285,172 +284,6 @@ function sendStatic(res: ServerResponse, file: StaticFile): void {
     "content-security-policy": "default-src 'none'",
   });
   res.end(body);
-}
-
-function brainFavicon(): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-  stroke="#72c7ff" stroke-width="2" stroke-linecap="round"
-  stroke-linejoin="round" opacity=".5">
-  <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
-  <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
-  <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/>
-  <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/>
-  <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/>
-  <path d="M3.477 10.896a4 4 0 0 1 .585-.396"/>
-  <path d="M19.938 10.5a4 4 0 0 1 .585.396"/>
-  <path d="M6 18a4 4 0 0 1-1.967-.516"/>
-  <path d="M19.967 17.484A4 4 0 0 1 18 18"/>
-</svg>`;
-}
-
-function registryLandingPage(fileCount: number): string {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <title>Brain Registry</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      background: #0c0e11;
-      color: #edf4f8;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 50% 42%, rgba(64, 161, 218, .07), transparent 35%),
-        #0c0e11;
-    }
-    main {
-      width: min(680px, calc(100% - 40px));
-      padding: 52px 32px 34px;
-      text-align: center;
-    }
-    .registry-label {
-      margin: 0 0 38px;
-      color: #71808a;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-    }
-    .brain-stage {
-      position: relative;
-      display: grid;
-      place-items: center;
-      width: 230px;
-      height: 190px;
-      margin: 0 auto;
-    }
-    .brain-stage::before {
-      position: absolute;
-      width: 158px;
-      height: 158px;
-      border-radius: 50%;
-      background: rgba(91, 192, 249, .11);
-      content: "";
-      filter: blur(26px);
-      animation: breathe 5s ease-in-out infinite;
-    }
-    .brain-icon {
-      position: relative;
-      z-index: 2;
-      width: 128px;
-      height: 128px;
-      color: #82d2ff;
-      filter: drop-shadow(0 0 12px rgba(95, 196, 250, .2));
-      animation: float 6s ease-in-out infinite;
-    }
-    .flow {
-      position: absolute;
-      left: 50%;
-      bottom: 3px;
-      width: 170px;
-      height: 24px;
-      border-radius: 50%;
-      transform: translateX(-50%);
-      background: radial-gradient(ellipse, rgba(130, 210, 255, .13), transparent 70%);
-      filter: blur(8px);
-      animation: flowGlow 5s ease-in-out infinite;
-    }
-    .type-line {
-      min-height: 34px;
-      margin: 24px auto 0;
-      color: #a8dcf8;
-      font-family: "SFMono-Regular", "Cascadia Code", "Roboto Mono", "JetBrains Mono", ui-monospace, monospace;
-      font-size: clamp(14px, 2.5vw, 18px);
-      font-weight: 500;
-      letter-spacing: .025em;
-    }
-    .typewriter {
-      display: inline-block;
-      width: 0;
-      overflow: hidden;
-      animation: typing 2.9s steps(29, end) .55s forwards;
-      white-space: nowrap;
-    }
-    .registry-meta {
-      margin: 34px 0 0;
-      color: #63717a;
-      font-size: 12px;
-      line-height: 1.7;
-    }
-    .registry-meta strong { color: #91a4af; font-weight: 500; }
-    nav { display: flex; justify-content: center; gap: 18px; margin-top: 18px; }
-    a { color: #78bddf; font-size: 12px; text-decoration: none; }
-    a:hover { color: #a8dcf8; }
-    @keyframes typing { to { width: 29ch; } }
-    @keyframes breathe {
-      0%, 100% { opacity: .65; transform: scale(.94); }
-      50% { opacity: 1; transform: scale(1.06); }
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(1px); }
-      50% { transform: translateY(-3px); }
-    }
-    @keyframes flowGlow {
-      0%, 100% { opacity: .45; transform: translateX(-50%) scaleX(.82); }
-      50% { opacity: .8; transform: translateX(-50%) scaleX(1.08); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .brain-stage::before, .brain-icon, .flow { animation: none; }
-      .typewriter { width: 29ch; animation: none; }
-    }
-  </style>
-</head>
-<body>
-  <main>
-    <p class="registry-label">Brain Registry</p>
-    <div class="brain-stage">
-      <svg class="brain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"
-        role="img" aria-label="Brain Registry">
-        <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path>
-        <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path>
-        <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"></path>
-        <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"></path>
-        <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"></path>
-        <path d="M3.477 10.896a4 4 0 0 1 .585-.396"></path>
-        <path d="M19.938 10.5a4 4 0 0 1 .585.396"></path>
-        <path d="M6 18a4 4 0 0 1-1.967-.516"></path>
-        <path d="M19.967 17.484A4 4 0 0 1 18 18"></path>
-      </svg>
-      <span class="flow" aria-hidden="true"></span>
-    </div>
-    <div class="type-line"><span class="typewriter">You owe your intellect to me!</span></div>
-    <p class="registry-meta"><strong>${fileCount}</strong> immutable resources · MCP <strong>/mcp</strong></p>
-    <nav><a href="/health">Health</a><a href="/v1/index.json">Content index</a></nav>
-  </main>
-</body>
-</html>`;
 }
 
 export async function startContentRegistryServer(
@@ -499,27 +332,6 @@ export async function startContentRegistryServer(
     });
     try {
       const url = new URL(req.url ?? "/", `http://${host.includes(":") ? `[${host}]` : host}`);
-
-      if (req.method === "GET" && url.pathname === "/") {
-        sendText(
-          res,
-          200,
-          registryLandingPage(files.size),
-          "text/html; charset=utf-8",
-          "default-src 'none'; style-src 'unsafe-inline'",
-        );
-        return;
-      }
-
-      if (req.method === "GET" && url.pathname === "/favicon.svg") {
-        sendText(
-          res,
-          200,
-          brainFavicon(),
-          "image/svg+xml; charset=utf-8",
-        );
-        return;
-      }
 
       if (req.method === "GET" && url.pathname === "/health") {
         sendText(

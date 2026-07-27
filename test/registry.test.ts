@@ -14,17 +14,6 @@ import {
 test("HTTP API serves only the committed static index, manifest, and files", async () => {
   const running = await startContentRegistryServer({ port: 0 });
   try {
-    const landing = await fetch(running.url);
-    assert.equal(landing.status, 200);
-    const landingHtml = await landing.text();
-    assert.match(landingHtml, /Brain Registry/);
-    assert.match(landingHtml, /You owe your intellect to me!/);
-    assert.match(landingHtml, /class="brain-icon"/);
-    assert.match(landingHtml, /href="\/favicon\.svg"/);
-    const favicon = await fetch(`${running.url}/favicon.svg`);
-    assert.equal(favicon.status, 200);
-    assert.match(await favicon.text(), /opacity="\.5"/);
-
     const indexResponse = await fetch(`${running.url}/v1/index.json`);
     assert.equal(indexResponse.status, 200);
     const index = await indexResponse.json() as {
@@ -32,8 +21,8 @@ test("HTTP API serves only the committed static index, manifest, and files", asy
     };
     assert.deepEqual(index.bundles, [{
       id: "brainstorm",
-      latest: "0.1.0",
-      versions: ["0.1.0"],
+      latest: "0.2.0",
+      versions: ["0.1.0", "0.2.0"],
     }]);
 
     const prefix = `${running.url}/v1/bundles/brainstorm/0.1.0`;
