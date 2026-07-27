@@ -21,8 +21,8 @@ test("HTTP API serves only the committed static index, manifest, and files", asy
     };
     assert.deepEqual(index.bundles, [{
       id: "brainstorm",
-      latest: "0.2.0",
-      versions: ["0.1.0", "0.2.0"],
+      latest: "0.3.0",
+      versions: ["0.1.0", "0.2.0", "0.3.0"],
     }]);
 
     const prefix = `${running.url}/v1/bundles/brainstorm/0.1.0`;
