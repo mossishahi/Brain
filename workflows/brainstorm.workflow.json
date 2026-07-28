@@ -1,8 +1,8 @@
 {
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
-  "version": "0.2.0",
-  "description": "Multidisciplinary scientific panel: structure the submission (classifying its type against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline), assemble an expert panel, let every member work the submission in parallel in the shape the catalog maps its type to, review each member chain of thought step by step (commentors, judge, bounded redevelopment), then synthesize one final summary.",
+  "version": "0.3.0",
+  "description": "Multidisciplinary scientific panel: structure the submission (classifying its type against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline), assemble an expert panel, let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step (commentors, judge, bounded redevelopment), audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
       "description": "Maximum number of seats the deterministic panel.select activity may produce.",
@@ -246,6 +246,21 @@
       },
       {
         "kind": "agent",
+        "id": "bridge-audit",
+        "notes": "Sequential integration audit after review: one auditor reads every member's finished output (the chains never reach it, by construction), verifies each novelty claim across fields, and maps contradictions and unexplored seams between the seats. Advisory input to the chair.",
+        "skill": "integrator",
+        "route": "reasoning",
+        "bind": {
+          "input": { "ref": "input", "omit": ["files"] },
+          "files": "usefulFiles.files",
+          "roster": "panel.members",
+          "ideas": { "ref": "ideas", "pick": ["output", "novelty", "literature"] },
+          "type": "input.type"
+        },
+        "output": { "key": "bridge", "schema": "bridgeReport" }
+      },
+      {
+        "kind": "agent",
         "id": "synthesize-proposal",
         "notes": "Rapporteur step. The bind projects each idea to its output and novelty statement only — the chain of thought never reaches the chair, by construction.",
         "skill": "chair",
@@ -255,6 +270,7 @@
           "files": "usefulFiles.files",
           "roster": "panel.members",
           "ideas": { "ref": "ideas", "pick": ["output", "novelty"] },
+          "bridge": "bridge",
           "type": "input.type",
           "shape": "catalog.inputTypes.shapes[input.type]"
         },

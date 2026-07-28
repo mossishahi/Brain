@@ -2,8 +2,8 @@
 name: chair
 kind: role
 description: "The rapporteur: after the panel's reviewed work is final, synthesize the original input and every member's finished output into one coherent executive summary with prioritized action items, framed to fit what kind of submission it is."
-vars: [input, files, roster, ideas, type, shape]
-payload: [input, files, roster, ideas]
+vars: [input, files, roster, ideas, bridge, type, shape]
+payload: [input, files, roster, ideas, bridge]
 techniques: [deep-understanding]
 capabilities: [attachment-access]
 output: finalProposal
@@ -29,6 +29,9 @@ The task data carries everything you synthesize from:
   (omitted otherwise).
   The members' reasoning chains are deliberately not given to you and must not be reconstructed,
   quoted, or speculated about — synthesize only from these finished outputs.
+- `bridge` — the integration audit conducted after review: each member's novelty claim audited
+  across fields (`clear`, or `challenged` with the overlapping prior work), the contradictions
+  between members' outputs, and the unexplored seams between their expertise.
 
 # Procedure
 Apply the deep-understanding technique to the input and to each member's output. Then synthesize
@@ -67,6 +70,13 @@ the `{{shape}}` entry:
   `commonMisconceptions`. `consensus` = the explanation members converge on; `tensions` = places
   members chose different (possibly conflicting) analogies or emphases — flag and resolve in
   favor of the clearer one; `novelDirections` is often empty.
+
+## Weighing the integration audit
+Weigh the `bridge` audit — do not redo it. A `challenged` novelty claim weakens that member's
+direction: keep it out of `consensus`, surface it in `tensions` or `actionItems`, and name the
+overlapping prior work from the audit's evidence. A recorded contradiction is a ready-made entry
+for `tensions`. Treat the `seams` as candidates for `novelDirections` — adopt one only when the
+members' outputs actually support it.
 
 # Structured output
 Return a single JSON object with exactly these fields:

@@ -1,8 +1,8 @@
 ---
 name: literature-review
 kind: technique
-description: "Establish, for a given research input, what already exists: a trusted cross-field literature map, the chronological ordering of the relevant works, their citation graph, and an explicit is-this-already-solved assessment — carried as working material that the caller positions its own contribution against."
-vars: []
+description: "Establish, for a given research input, what already exists — mapped from a declared scientific vantage (a department, an umbrella field, working subfields): a trusted literature map built in the vantage's own vocabulary, the chronological ordering of the relevant works, their citation graph, and an explicit is-this-already-solved assessment — carried as working material that the caller positions its own contribution against."
+vars: [department, umbrella, subfields]
 capabilities: [web-search]
 ---
 # Technique: Literature Review
@@ -10,6 +10,25 @@ capabilities: [web-search]
 You are executing this technique as part of a larger task: before developing anything, map what
 already exists. The result is a structured **literature map** you keep as working material and
 consult throughout your task — especially when claiming novelty.
+
+## The vantage — read first
+This review is conducted from a declared scientific vantage, never from nowhere: you search as a
+researcher of {{umbrella}} ({{department}}) whose working areas are {{subfields}}. Every real
+literature review is written from somewhere — declaring the vantage is what makes the bias honest
+and the map deep: an aimed search surfaces the works a generalist sweep never finds, and reads
+each one the way a working scientist of these subfields would read it. The vantage controls where
+you AIM, never what you ADMIT:
+
+- **Aim from inside.** Phrase every query in the vantage's own terms of art — the exact
+  vocabulary of {{subfields}} first, {{umbrella}}'s broader phrasings second — and direct it at
+  the venues, benchmarks, and author communities where these areas publish.
+- **Admit what returns.** Record whatever an aimed search honestly surfaces, including a decisive
+  work from another field, and read it through the vantage: what it means FOR these subfields.
+  Never drop a result to keep the map pure — and never widen the aim into a survey of fields that
+  are not yours.
+- **Judge by the vantage's standards.** Relevance, strength of result, credibility of venue,
+  seriousness of baseline: assess them as {{umbrella}} assesses them, and let each work's
+  relation line say so.
 
 ## Guards — do not violate
 - **No invented papers.** Every work you record must come from an actual search result and carry a
@@ -21,12 +40,11 @@ consult throughout your task — especially when claiming novelty.
 - **Verbatim metadata.** Titles, authors, years, and venues exactly as the source states them.
 
 ## Procedure
-1. **Facets.** From the research input (question, context, assumptions), derive search facets:
-   the core phenomenon (its own wording AND at least one synonym phrasing); the method angle and
-   the application angle, phrased separately; your own expertise angle — how YOUR field would name
-   this problem; and at least TWO phrasings from fields outside your own (how would a statistician,
-   physicist, biologist, or engineer describe the same thing?). Cross-field coverage is a hard
-   requirement: related work often lives under a different vocabulary.
+1. **Facets.** From the research input (question, context, assumptions), derive the search facets
+   from inside the vantage: the core phenomenon as {{umbrella}} names it, plus at least one
+   synonym phrasing these subfields also use; the method angle and the application angle in the
+   vantage's vocabulary; and one facet per working area in {{subfields}} that makes the input
+   visible to that area. Add no facet whose purpose is coverage of another field.
 2. **Search to saturation.** Query scholarly indexes across the facets, prioritizing the last
    10-15 years but following older foundational works when newer ones point to them. Keep searching
    until two consecutive queries surface no new relevant work, or you reach the ~15-query cap.

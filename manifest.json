@@ -1,7 +1,7 @@
 {
   "schemaVersion": "content-registry-manifest/v1",
   "bundle": "brainstorm",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "runtimeProtocol": "brainstorm.workflow/v1",
   "entrypoints": {
     "workflow": "workflows/brainstorm.workflow.json",
@@ -53,26 +53,32 @@
     },
     {
       "path": "skills/roles/brain.md",
-      "sha256": "007495eeb14db779dfd311c1f43234a1a4a5d79bd5864bb748b9527b77db9f01",
-      "bytes": 15675,
+      "sha256": "805002078b0385543181bd89451415610a5d096d616fdc03da560414731fd425",
+      "bytes": 17538,
       "mediaType": "text/markdown"
     },
     {
       "path": "skills/roles/chair.md",
-      "sha256": "e03f076adde0f70b83e6aa51e6d2355347aac3e461ca1f1e0bab06b0f8ad2061",
-      "bytes": 5814,
+      "sha256": "bb802cd47b2f80222902d3450a77a4690f0d03e8892ad56a68a447767fbbdb03",
+      "bytes": 6559,
       "mediaType": "text/markdown"
     },
     {
       "path": "skills/roles/commentor.md",
-      "sha256": "81089e1910538e637dfe6dd90d9e457608a543bb1be757c35beafc340d74093b",
-      "bytes": 4234,
+      "sha256": "a6a315c24cb48ee0811d190454490a5cfbd97e810214664ad2eb61e6fabc9ade",
+      "bytes": 4910,
       "mediaType": "text/markdown"
     },
     {
       "path": "skills/roles/decomposer.md",
       "sha256": "bd1670dbc2bf70aeb831d2066d6c4d0ce9288b4dd0a5241d14a6cf48bcbc63ff",
       "bytes": 12682,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/integrator.md",
+      "sha256": "6ee091b8a75ed9a6c88b8db923f704050ef33855294336cbec658f68eaee5792",
+      "bytes": 4195,
       "mediaType": "text/markdown"
     },
     {
@@ -89,8 +95,8 @@
     },
     {
       "path": "skills/roles/redeveloper.md",
-      "sha256": "2e570549a024b1f32643db064f7b26bd1c9801042c939451799bbaefdad02aaa",
-      "bytes": 8440,
+      "sha256": "783059cdf3ece2660d4707b75b47d7009e8c51163fbcc975c9b2561305ee8afc",
+      "bytes": 9297,
       "mediaType": "text/markdown"
     },
     {
@@ -107,14 +113,14 @@
     },
     {
       "path": "skills/techniques/literature-review.md",
-      "sha256": "9ea9676d6106aa667ab71d5bfd6ebe0369bd44ce090e30e4618f8732ac0b1bc1",
-      "bytes": 3519,
+      "sha256": "0994977abe49ee9a0d9ca44e3c3ff398c4cfbaf581cec7bd00aac16515b8ad34",
+      "bytes": 4906,
       "mediaType": "text/markdown"
     },
     {
       "path": "workflows/brainstorm.workflow.json",
-      "sha256": "9dbb58b883f755e0faffaaca5c5ba59f72bf361538ccb6f4036feb4ef7f0ce5a",
-      "bytes": 12669,
+      "sha256": "fc7e1df43d47e6ed5a3107b949732ec84f81e3565ef50cdd5a8cb7b1fed35a2c",
+      "bytes": 13660,
       "mediaType": "application/json"
     }
   ]
