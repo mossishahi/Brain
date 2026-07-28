@@ -1,8 +1,8 @@
 {
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
-  "version": "0.1.0",
-  "description": "Multidisciplinary scientific brainstorm: structure the submission, assemble an expert panel, let every member develop the input in parallel, review each member's chain of thought step by step (commentors, judge, bounded redevelopment), then synthesize one final proposal.",
+  "version": "0.2.0",
+  "description": "Multidisciplinary scientific panel: structure the submission (classifying its type against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline), assemble an expert panel, let every member work the submission in parallel in the shape the catalog maps its type to, review each member chain of thought step by step (commentors, judge, bounded redevelopment), then synthesize one final summary.",
   "params": {
     "panelSize": {
       "description": "Maximum number of seats the deterministic panel.select activity may produce.",
@@ -109,7 +109,7 @@
       {
         "kind": "forEach",
         "id": "first-pass",
-        "notes": "First pass: every member develops the input in parallel, producing a five-section paper, a chain of thought of exactly input.cotSteps steps, and a novelty statement.",
+        "notes": "First pass: every member works the submission in parallel, producing the output shape the catalog maps input.type to, a chain of thought of exactly input.cotSteps steps, and (for shapes positioned against a literature map: paper, resolution, survey) a novelty statement.",
         "items": "panel.members",
         "itemVar": "member",
         "mode": "parallel",
@@ -124,7 +124,10 @@
             "department": "member.department",
             "umbrella": "member.umbrella",
             "subfields": "member.subfields",
-            "cotSteps": "input.cotSteps"
+            "cotSteps": "input.cotSteps",
+            "type": "input.type",
+            "outline": "catalog.inputTypes.outlines[input.type]",
+            "shape": "catalog.inputTypes.shapes[input.type]"
           },
           "output": { "key": "ideas[member.id]", "schema": "brainIdea" }
         }
@@ -176,7 +179,9 @@
                       "subfields": "commentor.subfields",
                       "chain": { "ref": "ideas[member.id].cot", "through": "stepIndex" },
                       "currentStep": "stepIndex",
-                      "verdictOptions": "review.allowedVerdicts"
+                      "verdictOptions": "review.allowedVerdicts",
+                      "type": "input.type",
+                      "typeGuidance": "catalog.inputTypes.guidance[input.type]"
                     },
                     "output": { "key": "round.comments[commentor.id]", "schema": "comment" }
                   }
@@ -192,7 +197,9 @@
                     "files": "usefulFiles.files",
                     "comments": "round.comments",
                     "currentStep": "stepIndex",
-                    "verdictOptions": "review.allowedVerdicts"
+                    "verdictOptions": "review.allowedVerdicts",
+                    "type": "input.type",
+                    "typeGuidance": "catalog.inputTypes.guidance[input.type]"
                   },
                   "output": { "key": "round.decision", "schema": "judgeDecision" }
                 },
@@ -224,7 +231,10 @@
                         "pick": ["verdict", "reason", "suggestion", "evidence"]
                       },
                       "currentStep": "stepIndex",
-                      "totalSteps": "input.cotSteps"
+                      "totalSteps": "input.cotSteps",
+                      "type": "input.type",
+                      "outline": "catalog.inputTypes.outlines[input.type]",
+                      "shape": "catalog.inputTypes.shapes[input.type]"
                     },
                     "output": { "key": "round.revision", "schema": "redevelopment" }
                   }
@@ -237,14 +247,16 @@
       {
         "kind": "agent",
         "id": "synthesize-proposal",
-        "notes": "Rapporteur step. The bind projects each idea to its paper and novelty statement only — the chain of thought never reaches the chair, by construction.",
+        "notes": "Rapporteur step. The bind projects each idea to its output and novelty statement only — the chain of thought never reaches the chair, by construction.",
         "skill": "chair",
         "route": "writing",
         "bind": {
           "input": { "ref": "input", "omit": ["files"] },
           "files": "usefulFiles.files",
           "roster": "panel.members",
-          "ideas": { "ref": "ideas", "pick": ["output", "novelty"] }
+          "ideas": { "ref": "ideas", "pick": ["output", "novelty"] },
+          "type": "input.type",
+          "shape": "catalog.inputTypes.shapes[input.type]"
         },
         "output": { "key": "proposal", "schema": "finalProposal" }
       },

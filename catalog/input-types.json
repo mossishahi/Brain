@@ -1,13 +1,111 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "types": {
-    "research proposal": "A worked-out plan: objectives plus intended methodology (and often evaluation), submitted for critique and refinement — a planned research project. Choose when the input already says both WHAT will be done and HOW.",
-    "research idea": "A sketched mechanism, method, model, or construction the submitter proposes but has not worked out (e.g. 'message passing where nodes are Gaussian distributions and edges are Bernoulli variables'). Choose when a concrete technical 'what if we build it like this' is on the table without a full plan.",
-    "hypothesis": "A single declarative, testable claim the submitter wants validated or refuted (e.g. 'attention layers implicitly perform kernel regression'). Choose when the input asserts something checkable rather than asking or proposing.",
-    "research question": "A specific interrogative that an investigation could answer (e.g. 'Can KNN graph construction be made differentiable?'). Choose when the input asks whether/how/why something holds or can be done, without proposing the mechanism itself.",
-    "open problem": "A challenge the field already recognizes as unsolved — the problem statement is established, the solution is missing (e.g. 'scalable exact inference in dense graphical models'). Choose when the input names a known standing problem rather than a new personal question or idea.",
-    "research goal": "A target capability or outcome the submitter wants achieved, stated as an aim rather than a question or mechanism (e.g. 'a model that generates novel molecules conditioned on a target property'). Choose when the input says WHAT should be achieved but neither asks whether it is possible (that is a research question) nor proposes HOW (that is a research idea).",
-    "gap-bridging research topic": "A topic whose whole point is connecting two fields, methods, or communities — the bridge itself is the contribution (e.g. 'bring optimal transport tools to single-cell trajectory inference'). Choose when the input names the two sides but no concrete mechanism; if a mechanism is sketched, it is a research idea instead.",
-    "exploratory research topic": "A broad area or direction to map and understand, with no specific claim, question, or mechanism yet (e.g. 'uncertainty in graph learning'). Choose only when nothing sharper fits — no claim (hypothesis), no question, no proposed mechanism (research idea), and no explicit two-field bridge (gap-bridging). This is the broadest, least-specified category."
+    "unverified claim": {
+      "description": "A single declarative statement whose truth is in question: the submitter's own hypothesis, a step in their own derivation, or an error they believe they have found in existing work. Choose when the submission asserts something checkable and wants to know whether it holds, rather than asking for it to be developed further.",
+      "shape": "verification",
+      "guidance": "A good step gathers or reasons about evidence that actually bears on the claim under examination. A bad step is a restatement of confidence without new evidence, evidence that does not address the specific claim, or a verdict reached before the evidence a prior step promised to gather has actually been produced.",
+      "outline": {
+        "claim": "Claim — the single claim under examination, verbatim or precisely restated.",
+        "claimSource": "Claim source — where the claim comes from: the submitter's own hypothesis, or the attachment name and location where the alleged error was found.",
+        "verdict": "Verdict — the adjudication: confirmed, refuted, partially-correct, or indeterminate. Reach indeterminate only when no evidence could be obtained either way.",
+        "evidence": "Evidence — a runnable script, a self-contained derivation, or a real citable reference. Required for every verdict except indeterminate; assertion alone never qualifies.",
+        "reasoning": "Reasoning — one paragraph on how the evidence was obtained and weighed.",
+        "confidence": "Confidence — a level (high, medium, or low) plus a one-line rationale for that level."
+      }
+    },
+    "research proposal": {
+      "description": "A worked-out plan that states both WHAT will be done and HOW — objectives plus methodology, protocol, experimental design, or system design — and that has not yet been executed or built. Choose when the submission is a plan awaiting a decision to commit resources, not a finished study (that is completed work) and not an unworked idea (that is a research idea).",
+      "shape": "feasibility",
+      "guidance": "A good step judges one concrete aspect of the plan (importance, hypothesis logic, methodology soundness, replicability, or pre-specified tests) against the plan as actually written, not against an idealized redesign. A bad step invents requirements the plan never claimed to meet, or declares it unworkable without naming the specific obstacle.",
+      "outline": {
+        "designSummary": "Design summary — one paragraph restating the proposed study, protocol, or system exactly as written, never an improved version of it.",
+        "importance": "Importance — one paragraph on why the underlying question matters.",
+        "hypothesisLogic": "Hypothesis logic — one paragraph on whether the rationale connecting the plan to its hypothesis is plausible.",
+        "methodologySoundness": "Methodology soundness — one entry per concrete aspect actually present (sampling, controls, measurement, analysis plan, …), each judged sound, concern, or flaw, with a note naming the specific reason.",
+        "replicability": "Replicability — one paragraph on whether there is enough detail for an independent team to run this as described.",
+        "feasibilityVerdict": "Feasibility verdict — feasible-as-is, feasible-with-changes, or not-feasible.",
+        "requiredChanges": "Required changes — what must change before the plan would work. Must be empty when the verdict is feasible-as-is, and name at least one change otherwise.",
+        "alternativeDesigns": "Alternative designs — a stronger design achieving the same goal, when one is warranted; otherwise empty."
+      }
+    },
+    "completed work": {
+      "description": "A finished artifact that already exists in full: a paper or manuscript, a model, a dataset, a codebase, or a written argument. Choose when the submission is done rather than planned, and the whole of it is on the table — not one specific claim inside it (that is an unverified claim) and not a plan yet to run (that is a research proposal).",
+      "shape": "critique",
+      "guidance": "A good step names a specific, locatable strength or weakness with enough detail that the author could act on it. A bad step is a generic quality remark ('could be clearer') with no specific location or fix, or an issue whose severity is overstated relative to its actual impact on the work's central claim.",
+      "outline": {
+        "artifactSummary": "Artifact summary — one paragraph on what the work claims or does, in its own terms.",
+        "strengths": "Strengths — specific, locatable strong points; at least one.",
+        "issues": "Issues — itemized findings, each with a description, a severity (minor, major, or critical), evidence where the point turns on a checkable fact, and a concrete suggestion.",
+        "missingConsiderations": "Missing considerations — things the work should have addressed but did not.",
+        "recommendation": "Recommendation — sound, sound-with-revisions, or not-sound. A critical issue rules out sound.",
+        "prioritizedNextSteps": "Prioritized next steps — concrete actions with priority 1 as the most urgent; at least one."
+      }
+    },
+    "empirical result": {
+      "description": "The submitter's own specific result, measurement, dataset pattern, or observation, whose meaning is unclear. Choose when the object is a particular finding the submitter obtained themselves — not a general topic (that is an established concept or a research area) and not someone else's finished work (that is completed work).",
+      "shape": "interpretation",
+      "guidance": "A good step proposes a reading that is genuinely consistent with the observation and states what would distinguish it from rival readings. A bad step jumps to the most dramatic explanation without ruling out mundane ones (measurement error, confound, sampling artifact) first.",
+      "outline": {
+        "observationSummary": "Observation summary — one paragraph restating the submitter's specific result, dataset pattern, or observation precisely.",
+        "candidateInterpretations": "Candidate interpretations — ranked readings of the observation, each with its supporting and contradicting evidence and a plausibility (high, medium, or low). Mundane explanations (measurement error, confound, sampling artifact) are considered before dramatic ones.",
+        "mostLikelyInterpretation": "Most likely interpretation — one paragraph settling on the best-supported reading and saying what distinguishes it from the rivals.",
+        "confidence": "Confidence — a level (high, medium, or low) plus a one-line rationale for that level.",
+        "threatsToValidity": "Threats to validity — the confounds and caveats that could overturn the reading.",
+        "implications": "Implications — what follows if the chosen reading holds; may be empty."
+      }
+    },
+    "research area": {
+      "description": "A topic, field, or set of competing approaches to be mapped rather than advanced: what already exists, how the approaches relate, and which one fits a given situation. Choose when the submission asks about the state of existing work rather than putting forward something new.",
+      "shape": "survey",
+      "guidance": "A good step places a work or approach accurately relative to the others already mapped, with a correct claim about what it does or does not cover. A bad step misattributes a contribution, omits a work that changes the comparison's balance, or asserts a consensus that the collected works do not actually support.",
+      "outline": {
+        "landscapeMap": "Landscape map — one group per school of thought or approach family, each with a name, the works belonging to it, and a characterization of what unites them.",
+        "comparisonTable": "Comparison table — one entry per axis of comparison, saying how the approaches differ along it. Empty unless the submitter actually asked to compare or choose.",
+        "consensusAndFrontier": "Consensus and frontier — one paragraph on what is settled across the mapped works versus what is still actively contested.",
+        "openGaps": "Open gaps — what remains unaddressed across everything mapped.",
+        "recommendation": "Recommendation — which option to use and why. Empty unless the submitter asked to choose."
+      }
+    },
+    "established concept": {
+      "description": "A settled, textbook-level concept, method, or result the submitter wants to understand. Choose when nothing of the submitter's own is being investigated, checked, or judged, and the answer already exists in the literature — the submission exists so the panel can teach it.",
+      "shape": "explanation",
+      "guidance": "A good step increases understanding at exactly the right level for what has been established so far — building on, not repeating, the previous step. A bad step is technically correct but skips the intuition, uses an inaccurate analogy, or introduces a term before it is needed.",
+      "outline": {
+        "motivatingQuestion": "Motivating question — one paragraph on why this concept matters or what puzzle it resolves.",
+        "coreIntuition": "Core intuition — one paragraph giving a plain-language mental model or analogy, deliberately informal and free of notation.",
+        "formalTreatment": "Formal treatment — one paragraph giving the rigorous version: definitions, mechanism, and derivation as the concept warrants.",
+        "workedExample": "Worked example — one paragraph walking one concrete instance through end to end.",
+        "commonMisconceptions": "Common misconceptions — the mistakes a learner reliably makes here, each paired with its correction.",
+        "connections": "Connections — the related topics or fields this one links to."
+      }
+    },
+    "open problem": {
+      "description": "A formally posed problem whose statement is already crisp and whose solution is missing: a named theorem or conjecture, a construction target, an algorithmic challenge, a bound to establish. Choose when the submission hands the panel an exact target to prove, disprove, construct, or bound, and the statement itself needs no inventing — only resolving.",
+      "shape": "resolution",
+      "guidance": "A good step is a valid logical or constructive move that strictly follows from the hypothesis and prior steps — a correct inference, a legitimate case split, a sound bound. A bad step contains a gap, an unjustified leap, a hidden assumption that is not literally given, or a construction that does not actually satisfy the stated conditions.",
+      "outline": {
+        "problemStatement": "Problem statement — one paragraph restating the exact formal target (theorem, conjecture, bound, or construction), sharpened to be unambiguous.",
+        "knownResults": "Known results — the prior results this attempt is positioned against; each entry names the result, its kind (theorem, bound, partial-result, or counterexample-attempt), and its relation to this target. Empty only when the literature genuinely surfaced nothing.",
+        "approach": "Approach — one paragraph naming the strategy chosen and why it was chosen over the alternatives.",
+        "derivation": "Derivation — the actual proof or construction steps, one paragraph per step, in order. This doubles as the reviewed chain of thought.",
+        "verification": "Verification — a self-check of the derivation: a runnable script, an independent re-derivation of the key step, or none when neither was possible.",
+        "status": "Status — the honest outcome: resolved (a complete, checked proof or construction), refuted (a counterexample or disproof), partial (genuine progress short of resolution), or still-open (no advance on known results).",
+        "remainingGaps": "Remaining gaps — what is still unproved or unconstructed. Must be empty when the status is resolved, and must name at least one gap otherwise.",
+        "significance": "Significance — one paragraph on what this unlocks if pushed further."
+      }
+    },
+    "research idea": {
+      "description": "A sketched idea, mechanism, method, goal, or direction the submitter puts forward but has not worked out — including a bridge between two fields, or a question read as an invitation to propose how to investigate it. Choose when there is no finished artifact to review, no formally posed target to solve, and no single claim whose truth is in question: the submission exists to be built into a full contribution. This is the residual default — it is listed last, and is chosen only once every category above has been ruled out.",
+      "shape": "paper",
+      "guidance": "A good step advances the idea with a concrete, checkable claim, mechanism, or design decision — not a restatement of the input. A bad step is vague, contradicts an earlier step, ignores a closer prior work, or overlooks a flaw a reviewer in this field would catch immediately.",
+      "outline": {
+        "abstract": "Abstract — exactly three paragraphs summarizing the whole developed idea: the problem, what is proposed, and why it matters.",
+        "introduction": "Introduction — exactly three paragraphs: the context, the gap in existing work, and the contribution this idea makes.",
+        "method": "Method — exactly three paragraphs giving the concrete mechanism, construction, or study design in enough detail to be criticized.",
+        "discussion": "Discussion — exactly three paragraphs on expected outcomes, limitations, and how the idea relates to the closest prior work.",
+        "conclusion": "Conclusion — exactly one paragraph stating what has been established and the single most important next step."
+      }
+    }
   }
 }

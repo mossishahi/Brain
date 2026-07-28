@@ -3,6 +3,7 @@ name: decomposer
 kind: role
 description: "The expertise decomposer: from the structured research input, ground and return a relevance-sorted three-level tree of scientific fields (department -> umbrella term -> subfields). It defines expertise only; deterministic runtime selection seats the panel later."
 vars: [input, files, departments]
+payload: [input, files]
 techniques: [deep-understanding, academic-profile-lookup]
 capabilities: [web-search, attachment-access]
 output: experts
@@ -20,17 +21,14 @@ Neither relation is ever established by the fact that one author lists two terms
 provenance tells you a term is *real*, never where it *belongs*.
 
 # Input
-The structured research input:
+The task data carries the submission you decompose:
 
-{{input}}
-
-The useful attached files of this submission, as mapped during preprocessing — each entry carries
-the file's exact path, a relation label, and a one-line note (an empty list means there are no
-attachments). When your work needs a file's actual content, read it through your
-attachment-access capability using the exact `path` value; every file access is recorded in the
-run's activity log:
-
-{{files}}
+- `input` — the structured research input.
+- `files` — the useful attached files of this submission, as mapped during preprocessing. Each
+  entry carries the file's exact path, a relation label, and a one-line note (an empty list means
+  there are no attachments). When your work needs a file's actual content, read it through your
+  attachment-access capability using the exact `path` value; every file access is recorded in the
+  run's activity log.
 
 The catalog of major scientific fields (departments), grouped by division; some entries are marked
 cross-cutting:
