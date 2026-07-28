@@ -40,6 +40,11 @@ export interface ContentRegistryServerOptions {
   readonly repoRoot?: string;
   /** Seconds between release-tag rescans in release mode. Default 60. */
   readonly refreshTtlSeconds?: number;
+  /**
+   * Fetch tags from the repo's remote before each rescan (best effort).
+   * Enable on deployments that serve a clone of the publishing repo.
+   */
+  readonly fetchTags?: boolean;
   /** Per-client request ceiling in a rolling minute. Default 300. */
   readonly requestsPerMinute?: number;
   /** Maximum JSON request body accepted by MCP. Default 1 MiB. */
@@ -124,7 +129,7 @@ export function defaultContentRoot(): string {
  * index. Returns true when the store changed. Delegates to the same script
  * used by CI and the app test suites, so there is exactly one materializer.
  */
-function materializeStore(repoRoot: string, storeRoot: string): boolean {
+function materializeStore(repoRoot: string, storeRoot: string, fetchTags: boolean): boolean {
   const before = readIndexText(storeRoot);
   execFileSync(
     process.execPath,
@@ -135,6 +140,7 @@ function materializeStore(repoRoot: string, storeRoot: string): boolean {
       "--store",
       storeRoot,
       "--quiet",
+      ...(fetchTags ? ["--fetch"] : []),
     ],
     { stdio: ["ignore", "ignore", "inherit"] },
   );
@@ -360,9 +366,10 @@ export async function startContentRegistryServer(
   const releaseMode = options.contentRoot === undefined;
   const repoRoot = resolve(options.repoRoot ?? defaultRepoRoot());
   const refreshTtlMs = (options.refreshTtlSeconds ?? 60) * 1000;
+  const fetchTags = options.fetchTags ?? false;
   const contentRoot = resolve(options.contentRoot ?? defaultContentRoot());
   if (releaseMode) {
-    materializeStore(repoRoot, contentRoot);
+    materializeStore(repoRoot, contentRoot, fetchTags);
   }
   let files = new Map(listFiles(contentRoot).map((file) => [file.relativePath, file]));
   if (!files.has("index.json")) {
@@ -383,7 +390,7 @@ export async function startContentRegistryServer(
     if (!releaseMode || Date.now() - lastScanAt < refreshTtlMs) return;
     lastScanAt = Date.now();
     try {
-      if (!materializeStore(repoRoot, contentRoot)) return;
+      if (!materializeStore(repoRoot, contentRoot, fetchTags)) return;
       files = new Map(listFiles(contentRoot).map((file) => [file.relativePath, file]));
       for (const { server } of sessions.values()) {
         void server.sendResourceListChanged();

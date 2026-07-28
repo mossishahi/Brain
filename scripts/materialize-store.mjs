@@ -38,6 +38,18 @@ const store = flag("store") ?? join(repo, ".registry-store");
 const git = (...args) =>
   execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 
+// Deployments serve a clone: new releases arrive as tags on the remote, so a
+// scan may first fetch them. Best effort — offline keeps serving what exists.
+if (process.argv.includes("--fetch")) {
+  try {
+    git("fetch", "--tags", "--quiet");
+  } catch (error) {
+    if (!quiet) {
+      console.error(`tag fetch failed (serving known releases): ${error.message ?? error}`);
+    }
+  }
+}
+
 function releases() {
   const raw = git("tag", "-l", "*/v*", "--format", "%(refname:strip=2)\u001f%(contents:subject)");
   return raw

@@ -37,6 +37,9 @@ async function main(): Promise<void> {
     host: flag("host") ?? "127.0.0.1",
     port: parsePort(flag("port")),
     ...(flag("content-root") ? { contentRoot: flag("content-root") } : {}),
+    fetchTags:
+      process.argv.includes("--fetch-tags") ||
+      process.env.BRAIN_REGISTRY_FETCH_TAGS === "1",
     requestsPerMinute: parsePositive(
       flag("requests-per-minute") ?? process.env.BRAIN_REGISTRY_REQUESTS_PER_MINUTE,
       300,

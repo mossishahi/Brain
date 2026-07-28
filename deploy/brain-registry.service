@@ -12,6 +12,8 @@ ExecStart=/usr/bin/node /opt/brain-registry/dist/src/main.js --host 127.0.0.1 --
 Environment=BRAIN_REGISTRY_ACCESS_LOG=1
 Environment=BRAIN_REGISTRY_REQUESTS_PER_MINUTE=300
 Environment=BRAIN_REGISTRY_MAX_SESSIONS=500
+# Release mode: fetch new release tags from origin on each TTL rescan.
+Environment=BRAIN_REGISTRY_FETCH_TAGS=1
 Restart=on-failure
 RestartSec=3
 TimeoutStopSec=20
@@ -20,6 +22,9 @@ NoNewPrivileges=true
 PrivateTmp=true
 PrivateDevices=true
 ProtectSystem=strict
+# Release mode writes the materialized store and fetches tags into .git;
+# everything else stays read-only under ProtectSystem=strict.
+ReadWritePaths=/opt/brain-registry/.registry-store /opt/brain-registry/.git
 ProtectHome=true
 ProtectKernelTunables=true
 ProtectKernelModules=true

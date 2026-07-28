@@ -53,16 +53,24 @@ all content traffic uses HTTPS.
 
 ```bash
 cd /opt/brain-registry
-git fetch origin
-git checkout main
-git pull --ff-only
-npm ci
-npm run build
-chown -R brain-registry:brain-registry /opt/brain-registry
+sudo -u brain-registry git fetch origin --tags
+sudo -u brain-registry git checkout main
+sudo -u brain-registry git pull --ff-only
+sudo -u brain-registry npm ci
+sudo -u brain-registry npm run build
+install -m 0644 deploy/brain-registry.service /etc/systemd/system/brain-registry.service
+systemctl daemon-reload
 systemctl restart brain-registry
 curl --fail http://127.0.0.1:51011/health
 curl --fail https://167.172.170.154/health
+curl --fail http://127.0.0.1:51011/v1/index.json
 ```
+
+Content releases need no code deployment at all: the service fetches release
+tags from origin on its rescan TTL (`BRAIN_REGISTRY_FETCH_TAGS=1`), so a
+published `brainstorm/v*` tag appears in the served index within about a
+minute. The store lives in `/opt/brain-registry/.registry-store` (append-only;
+safe to delete — it is rebuilt from the tags on the next start).
 
 ## Diagnostics
 
