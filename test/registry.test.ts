@@ -17,13 +17,17 @@ test("HTTP API serves only the committed static index, manifest, and files", asy
     const indexResponse = await fetch(`${running.url}/v1/index.json`);
     assert.equal(indexResponse.status, 200);
     const index = await indexResponse.json() as {
-      bundles: Array<{ id: string; latest: string }>;
+      bundles: Array<{ id: string; latest: string; versions: string[] }>;
     };
-    assert.deepEqual(index.bundles, [{
-      id: "brainstorm",
-      latest: "0.3.0",
-      versions: ["0.1.0", "0.2.0", "0.3.0"],
-    }]);
+    // The response must be exactly the committed index — whatever versions
+    // the publish script has appended to it.
+    const committed = JSON.parse(
+      readFileSync(join(defaultContentRoot(), "index.json"), "utf8"),
+    ) as { bundles: unknown };
+    assert.deepEqual(index.bundles, committed.bundles);
+    const brainstorm = index.bundles.find((bundle) => bundle.id === "brainstorm");
+    assert.ok(brainstorm, "the index publishes the brainstorm bundle");
+    assert.ok(brainstorm.versions.includes(brainstorm.latest));
 
     const prefix = `${running.url}/v1/bundles/brainstorm/0.1.0`;
     const manifestResponse = await fetch(`${prefix}/manifest.json`);

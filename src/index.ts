@@ -1,5 +1,6 @@
 export {
   defaultContentRoot,
+  defaultRepoRoot,
   startContentRegistryServer as startContentRegistry,
   startContentRegistryServer,
   type RunningContentRegistryServer,

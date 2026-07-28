@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
   createServer,
@@ -28,8 +29,17 @@ import {
 export interface ContentRegistryServerOptions {
   readonly port?: number;
   readonly host?: string;
-  /** Root containing index.json and bundles/. */
+  /**
+   * Serve this directory statically (must contain index.json and bundles/),
+   * with no git involvement. When omitted, the server runs in release mode:
+   * it materializes the store from the repo's release tags at startup and
+   * rescans for new tags on a TTL.
+   */
   readonly contentRoot?: string;
+  /** Git repository whose `<bundle>/v<semver>` tags are the releases. */
+  readonly repoRoot?: string;
+  /** Seconds between release-tag rescans in release mode. Default 60. */
+  readonly refreshTtlSeconds?: number;
   /** Per-client request ceiling in a rolling minute. Default 300. */
   readonly requestsPerMinute?: number;
   /** Maximum JSON request body accepted by MCP. Default 1 MiB. */
@@ -96,8 +106,47 @@ function allowRequest(
   return current.count <= limit;
 }
 
+/** The repo this server was built from — release tags live here. */
+export function defaultRepoRoot(): string {
+  return fileURLToPath(new URL("../../", import.meta.url));
+}
+
+/**
+ * The serving store: version trees materialized from release tags. Content
+ * of published versions is immutable, so the store is append-only cache.
+ */
 export function defaultContentRoot(): string {
-  return fileURLToPath(new URL("../../content/", import.meta.url));
+  return join(defaultRepoRoot(), ".registry-store");
+}
+
+/**
+ * Materializes any release tags missing from the store and rewrites its
+ * index. Returns true when the store changed. Delegates to the same script
+ * used by CI and the app test suites, so there is exactly one materializer.
+ */
+function materializeStore(repoRoot: string, storeRoot: string): boolean {
+  const before = readIndexText(storeRoot);
+  execFileSync(
+    process.execPath,
+    [
+      fileURLToPath(new URL("../../scripts/materialize-store.mjs", import.meta.url)),
+      "--repo",
+      repoRoot,
+      "--store",
+      storeRoot,
+      "--quiet",
+    ],
+    { stdio: ["ignore", "ignore", "inherit"] },
+  );
+  return readIndexText(storeRoot) !== before;
+}
+
+function readIndexText(storeRoot: string): string {
+  try {
+    return readFileSync(join(storeRoot, "index.json"), "utf8");
+  } catch {
+    return "";
+  }
 }
 
 function mediaType(path: string): string {
@@ -178,21 +227,25 @@ function pathFromResourceUri(uri: string): string {
 
 function createProtocolServer(
   contentRoot: string,
-  files: ReadonlyMap<string, StaticFile>,
+  getFiles: () => ReadonlyMap<string, StaticFile>,
+  refresh: () => void,
 ): Server {
   const server = new Server(
     { name: "brain-content-registry", version: "0.1.0" },
-    { capabilities: { resources: {} } },
+    { capabilities: { resources: { listChanged: true } } },
   );
 
-  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-    resources: [...files.values()].map((file) => ({
-      uri: resourceUri(file.relativePath),
-      name: file.relativePath,
-      mimeType: file.mediaType,
-      size: file.bytes,
-    })),
-  }));
+  server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    refresh();
+    return {
+      resources: [...getFiles().values()].map((file) => ({
+        uri: resourceUri(file.relativePath),
+        name: file.relativePath,
+        mimeType: file.mediaType,
+        size: file.bytes,
+      })),
+    };
+  });
 
   server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
     resourceTemplates: [{
@@ -206,7 +259,7 @@ function createProtocolServer(
 
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const relativePath = pathFromResourceUri(request.params.uri);
-    const file = resolveStaticFile(contentRoot, files, relativePath);
+    const file = resolveStaticFile(contentRoot, getFiles(), relativePath);
     return {
       contents: [{
         uri: request.params.uri,
@@ -302,9 +355,16 @@ export async function startContentRegistryServer(
       throw new Error(`${name} must be a positive integer`);
     }
   }
+  // Static mode serves an explicit directory as-is; release mode materializes
+  // the store from the repo's release tags and keeps rescanning on a TTL.
+  const releaseMode = options.contentRoot === undefined;
+  const repoRoot = resolve(options.repoRoot ?? defaultRepoRoot());
+  const refreshTtlMs = (options.refreshTtlSeconds ?? 60) * 1000;
   const contentRoot = resolve(options.contentRoot ?? defaultContentRoot());
-  const listed = listFiles(contentRoot);
-  const files = new Map(listed.map((file) => [file.relativePath, file]));
+  if (releaseMode) {
+    materializeStore(repoRoot, contentRoot);
+  }
+  let files = new Map(listFiles(contentRoot).map((file) => [file.relativePath, file]));
   if (!files.has("index.json")) {
     throw new Error(`content registry has no index.json below "${contentRoot}"`);
   }
@@ -314,6 +374,24 @@ export async function startContentRegistryServer(
     { transport: StreamableHTTPServerTransport; server: Server }
   >();
   const rateWindows = new Map<string, RateWindow>();
+
+  // A new release tag becomes visible on the next index or resource-list
+  // request after the TTL: the store gains the version, the file map is
+  // rebuilt, and connected MCP clients get a resources list_changed push.
+  let lastScanAt = Date.now();
+  const refreshIfStale = (): void => {
+    if (!releaseMode || Date.now() - lastScanAt < refreshTtlMs) return;
+    lastScanAt = Date.now();
+    try {
+      if (!materializeStore(repoRoot, contentRoot)) return;
+      files = new Map(listFiles(contentRoot).map((file) => [file.relativePath, file]));
+      for (const { server } of sessions.values()) {
+        void server.sendResourceListChanged();
+      }
+    } catch {
+      // A failed rescan leaves the previous store serving; retried after TTL.
+    }
+  };
 
   const httpServer = createServer(async (req, res) => {
     const startedAt = Date.now();
@@ -352,6 +430,7 @@ export async function startContentRegistryServer(
         const relativePath = url.pathname === "/v1/index.json"
           ? "index.json"
           : url.pathname.slice("/v1/".length);
+        if (relativePath === "index.json") refreshIfStale();
         sendStatic(res, resolveStaticFile(contentRoot, files, relativePath));
         return;
       }
@@ -387,7 +466,7 @@ export async function startContentRegistryServer(
         return;
       }
 
-      const protocolServer = createProtocolServer(contentRoot, files);
+      const protocolServer = createProtocolServer(contentRoot, () => files, refreshIfStale);
       let transport!: StreamableHTTPServerTransport;
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),

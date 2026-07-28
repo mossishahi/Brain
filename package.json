@@ -16,15 +16,17 @@
     }
   },
   "files": [
-    "content",
-    "dist"
+    "content-src",
+    "dist",
+    "scripts"
   ],
   "scripts": {
     "clean": "rm -rf dist",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run clean && npm run build && node --test dist/test/*.test.js",
-    "manifest": "node scripts/generate-manifest.mjs"
+    "manifest": "node scripts/generate-manifest.mjs",
+    "publish-bundle": "node scripts/publish-bundle.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"

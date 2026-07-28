@@ -1,0 +1,121 @@
+{
+  "version": "0.4.0",
+  "types": {
+    "unverified claim": {
+      "description": "A single declarative statement whose truth is in question: the submitter's own hypothesis, a step in their own derivation, or an error they believe they have found in existing work. Choose when the submission asserts something checkable and wants to know whether it holds, rather than asking for it to be developed further.",
+      "shape": "verification",
+      "guidance": "A good step gathers or reasons about evidence that actually bears on the claim under examination. A bad step is a restatement of confidence without new evidence, evidence that does not address the specific claim, or a verdict reached before the evidence a prior step promised to gather has actually been produced.",
+      "outline": {
+        "claim": "Claim — the single claim under examination, verbatim or precisely restated.",
+        "claimSource": "Claim source — where the claim comes from: the submitter's own hypothesis, or the attachment name and location where the alleged error was found.",
+        "verdict": "Verdict — the adjudication: confirmed, refuted, partially-correct, or indeterminate. Reach indeterminate only when no evidence could be obtained either way.",
+        "evidence": "Evidence — a runnable script, a self-contained derivation, or a real citable reference. Required for every verdict except indeterminate; assertion alone never qualifies.",
+        "reasoning": "Reasoning — one paragraph on how the evidence was obtained and weighed.",
+        "confidence": "Confidence — a level (high, medium, or low) plus a one-line rationale for that level."
+      }
+    },
+    "research proposal": {
+      "description": "A worked-out plan that states both WHAT will be done and HOW — objectives plus methodology, protocol, experimental design, or system design — and that has not yet been executed or built. Choose when the submission is a plan awaiting a decision to commit resources, not a finished study (that is completed work) and not an unworked idea (that is a research idea).",
+      "shape": "feasibility",
+      "guidance": "A good step judges one concrete aspect of the plan (importance, hypothesis logic, methodology soundness, replicability, or pre-specified tests) against the plan as actually written, not against an idealized redesign. A bad step invents requirements the plan never claimed to meet, or declares it unworkable without naming the specific obstacle.",
+      "outline": {
+        "designSummary": "Design summary — one paragraph restating the proposed study, protocol, or system exactly as written, never an improved version of it.",
+        "importance": "Importance — one paragraph on why the underlying question matters.",
+        "hypothesisLogic": "Hypothesis logic — one paragraph on whether the rationale connecting the plan to its hypothesis is plausible.",
+        "methodologySoundness": "Methodology soundness — one entry per concrete aspect actually present (sampling, controls, measurement, analysis plan, …), each judged sound, concern, or flaw, with a note naming the specific reason.",
+        "replicability": "Replicability — one paragraph on whether there is enough detail for an independent team to run this as described.",
+        "feasibilityVerdict": "Feasibility verdict — feasible-as-is, feasible-with-changes, or not-feasible.",
+        "requiredChanges": "Required changes — what must change before the plan would work. Must be empty when the verdict is feasible-as-is, and name at least one change otherwise.",
+        "alternativeDesigns": "Alternative designs — a stronger design achieving the same goal, when one is warranted; otherwise empty."
+      }
+    },
+    "completed work": {
+      "description": "A finished artifact that already exists in full: a paper or manuscript, a model, a dataset, a codebase, or a written argument. Choose when the submission is done rather than planned, and the whole of it is on the table — not one specific claim inside it (that is an unverified claim) and not a plan yet to run (that is a research proposal).",
+      "shape": "critique",
+      "guidance": "A good step names a specific, locatable strength or weakness with enough detail that the author could act on it. A bad step is a generic quality remark ('could be clearer') with no specific location or fix, or an issue whose severity is overstated relative to its actual impact on the work's central claim.",
+      "outline": {
+        "artifactSummary": "Artifact summary — one paragraph on what the work claims or does, in its own terms.",
+        "strengths": "Strengths — specific, locatable strong points; at least one.",
+        "issues": "Issues — itemized findings, each with a description, a severity (minor, major, or critical), evidence where the point turns on a checkable fact, and a concrete suggestion.",
+        "missingConsiderations": "Missing considerations — things the work should have addressed but did not.",
+        "recommendation": "Recommendation — sound, sound-with-revisions, or not-sound. A critical issue rules out sound.",
+        "prioritizedNextSteps": "Prioritized next steps — concrete actions with priority 1 as the most urgent; at least one."
+      }
+    },
+    "empirical result": {
+      "description": "The submitter's own specific result, measurement, dataset pattern, or observation, whose meaning is unclear. Choose when the object is a particular finding the submitter obtained themselves — not a general topic (that is an established concept or a research area) and not someone else's finished work (that is completed work).",
+      "shape": "interpretation",
+      "guidance": "A good step proposes a reading that is genuinely consistent with the observation and states what would distinguish it from rival readings. A bad step jumps to the most dramatic explanation without ruling out mundane ones (measurement error, confound, sampling artifact) first.",
+      "outline": {
+        "observationSummary": "Observation summary — one paragraph restating the submitter's specific result, dataset pattern, or observation precisely.",
+        "candidateInterpretations": "Candidate interpretations — ranked readings of the observation, each with its supporting and contradicting evidence and a plausibility (high, medium, or low). Mundane explanations (measurement error, confound, sampling artifact) are considered before dramatic ones.",
+        "mostLikelyInterpretation": "Most likely interpretation — one paragraph settling on the best-supported reading and saying what distinguishes it from the rivals.",
+        "confidence": "Confidence — a level (high, medium, or low) plus a one-line rationale for that level.",
+        "threatsToValidity": "Threats to validity — the confounds and caveats that could overturn the reading.",
+        "implications": "Implications — what follows if the chosen reading holds; may be empty."
+      }
+    },
+    "research area": {
+      "description": "A topic, field, or set of competing approaches to be mapped rather than advanced: what already exists, how the approaches relate, and which one fits a given situation. Choose when the submission asks about the state of existing work rather than putting forward something new.",
+      "shape": "survey",
+      "guidance": "A good step places a work or approach accurately relative to the others already mapped, with a correct claim about what it does or does not cover. A bad step misattributes a contribution, omits a work that changes the comparison's balance, or asserts a consensus that the collected works do not actually support.",
+      "outline": {
+        "landscapeMap": "Landscape map — one group per school of thought or approach family, each with a name, the works belonging to it, and a characterization of what unites them.",
+        "comparisonTable": "Comparison table — one entry per axis of comparison, saying how the approaches differ along it. Empty unless the submitter actually asked to compare or choose.",
+        "consensusAndFrontier": "Consensus and frontier — one paragraph on what is settled across the mapped works versus what is still actively contested.",
+        "openGaps": "Open gaps — what remains unaddressed across everything mapped.",
+        "recommendation": "Recommendation — which option to use and why. Empty unless the submitter asked to choose."
+      }
+    },
+    "established concept": {
+      "description": "A settled, textbook-level concept, method, or result the submitter wants to understand. Choose when nothing of the submitter's own is being investigated, checked, or judged, and the answer already exists in the literature — the submission exists so the panel can teach it.",
+      "shape": "explanation",
+      "guidance": "A good step increases understanding at exactly the right level for what has been established so far — building on, not repeating, the previous step. A bad step is technically correct but skips the intuition, uses an inaccurate analogy, or introduces a term before it is needed.",
+      "outline": {
+        "motivatingQuestion": "Motivating question — one paragraph on why this concept matters or what puzzle it resolves.",
+        "coreIntuition": "Core intuition — one paragraph giving a plain-language mental model or analogy, deliberately informal and free of notation.",
+        "formalTreatment": "Formal treatment — one paragraph giving the rigorous version: definitions, mechanism, and derivation as the concept warrants.",
+        "workedExample": "Worked example — one paragraph walking one concrete instance through end to end.",
+        "commonMisconceptions": "Common misconceptions — the mistakes a learner reliably makes here, each paired with its correction.",
+        "connections": "Connections — the related topics or fields this one links to."
+      }
+    },
+    "open problem": {
+      "description": "A formally posed problem whose statement is already crisp and whose solution is missing: a named theorem or conjecture, a construction target, an algorithmic challenge, a bound to establish. Choose when the submission hands the panel an exact target to prove, disprove, construct, or bound, and the statement itself needs no inventing — only resolving.",
+      "shape": "resolution",
+      "guidance": "A good step is a valid logical or constructive move that strictly follows from the hypothesis and prior steps — a correct inference, a legitimate case split, a sound bound. A bad step contains a gap, an unjustified leap, a hidden assumption that is not literally given, or a construction that does not actually satisfy the stated conditions.",
+      "outline": {
+        "problemStatement": "Problem statement — one paragraph restating the exact formal target (theorem, conjecture, bound, or construction), sharpened to be unambiguous.",
+        "knownResults": "Known results — the prior results this attempt is positioned against; each entry names the result, its kind (theorem, bound, partial-result, or counterexample-attempt), and its relation to this target. Empty only when the literature genuinely surfaced nothing.",
+        "approach": "Approach — one paragraph naming the strategy chosen and why it was chosen over the alternatives.",
+        "derivation": "Derivation — the actual proof or construction steps, one paragraph per step, in order. This doubles as the reviewed chain of thought.",
+        "verification": "Verification — a self-check of the derivation: a runnable script, an independent re-derivation of the key step, or none when neither was possible.",
+        "status": "Status — the honest outcome: resolved (a complete, checked proof or construction), refuted (a counterexample or disproof), partial (genuine progress short of resolution), or still-open (no advance on known results).",
+        "remainingGaps": "Remaining gaps — what is still unproved or unconstructed. Must be empty when the status is resolved, and must name at least one gap otherwise.",
+        "significance": "Significance — one paragraph on what this unlocks if pushed further."
+      }
+    },
+    "research idea": {
+      "description": "A sketched idea, mechanism, method, goal, or direction the submitter puts forward but has not worked out — including a bridge between two fields, or a question read as an invitation to propose how to investigate it. Choose when there is no finished artifact to review, no formally posed target to solve, and no single claim whose truth is in question: the submission exists to be built into a full contribution. This is the residual default — it is listed last, and is chosen only once every category above has been ruled out.",
+      "shape": "paper",
+      "guidance": "A good step advances the idea with a concrete, checkable claim, mechanism, or design decision — not a restatement of the input. A bad step is vague, contradicts an earlier step, ignores a closer prior work, or overlooks a flaw a reviewer in this field would catch immediately.",
+      "outline": {
+        "abstract": "Abstract — exactly three paragraphs summarizing the whole developed idea: the problem, what is proposed, and why it matters.",
+        "introduction": "Introduction — exactly three paragraphs: the context, the gap in existing work, and the contribution this idea makes.",
+        "method": "Method — exactly three paragraphs giving the concrete mechanism, construction, or study design in enough detail to be criticized.",
+        "discussion": "Discussion — exactly three paragraphs on expected outcomes, limitations, and how the idea relates to the closest prior work.",
+        "conclusion": "Conclusion — exactly one paragraph stating what has been established and the single most important next step."
+      }
+    }
+  },
+  "shapeRules": {
+    "paper": "Develop the submission into a full research contribution. Commit to this structure before\nthinking; you may not deviate:\n- The **paper**: `abstract` (EXACTLY 3 paragraphs), `introduction` (EXACTLY 3), `method`\n  (EXACTLY 3), `discussion` (EXACTLY 3), `conclusion` (EXACTLY 1).\n- The **chain of thought** (`cot`, exactly the run's fixed step count): the reasoning behind your\n  developed version — each step may rely on whatever is stated in prior steps; no step may\n  reference anything only articulated later.\n- The **novelty** statement (required for this shape): the 2-3 closest works from your literature\n  map and precisely what your idea does that none of them does.\nThink with maximum effort toward a robust idea with a determined goal and no overlooked flaw.\n**Novelty check:** hold your developing idea against the literature map; if a collected work\nalready does it, develop what your map says remains open instead.",
+    "resolution": "The submission names a formally posed target (a theorem, conjecture, or construction) — attempt to\nprove it, disprove it, construct it, or bound it as far as your reasoning actually reaches. Never\nreport success you have not actually shown.\n- `problemStatement` (1 paragraph): the exact target, sharpened and stated precisely.\n- `knownResults` (list, may be empty only if the literature review genuinely surfaced nothing):\n  each a `result` you found, its `sourceType` (`theorem` | `bound` | `partial-result` |\n  `counterexample-attempt`), and its `relation` to this target.\n- `approach` (1 paragraph): the strategy you chose, and why.\n- `derivation` (1-20 steps, one paragraph each): the actual proof or construction steps, in order —\n  this is also your `cot` (see below).\n- `verification`: a self-check of your own derivation — `kind: \"script\"` if you can execute a\n  check with your code-execution or attachment-access capability, `kind: \"math\"` for an\n  independent re-derivation of the key step, or `kind: \"none\"` only when neither is possible.\n- `status`: `resolved` (you have a complete, checked proof/construction), `refuted` (you found a\n  counterexample or disproof), `partial` (genuine progress, not a full resolution), or\n  `still-open` (you could not advance the known results). `resolved` requires an empty\n  `remainingGaps`; every other status requires naming at least one.\n- `remainingGaps`, `significance` (1 paragraph on why this matters if pushed further).\n- **`cot`** (exactly the run's fixed step count): use your `derivation` steps directly as the\n  chain (pad or merge only if their count differs; keep each step's content intact).\n- No `novelty` field for this shape — omit it.",
+    "verification": "Adjudicate exactly one claim. Do not develop it into a new direction; a verdict is the deliverable.\n- `claim` (verbatim or precisely restated) and `claimSource` (`\"submitter's own hypothesis\"`, or\n  the attachment name and location where you found the alleged error).\n- `verdict`: `confirmed`, `refuted`, `partially-correct`, or `indeterminate`. Any verdict except\n  `indeterminate` requires `evidence` with `kind` `script`, `math`, or `reference` — never `none`.\n  Reach `indeterminate` only when you genuinely could not obtain evidence either way.\n- `evidence`: the same evidence object used elsewhere in this pipeline — run a script with your\n  code-execution capability if available (else include the full script), work an independent\n  derivation, or cite and locate a real reference with your web-search capability.\n- `reasoning` (1 paragraph): how you obtained and weighed the evidence.\n- `confidence`: `level` (`high`/`medium`/`low`) plus a one-line `rationale`.\n- **`cot`** (exactly the run's fixed step count, typically 3): restate the claim and what would\n  settle it; gather/construct the evidence; render the verdict. Add intermediate steps only if the\n  evidence genuinely required more than one stage.\n- No `novelty` field for this shape — omit it.",
+    "feasibility": "Review the plan as **actually written** — never invent a stronger version to praise or a weaker\none to fault.\n- `designSummary` (1 paragraph): the plan, restated precisely.\n- `importance` (1 paragraph): why the underlying question matters.\n- `hypothesisLogic` (1 paragraph): is the rationale connecting the plan to its hypothesis\n  plausible.\n- `methodologySoundness` (1-15 entries): judge concrete aspects (sampling, controls, measurement,\n  analysis plan, and any other aspect actually present) each as `sound`, `concern`, or `flaw`,\n  with a `note` naming the specific reason.\n- `replicability` (1 paragraph): is there enough detail for an independent team to run this.\n- `feasibilityVerdict`: `feasible-as-is`, `feasible-with-changes`, or `not-feasible`.\n  `feasible-as-is` requires an empty `requiredChanges`; the other two require naming at least one.\n- `requiredChanges`, `alternativeDesigns` (a stronger design for the same goal, if one is warranted;\n  otherwise empty).\n- **`cot`** (exactly the run's fixed step count): walk the criteria above in order (importance,\n  hypothesis logic, methodology soundness, replicability, verdict) as your chain steps.\n- No `novelty` field for this shape — omit it.",
+    "critique": "The work already exists in full — review it holistically, not one claim at a time.\n- `artifactSummary` (1 paragraph): what the work claims or does.\n- `strengths` (at least 1): specific, locatable strong points.\n- `issues`: each with a `description`, `severity` (`minor`/`major`/`critical`), `evidence` (use\n  `kind: \"none\"` only for issues that do not turn on a checkable fact), and a `suggestion`.\n- `missingConsiderations`: things the work should have addressed but did not.\n- `recommendation`: `sound`, `sound-with-revisions`, or `not-sound`. A `critical` issue rules out\n  `sound`.\n- `prioritizedNextSteps` (at least 1): `{priority, action}`, priority 1 = most urgent.\n- **`cot`** (exactly the run's fixed step count): summarize the work, then walk strengths, then\n  issues (splitting into more steps if there are many), then the recommendation.\n- No `novelty` field for this shape — omit it.",
+    "interpretation": "Make sense of the submitter's own particular finding — never generalize it into a new research\ndirection.\n- `observationSummary` (1 paragraph): the result, restated precisely.\n- `candidateInterpretations` (1-10, ranked): each an `interpretation`, its `supportingEvidence`\n  and `contradictingEvidence` (empty string if none), and `plausibility` (`high`/`medium`/`low`).\n  Consider mundane explanations (measurement error, confound, sampling artifact) before dramatic\n  ones.\n- `mostLikelyInterpretation` (1 paragraph) and `confidence` (`level` + `rationale`).\n- `threatsToValidity`: confounds and caveats. `implications`: optional, empty string if none.\n- **`cot`** (exactly the run's fixed step count): summarize the observation, generate candidates,\n  weigh each against the evidence, settle on the most likely one.\n- No `novelty` field for this shape — omit it.",
+    "survey": "Map what exists; compare and recommend **only if the submitter actually asked to compare or\nchoose**.\n- `landscapeMap` (1-12 groups): each a `name` for the school of thought or approach family, its\n  `works` (from your literature review, in the shared paper shape), and a `characterization`.\n- `comparisonTable`: leave empty unless a comparison or decision was requested; if requested, one\n  `{dimension, comparison}` entry per axis of comparison.\n- `consensusAndFrontier` (1 paragraph): what's settled vs. actively contested.\n- `openGaps`: what remains unaddressed across the mapped works.\n- `recommendation`: empty string unless the submitter asked which option to use.\n- **`cot`** (exactly the run's fixed step count): build the landscape map, then (if applicable)\n  compare, then identify gaps, then (if applicable) recommend.\n- **`novelty` field is required for this shape** — but repurposed: name the 2-3 works your map\n  treats as the frontier and state what genuinely remains beyond them.",
+    "explanation": "Teach the concept; nothing of the submitter's own is being judged or checked.\n- `motivatingQuestion` (1 paragraph): why this concept matters or what puzzle it resolves.\n- `coreIntuition` (1 paragraph): a plain-language mental model or analogy — deliberately informal.\n- `formalTreatment` (1 paragraph): the rigorous version — definitions, mechanism, derivation as the\n  concept warrants.\n- `workedExample` (1 paragraph): one concrete instance walked through.\n- `commonMisconceptions`: each a `misconception` and its `correction`.\n- `connections`: related topics or fields this connects to.\n- **`cot`** (exactly the run's fixed step count): motivate, build intuition, formalize, exemplify,\n  address misconceptions, connect — split or merge these stages to land on exactly that count.\n- No `novelty` field for this shape — omit it."
+  }
+}

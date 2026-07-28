@@ -64,15 +64,32 @@ The generic transport itself currently has no authentication; do not expose it d
 public internet without trusted TLS and edge hardening. The current content is public; deployment
 assets for HTTPS on a bare IP are documented in [`deploy/README.md`](deploy/README.md).
 
-## Publishing a new version
+## Authoring and publishing
 
-Content versions are immutable. Copy the previous version to a new directory, edit only the new
-directory, regenerate its committed manifest with:
+The repo carries exactly ONE copy of the content: `content-src/<bundle>/`, the editable source
+tree (its `bundle.json` declares the runtime protocol and entrypoints). Releases are **annotated
+git tags** named `<bundle>/v<semver>` whose tree is the bundle content — no version directories
+live in the repo.
+
+To release the current source:
 
 ```bash
-npm run manifest -- brainstorm 0.2.0 brainstorm.workflow/v1
+npm run publish-bundle -- brainstorm 0.5.0 --notes "What changed, one line."
 ```
 
-Validate it through the app test suite, then add the new version to `content/index.json` atomically.
-Never modify files under a published version:
-hosts and caches are entitled to treat versioned URLs as immutable.
+This stamps the workflow's bundle version, hashes the source into a git tree (your branch and
+staging area are untouched), commits it with the previous release as parent, and tags it. The
+notes become the release metadata consumers see.
+
+Serving: the registry server materializes `.registry-store/` (gitignored) from the release tags
+at startup, and rescans on a TTL — a freshly pushed tag appears in the served `index.json`
+(versions, `latest`, per-version release notes) within a minute, and connected MCP clients get a
+`resources/list_changed` notification. Published versions are immutable by construction: the
+store is append-only and every version's SHA-256 manifest is generated from the immutable tag.
+
+To run against unpublished work-in-progress content, point the worker at the source tree
+(`--content-dir .../content-src/brainstorm/`) or set `BRAIN_TEST_CONTENT_DIR` for the app tests.
+App test suites materialize the store themselves via `scripts/materialize-store.mjs`.
+
+Deployment note: release mode requires `git` and the repo (with tags) on the host. To serve a
+prebuilt store without git, materialize it first and pass `--content-root <store>`.
