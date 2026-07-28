@@ -1,7 +1,7 @@
 {
   "schemaVersion": "content-registry-manifest/v1",
   "bundle": "brainstorm",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "runtimeProtocol": "brainstorm.workflow/v1",
   "entrypoints": {
     "workflow": "workflows/brainstorm.workflow.json",
@@ -35,8 +35,8 @@
     },
     {
       "path": "catalog/input-types.json",
-      "sha256": "ea7a78d8c0d8ca4d6b2cd7bc1e4d7142fa3aa219fac744f11e65c633a67553bd",
-      "bytes": 13867,
+      "sha256": "6c5ca98537d4f4f51d698d575606b5d8c86d010e8f5bc45772f5a293d8f7caeb",
+      "bytes": 22900,
       "mediaType": "application/json"
     },
     {
@@ -53,8 +53,8 @@
     },
     {
       "path": "skills/roles/brain.md",
-      "sha256": "805002078b0385543181bd89451415610a5d096d616fdc03da560414731fd425",
-      "bytes": 17538,
+      "sha256": "64fdd0a339b950a60c466755d20ae8aa541c6d4e525c16baadadb3bdd89c89de",
+      "bytes": 9266,
       "mediaType": "text/markdown"
     },
     {
@@ -65,14 +65,14 @@
     },
     {
       "path": "skills/roles/commentor.md",
-      "sha256": "a6a315c24cb48ee0811d190454490a5cfbd97e810214664ad2eb61e6fabc9ade",
-      "bytes": 4910,
+      "sha256": "3e391a4df06aac7b72e565b12939e0f70979d46cff93238e6ab230cf0ffc36ec",
+      "bytes": 5141,
       "mediaType": "text/markdown"
     },
     {
       "path": "skills/roles/decomposer.md",
-      "sha256": "bd1670dbc2bf70aeb831d2066d6c4d0ce9288b4dd0a5241d14a6cf48bcbc63ff",
-      "bytes": 12682,
+      "sha256": "a32be1924021b0073d73cd169041313dc85b624a15de7e9dbaee1a5bac647f99",
+      "bytes": 12994,
       "mediaType": "text/markdown"
     },
     {
@@ -83,8 +83,8 @@
     },
     {
       "path": "skills/roles/judge.md",
-      "sha256": "cfcdf45522591e1586e293f87168590c98c9e89e62fff17f92bd6d5e2b4bdd01",
-      "bytes": 4570,
+      "sha256": "37ae0b2c1ef664a5ec085ef9c300696bbf23fffc0941baeae423a3a24d5b2425",
+      "bytes": 4863,
       "mediaType": "text/markdown"
     },
     {
@@ -95,8 +95,8 @@
     },
     {
       "path": "skills/roles/redeveloper.md",
-      "sha256": "783059cdf3ece2660d4707b75b47d7009e8c51163fbcc975c9b2561305ee8afc",
-      "bytes": 9297,
+      "sha256": "73b1ba1f6c145ea82c1391e8a19c987db9f232c9f02825b285d0c92945783358",
+      "bytes": 8000,
       "mediaType": "text/markdown"
     },
     {
@@ -119,8 +119,8 @@
     },
     {
       "path": "workflows/brainstorm.workflow.json",
-      "sha256": "fc7e1df43d47e6ed5a3107b949732ec84f81e3565ef50cdd5a8cb7b1fed35a2c",
-      "bytes": 13660,
+      "sha256": "744e8d01cac2e2cb13fbb843d86ec2624abaaf327a001fa0669b52d1f3452cd9",
+      "bytes": 13814,
       "mediaType": "application/json"
     }
   ]
