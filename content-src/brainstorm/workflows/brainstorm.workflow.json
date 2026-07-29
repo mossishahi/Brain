@@ -10,12 +10,6 @@
       "min": 2,
       "max": 12
     },
-    "moduleSize": {
-      "description": "Number of umbrella leaves panel.select takes from each department per chunked round-robin pass.",
-      "default": 2,
-      "min": 1,
-      "max": 12
-    },
     "maxAttachmentFiles": {
       "description": "Ceiling on annotated attachment-inventory entries the file partition activities may emit.",
       "default": 400,
@@ -77,12 +71,11 @@
       {
         "kind": "activity",
         "id": "select-panel",
-        "notes": "Provider-neutral deterministic runtime transform. The registered panel.select handler applies stable chunked round-robin selection and returns no more than panelSize seats.",
+        "notes": "Provider-neutral deterministic runtime transform. The registered panel.select handler scores every subfield leaf as its own count times its umbrella's count times its department's count, and seats the panelSize highest-scoring leaves; equal scores keep tree order.",
         "handler": "panel.select",
         "bind": {
           "experts": "experts",
-          "panelSize": "params.panelSize",
-          "moduleSize": "params.moduleSize"
+          "panelSize": "params.panelSize"
         },
         "output": { "key": "panel", "schema": "panel" }
       },

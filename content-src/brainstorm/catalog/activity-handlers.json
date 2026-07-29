@@ -28,12 +28,11 @@
       }
     },
     "panel.select": {
-      "description": "Seat one member per (department, umbrella) leaf using stable chunked round-robin in the experts tree's declared relevance order: take up to moduleSize leaves from each department per pass, skip exhausted departments, assign stable ids by pick order, and stop at panelSize or tree exhaustion.",
+      "description": "Seat one member per subfield LEAF of the experts tree, chosen by descending product score: the subfield's own count times its umbrella's count times its department's count (i x j x k). Equal scores keep tree order, ids follow pick order, and selection stops at panelSize or leaf exhaustion.",
       "deterministic": true,
       "inputs": {
         "experts": { "kind": "artifact", "schema": "experts" },
-        "panelSize": { "kind": "positiveInteger" },
-        "moduleSize": { "kind": "positiveInteger" }
+        "panelSize": { "kind": "positiveInteger" }
       },
       "outputSchema": "panel",
       "bounds": {
