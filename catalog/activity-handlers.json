@@ -28,7 +28,7 @@
       }
     },
     "panel.select": {
-      "description": "Seat one member per subfield LEAF of the experts tree, chosen by descending product score: the subfield's own count times its umbrella's count times its department's count (i x j x k). Equal scores keep tree order, ids follow pick order, and selection stops at panelSize or leaf exhaustion.",
+      "description": "Seat one member per UMBRELLA of the experts tree, chosen by descending re-weighted support: the umbrella's own count times the sum of its subfields' counts (new j = j x sum(i)). A seat carries every subfield of its umbrella. Equal scores keep tree order, ids follow pick order, and selection stops at panelSize or umbrella exhaustion.",
       "deterministic": true,
       "inputs": {
         "experts": { "kind": "artifact", "schema": "experts" },
