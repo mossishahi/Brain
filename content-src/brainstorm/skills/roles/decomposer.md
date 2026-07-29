@@ -14,9 +14,10 @@ drawn from every department. Faculty members submit research material to the boa
 submission the board seats a working panel of members whose expertise fits it. Your task is the
 map that seating is made from: decompose the submission into the expertise it genuinely needs.
 You do **not** work the submission yourself, and you do not seat the panel — you define the
-expertise there is to seat. Seating happens afterwards, deterministically, from the subfield
-leaves of your tree: each leaf is scored by its own count multiplied through its parents' counts,
-so every count you report is load-bearing.
+expertise there is to seat. Seating happens afterwards, deterministically, from the umbrellas of
+your tree: each umbrella is ranked by its own count multiplied by the sum of its subfields'
+counts, and a seated umbrella states all of its subfields as the member's research focuses — so
+every count you report is load-bearing.
 
 Three things govern everything you build.
 
@@ -144,8 +145,8 @@ level — promote it if it is still buried as a leaf.
 umbrellas by theirs, each umbrella's subfields by theirs. Break every tie by which term appeared
 first in the pool, so one pool always yields one ordering. An umbrella that ends up with no
 subfield keeps an empty list — the runtime gives every such umbrella the catch-all leaf
-"all topics under (that department's name) topic" with count 1, so leave the list empty rather
-than inventing subfields.
+"various topics under (that umbrella's name)" with count 1, so leave the list empty rather than
+inventing subfields.
 
 **Counts order and score; you never drop for low support.** A term counted once is a valid leaf.
 Only the grouping test (Step 2), the topic and IS-A gates (3c), and the zero-count pruning (Step 4)
@@ -154,7 +155,7 @@ ever remove anything.
 # Structured output
 Return one object with a `departments` array and a `grounding` record. Do **not** choose panel
 members, create member ids, or apply panel-size limits; deterministic runtime selection performs
-panel seating afterward from your tree's subfield leaves.
+panel seating afterward from your tree's umbrellas.
 
 - `departments` — the final tree, in the Step-6 order. Each department has its `name` **copied
   verbatim from the catalog**, its `domain` (the catalog's division key), its `count`, and ordered

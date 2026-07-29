@@ -71,7 +71,7 @@
       {
         "kind": "activity",
         "id": "select-panel",
-        "notes": "Provider-neutral deterministic runtime transform. The registered panel.select handler scores every subfield leaf as its own count times its umbrella's count times its department's count, and seats the panelSize highest-scoring leaves; equal scores keep tree order.",
+        "notes": "Provider-neutral deterministic runtime transform. The registered panel.select handler re-weights every umbrella as its own count times the sum of its subfields' counts, seats the panelSize highest, and gives each seat all of its umbrella's subfields; equal scores keep tree order.",
         "handler": "panel.select",
         "bind": {
           "experts": "experts",
