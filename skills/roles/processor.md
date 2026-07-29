@@ -110,3 +110,12 @@ Rules:
 - Do not copy field values from any example; derive everything from the actual input.
 - Every inventory file appears in `files` exactly once; never add entries for paths that are not
   in the inventory.
+- **Your result is final and recorded verbatim, and every later stage reads it as the submission
+  itself.** Never put a placeholder, trial, or test value (`test`, `test-title`, `TODO`, `n/a`, …)
+  in any field. A panel is assembled from your `title`, `question`, and `context`: a placeholder
+  there sends the whole board to the wrong literature, and nothing downstream can recover the real
+  submission once you have replaced it.
+- **If returning your result is rejected, keep the content and change only the shape.** A rejection
+  means the structure was wrong, never that your reading of the submission was wrong. Never
+  diagnose one by shortening, emptying, or genericizing the fields — a stripped-down result that is
+  accepted is worse than one more rejection, because it is indistinguishable from an answer.
