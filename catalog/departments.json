@@ -1,12 +1,12 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "groups": {
     "natural_sciences": [
       { "name": "Physics" },
       { "name": "Astronomy & Astrophysics" },
       { "name": "Chemistry / Chemical Biology" },
       { "name": "Mathematics" },
-      { "name": "Statistics" },
+      { "name": "Statistics", "crossCutting": true },
       { "name": "Earth & Planetary Sciences / Geology" },
       { "name": "Atmospheric, Oceanic & Climate Science" },
       { "name": "Environmental Science" }
@@ -15,14 +15,16 @@
       { "name": "Molecular & Cell Biology" },
       { "name": "Organismic & Evolutionary Biology" },
       { "name": "Genetics & Genomics" },
-      { "name": "Microbiology & Immunology" },
+      { "name": "Microbiology" },
+      { "name": "Immunology" },
       { "name": "Neuroscience" },
       { "name": "Biochemistry & Biophysics" },
       { "name": "Systems Biology" },
       { "name": "Stem Cell & Regenerative Biology" },
       { "name": "Developmental Biology" },
       { "name": "Physiology" },
-      { "name": "Pharmacology" },
+      { "name": "Pharmacology & Toxicology" },
+      { "name": "Pharmaceutical Sciences" },
       { "name": "Pathology" },
       { "name": "Anatomy" },
       { "name": "Medicine (Clinical)" },
@@ -33,11 +35,17 @@
       { "name": "Nutrition" },
       { "name": "Dentistry" },
       { "name": "Nursing" },
-      { "name": "Veterinary Science" }
+      { "name": "Rehabilitation & Physical Therapy" },
+      { "name": "Allied Health Professions" },
+      { "name": "Veterinary Science" },
+      { "name": "Agronomy & Crop Science" },
+      { "name": "Food Science & Technology" },
+      { "name": "Forestry & Fisheries" }
     ],
     "engineering_and_applied_sciences": [
       { "name": "Computer Science" },
-      { "name": "Electrical & Computer Engineering" },
+      { "name": "Electrical Engineering & Signal Processing" },
+      { "name": "Computer Engineering & Hardware Systems" },
       { "name": "Mechanical Engineering" },
       { "name": "Civil & Environmental Engineering" },
       { "name": "Chemical Engineering" },
@@ -45,23 +53,31 @@
       { "name": "Materials Science & Engineering" },
       { "name": "Biomedical Engineering / Bioengineering" },
       { "name": "Industrial & Systems Engineering" },
+      { "name": "Operations Research & Decision Science" },
+      { "name": "Energy Science & Engineering" },
       { "name": "Nuclear Engineering" },
       { "name": "Applied Physics" },
       { "name": "Robotics" },
+      { "name": "Architecture & Built Environment" },
       { "name": "Data Science / Artificial Intelligence", "crossCutting": true }
     ],
     "social_sciences": [
       { "name": "Economics" },
+      { "name": "Finance & Accounting" },
+      { "name": "Business & Management" },
       { "name": "Political Science / Government" },
+      { "name": "Public Policy / Government Administration" },
+      { "name": "International Relations / Area Studies" },
+      { "name": "Law" },
       { "name": "Sociology" },
       { "name": "Psychology" },
       { "name": "Anthropology" },
       { "name": "Human Geography" },
       { "name": "Demography / Population Studies" },
-      { "name": "International Relations / Area Studies" },
-      { "name": "Public Policy / Government Administration" },
       { "name": "Criminology" },
-      { "name": "Communication & Media Studies" }
+      { "name": "Communication & Media Studies" },
+      { "name": "Education" },
+      { "name": "Information Science & Library Studies" }
     ],
     "arts_and_humanities": [
       { "name": "Philosophy" },
@@ -73,7 +89,11 @@
         "subfields": ["Comparative Literature", "English", "Classical Languages", "Modern Languages"]
       },
       { "name": "Religious Studies / Theology" },
-      { "name": "Archaeology" }
+      { "name": "Archaeology" },
+      { "name": "Art History & Visual Studies" },
+      { "name": "Music & Musicology" },
+      { "name": "Theater, Film & Performing Arts" },
+      { "name": "Design & Visual Communication" }
     ]
   }
 }
