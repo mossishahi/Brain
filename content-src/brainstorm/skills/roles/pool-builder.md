@@ -119,14 +119,19 @@ matching against the shared taxonomy happens afterward, outside this task.
 - `grounding` — the working material, reported exactly as retrieved (a factual record for the
   dashboard; it never changes the pool):
   - `papers`: every publication retrieved in Step 1 — `title`, the **full** author byline in
-    `authors`, and when known `year`, `venue`, `url`, plus a one-line `relation` to the topic.
-    Record works exactly as found — never invent an entry.
+    `authors`, `year` and `venue` when known, plus a one-line `relation` to the topic. Every
+    paper **must** carry its resolvable `url` (the arXiv abstract page, DOI link, or publisher
+    page): you retrieved it through search, so you have its address, and a cited work without a
+    link cannot be checked by the humans reading the record. Record works exactly as found —
+    never invent an entry and never invent a URL.
   - `scholars`: one entry per enumerated author, in paper order — `name`, the lookup outcome in
     `profile` (`ok` | `ambiguous` | `no_profile`), and from the **resolved** profile only:
-    `affiliation`, profile `url`, and the verbatim `interests` list (before unification and before
-    the per-author cap — report everything you collected, so the pool and its counts stay
-    reproducible). For `ambiguous`/`no_profile` authors use empty `affiliation`/`url` and an empty
-    `interests` array — never backfill.
+    `affiliation`, the profile `url` (the address of the page you read the interests from — a
+    resolved profile **always** has one; an `ok` entry with an empty `url` is not acceptable),
+    and the verbatim `interests` list (before unification and before the per-author cap — report
+    everything you collected, so the pool and its counts stay reproducible). For
+    `ambiguous`/`no_profile` authors use empty `affiliation`/`url` and an empty `interests`
+    array — never backfill.
 
 Example shape (structure only — derive all values from the actual input):
 

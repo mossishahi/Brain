@@ -132,6 +132,10 @@ Rules:
   `resolution`, `verification`, `feasibility`, `critique`, `interpretation`, `survey`,
   `explanation`) must be entirely absent — do not include them even as `null` or empty objects.
 - Omit `"literature"` entirely when your grounding (Step 3) surfaced no recordable work.
+- Every `literature` entry you do record **must** carry its resolvable `url` (arXiv abstract
+  page, DOI link, or publisher page) whenever web search was available — a cited work the reader
+  cannot click through to verify does not belong in the record. Never invent a URL; if you truly
+  cannot locate the work again, leave the entry out.
 - Omit `"novelty"` entirely unless `{{shape}}` is `paper`, `resolution`, or `survey`.
 
 Writing format — every text value MUST follow these rules:
