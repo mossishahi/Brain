@@ -27,8 +27,49 @@
         "maxItemsFromInput": "maxFiles"
       }
     },
+    "taxonomy.match": {
+      "description": "Deterministic orchestrator step, no model call: send every pool member's term to the shared taxonomy service (one taxonomy_resolve round-trip per member — the server checks for an exact name/alias match and otherwise runs its revise_query candidate search). Returns every member annotated with its match (position) or its candidate names, plus the projected unmatched subset the placer receives. Every answer carries the live taxonomy revision it was computed against.",
+      "deterministic": true,
+      "inputs": {
+        "pool": { "kind": "artifact", "schema": "pool" },
+        "maxMembers": { "kind": "positiveInteger" }
+      },
+      "outputSchema": "poolMatches",
+      "bounds": {
+        "outputField": "members",
+        "maxItemsFromInput": "maxMembers"
+      }
+    },
+    "taxonomy.suggest": {
+      "description": "Deterministic orchestrator step: submit a copy of the run's decision for EVERY pool member (matched position, new placement, or already-present resolution) to the shared taxonomy service's append-only suggestion queue, and return the receipt. Suggestions are recorded, never applied — processing them is a separate server-side concern.",
+      "deterministic": true,
+      "inputs": {
+        "matches": { "kind": "artifact", "schema": "poolMatches" },
+        "placements": { "kind": "artifact", "schema": "placements" },
+        "maxMembers": { "kind": "positiveInteger" }
+      },
+      "outputSchema": "suggestionReceipt",
+      "bounds": {
+        "outputField": "entries",
+        "maxItemsFromInput": "maxMembers"
+      }
+    },
+    "experts.bridge": {
+      "description": "TEMPORARY seating bridge until the pool-based panel design lands: deterministically fold the matched positions and placement decisions into the legacy experts tree (department <- taxonomy field, umbrella <- subfield, leaf <- topic), summing each member's distinct-people count into its landing node and injecting the catch-all leaf for umbrella-level landings. Every node also carries the pool builder's input-topic relevance (the max over members landing at or below it), and EVERY level of the tree is sorted by that relevance, descending (ties by count, then name). Keeps panel.select and everything downstream running unchanged.",
+      "deterministic": true,
+      "inputs": {
+        "matches": { "kind": "artifact", "schema": "poolMatches" },
+        "placements": { "kind": "artifact", "schema": "placements" },
+        "maxDepartments": { "kind": "positiveInteger" }
+      },
+      "outputSchema": "experts",
+      "bounds": {
+        "outputField": "departments",
+        "maxItemsFromInput": "maxDepartments"
+      }
+    },
     "panel.select": {
-      "description": "Seat one member per UMBRELLA of the experts tree, chosen by descending re-weighted support: the umbrella's own count times the sum of its subfields' counts (new j = j x sum(i)). A seat carries every subfield of its umbrella. Equal scores keep tree order, ids follow pick order, and selection stops at panelSize or umbrella exhaustion.",
+      "description": "Deterministic seating over the PRUNED expertise tree: every level-2/3/4 node carries its cxr seating value (count x relevance; departments carry the sum over their umbrellas), all nodes are mixed into ONE queue sorted by cxr descending, and seats are popped while capacity remains — a topic seats a member with that single focus; an umbrella seats a member with itself and ALL its subfields joined by 'and', removing its topics from the queue; a department seats a member through its highest-cxr umbrella still available, with the union of the umbrella term and its subfields as focuses, removing that umbrella and its topics. Exhausted parents leave the queue recursively: consuming a node whose parent has no other child left removes the parent too, level by level. One member per (department, umbrella); ties break by count then tree order; selection stops at panelSize or queue exhaustion. Relevance is required on every node — pre-relevance trees are refused and their runs restarted.",
       "deterministic": true,
       "inputs": {
         "experts": { "kind": "artifact", "schema": "experts" },

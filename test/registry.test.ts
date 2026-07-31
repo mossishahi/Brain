@@ -73,17 +73,12 @@ test("HTTP API serves only the committed static index, manifest, and files", asy
   }
 });
 
-test("MCP exposes static files as resources, with no executable tools", async () => {
+test("MCP exposes static files as resources and the taxonomy tools", async () => {
   const running = await startContentRegistryServer({ port: 0 });
   const client = new Client({ name: "content-registry-test", version: "0.1.0" });
   const transport = new StreamableHTTPClientTransport(new URL(running.mcpUrl));
   try {
     await client.connect(transport);
-    await assert.rejects(
-      client.listTools(),
-      /Method not found/,
-      "Brain Registry advertises no executable tools",
-    );
 
     const resources = await client.listResources();
     const templates = await client.listResourceTemplates();
@@ -101,6 +96,87 @@ test("MCP exposes static files as resources, with no executable tools", async ()
       "text" in read.contents[0]! ? read.contents[0].text : "",
       /name: brain/,
     );
+
+    // The live taxonomy store is mutable state behind the tools — it must
+    // never leak into the immutable static content tree.
+    assert.equal(
+      resources.resources.some((resource) => resource.name.startsWith("taxonomy/")),
+      false,
+      "the taxonomy store is not served as static content",
+    );
+  } finally {
+    await transport.close().catch(() => undefined);
+    await running.close();
+  }
+});
+
+test("taxonomy tools: exact resolve, candidate names on a miss, tree, and suggestion receipts", async () => {
+  const running = await startContentRegistryServer({ port: 0 });
+  const client = new Client({ name: "content-registry-test", version: "0.1.0" });
+  const transport = new StreamableHTTPClientTransport(new URL(running.mcpUrl));
+  const toolJson = async (name: string, args: Record<string, unknown>): Promise<any> => {
+    const result = await client.callTool({ name, arguments: args });
+    const content = (result.content as Array<{ type: string; text?: string }>)[0];
+    assert.ok(content && content.type === "text" && typeof content.text === "string");
+    return JSON.parse(content.text);
+  };
+  try {
+    await client.connect(transport);
+    assert.equal(running.taxonomyEnabled, true);
+
+    const tools = await client.listTools();
+    assert.deepEqual(
+      tools.tools.map((tool) => tool.name).sort(),
+      ["taxonomy_resolve", "taxonomy_suggest", "taxonomy_tree"],
+    );
+
+    // Exact hit: position + the revision it was answered from.
+    const hit = await toolJson("taxonomy_resolve", { query: "artificial INTELLIGENCE" });
+    assert.equal(hit.found, true);
+    assert.equal(hit.position.level, "subfield");
+    assert.equal(hit.position.path.join(" > "), "Physical Sciences > Computer Science > Artificial Intelligence");
+    assert.ok(hit.revision >= 1);
+
+    // Miss: the server-side processor runs revise_query and returns candidate
+    // NAMES only — alphabetized, no scores anywhere in the payload.
+    const miss = await toolJson("taxonomy_resolve", { query: "Neural Message Passing" });
+    assert.equal(miss.found, false);
+    assert.equal(miss.status, "NA");
+    assert.ok(Array.isArray(miss.options) && miss.options.length > 0);
+    assert.deepEqual(
+      miss.options,
+      [...miss.options].sort((a: string, b: string) => a.localeCompare(b)),
+    );
+    assert.ok(!("alpha" in miss) && !("hits" in miss));
+
+    // The whole latest tree, revision-stamped; a branch export via exact name.
+    const branch = await toolJson("taxonomy_tree", { root: "Computer Science" });
+    assert.ok(branch.outline.startsWith("Computer Science"));
+    assert.ok(branch.nodeCount > 100);
+    assert.equal(branch.revision, hit.revision);
+
+    // Suggestions are queued with a receipt, never applied: the revision does
+    // not move and the queue file records the entry verbatim.
+    const receipt = await toolJson("taxonomy_suggest", {
+      entries: [
+        { term: "Message Passing Neural Networks", kind: "place", detail: { parent: "Artificial Intelligence" } },
+      ],
+      submittedBy: "registry-test",
+    });
+    assert.equal(receipt.queued, 1);
+    assert.ok(receipt.id.length > 0);
+    const after = await toolJson("taxonomy_resolve", { query: "Message Passing Neural Networks" });
+    assert.equal(after.found, false);
+    assert.equal(after.revision, receipt.revision);
+
+    const queue = readFileSync(
+      join(defaultContentRoot(), "taxonomy", "suggestions.jsonl"),
+      "utf8",
+    ).trim().split("\n");
+    const last = JSON.parse(queue[queue.length - 1]!);
+    assert.equal(last.id, receipt.id);
+    assert.equal(last.entries[0].term, "Message Passing Neural Networks");
+    assert.equal(last.submittedBy, "registry-test");
   } finally {
     await transport.close().catch(() => undefined);
     await running.close();

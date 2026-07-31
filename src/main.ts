@@ -37,6 +37,12 @@ async function main(): Promise<void> {
     host: flag("host") ?? "127.0.0.1",
     port: parsePort(flag("port")),
     ...(flag("content-root") ? { contentRoot: flag("content-root") } : {}),
+    ...(flag("taxonomy-seed") ?? process.env.BRAIN_REGISTRY_TAXONOMY_SEED
+      ? { taxonomySeedPath: flag("taxonomy-seed") ?? process.env.BRAIN_REGISTRY_TAXONOMY_SEED }
+      : {}),
+    ...(flag("taxonomy-store") ?? process.env.BRAIN_REGISTRY_TAXONOMY_STORE
+      ? { taxonomyStoreDir: flag("taxonomy-store") ?? process.env.BRAIN_REGISTRY_TAXONOMY_STORE }
+      : {}),
     fetchTags:
       process.argv.includes("--fetch-tags") ||
       process.env.BRAIN_REGISTRY_FETCH_TAGS === "1",

@@ -1,7 +1,7 @@
 {
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Multidisciplinary scientific panel: structure the submission (classifying its type against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline), assemble an expert panel, let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step (commentors, judge, bounded redevelopment), audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
@@ -15,6 +15,18 @@
       "default": 400,
       "min": 1,
       "max": 400
+    },
+    "maxPoolMembers": {
+      "description": "Ceiling on pool members the taxonomy matching and suggestion activities may process.",
+      "default": 200,
+      "min": 1,
+      "max": 400
+    },
+    "maxDepartments": {
+      "description": "Ceiling on departments the temporary experts bridge may emit (the experts tree itself allows at most 12).",
+      "default": 12,
+      "min": 2,
+      "max": 12
     }
   },
   "root": {
@@ -57,14 +69,60 @@
       },
       {
         "kind": "agent",
-        "id": "decompose-experts",
-        "notes": "Ground and return only the three-level expertise tree (department -> umbrella -> subfields), relevance-sorted at every level. Panel seating is deliberately separate.",
-        "skill": "decomposer",
+        "id": "build-pool",
+        "notes": "Part one of the former decomposer: literature retrieval, full author enumeration, verbatim profile interests, term unification. Returns the expertise pool in which every member carries its origins (who stated it, on which paper) and its distinct-people count. No tree, no seating.",
+        "skill": "pool-builder",
         "route": "reasoning",
         "bind": {
           "input": { "ref": "input", "omit": ["files"] },
-          "files": "usefulFiles.files",
-          "departments": "catalog.departments.groups"
+          "files": "usefulFiles.files"
+        },
+        "output": { "key": "pool", "schema": "pool" }
+      },
+      {
+        "kind": "activity",
+        "id": "match-taxonomy",
+        "notes": "Deterministic orchestrator step, no model call: one taxonomy_resolve round-trip per pool member against the LIVE shared taxonomy on the registry — exact name/alias match, else the server-side revise_query candidate search. Output carries every member's match or candidate names, the unmatched projection for the placer, and the taxonomy revision answered from.",
+        "handler": "taxonomy.match",
+        "bind": {
+          "pool": "pool",
+          "maxMembers": "params.maxPoolMembers"
+        },
+        "output": { "key": "poolMatches", "schema": "poolMatches" }
+      },
+      {
+        "kind": "agent",
+        "id": "place-fields",
+        "notes": "Part two of the former decomposer: for the members deterministic matching could not resolve, read the whole latest shared taxonomy through the taxonomy-access capability and decide each member's canonical name and existing parent (or report it already present under another spelling). Decisions only — recording happens in the next step.",
+        "skill": "placer",
+        "route": "reasoning",
+        "bind": {
+          "input": { "ref": "input", "omit": ["files"] },
+          "unmatched": "poolMatches.unmatched"
+        },
+        "output": { "key": "placements", "schema": "placements" }
+      },
+      {
+        "kind": "activity",
+        "id": "submit-decisions",
+        "notes": "Deterministic orchestrator step: send a copy of the run's decision for every pool member (matched position, new placement, or already-present resolution) to the registry's append-only suggestion queue and record the receipt. Suggestions are queued, never applied here.",
+        "handler": "taxonomy.suggest",
+        "bind": {
+          "matches": "poolMatches",
+          "placements": "placements",
+          "maxMembers": "params.maxPoolMembers"
+        },
+        "output": { "key": "suggestionReceipt", "schema": "suggestionReceipt" }
+      },
+      {
+        "kind": "activity",
+        "id": "bridge-experts",
+        "notes": "TEMPORARY until the pool-based seating design lands: deterministically fold matched positions and placement decisions into the legacy experts tree so panel.select and everything downstream keep working unchanged.",
+        "handler": "experts.bridge",
+        "bind": {
+          "matches": "poolMatches",
+          "placements": "placements",
+          "maxDepartments": "params.maxDepartments"
         },
         "output": { "key": "experts", "schema": "experts" }
       },

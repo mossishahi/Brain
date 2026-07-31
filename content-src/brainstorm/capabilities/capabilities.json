@@ -18,6 +18,12 @@
       "contract": "The runtime must resolve each attachment named in the agent's input to its full content (or a faithful text rendition) on request.",
       "operations": ["attachment.list", "attachment.read"],
       "whenUnavailable": "Do NOT claim to have read attachments; state explicitly that attachment access was unavailable and reason only from the metadata and descriptions provided in your input."
+    },
+    "taxonomy-access": {
+      "description": "Read the LIVE shared scientific taxonomy (domain > field > subfield > topic) maintained by the Brain Registry: fetch the complete latest tree as a names-only outline, and resolve a field name to its exact position.",
+      "contract": "The runtime must answer every read from the single shared taxonomy store at its latest committed revision — reflecting every user's accepted edits, not a run-local copy — and stamp every answer with that revision. Reads only: recording placement decisions is a deterministic runtime step, never an agent tool.",
+      "operations": ["taxonomy.tree", "taxonomy.resolve"],
+      "whenUnavailable": "Do NOT invent taxonomy positions or parents; state explicitly that the shared taxonomy was unavailable and mark every member you were asked to place as undecidable instead of guessing."
     }
   }
 }

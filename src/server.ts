@@ -6,18 +6,22 @@ import {
   type Server as HttpServer,
   type ServerResponse,
 } from "node:http";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
+  CallToolRequestSchema,
   ListResourceTemplatesRequestSchema,
   ListResourcesRequestSchema,
+  ListToolsRequestSchema,
   ReadResourceRequestSchema,
   isInitializeRequest,
 } from "@modelcontextprotocol/sdk/types.js";
+
+import { TaxonomyError, TaxonomyService, type TaxonomySuggestion } from "./taxonomy.js";
 
 /**
  * This process is deliberately a generic static-file transport. It does not
@@ -53,6 +57,19 @@ export interface ContentRegistryServerOptions {
   readonly maxSessions?: number;
   /** Emits structured access records; disabled by default. */
   readonly accessLog?: (record: ContentRegistryAccessRecord) => void;
+  /**
+   * Versioned taxonomy seed (a bundle catalog asset). Default:
+   * `<repoRoot>/content-src/brainstorm/catalog/taxonomy.json`. The taxonomy
+   * tools are served only when this file (or an existing store) is present.
+   */
+  readonly taxonomySeedPath?: string;
+  /**
+   * Writable directory holding the LIVE taxonomy store (materialized from the
+   * seed on first start) and the append-only suggestion queue. Default:
+   * `<store>/taxonomy` — inside `.registry-store`, the one deploy-writable
+   * path; excluded from the served static file tree.
+   */
+  readonly taxonomyStoreDir?: string;
 }
 
 export interface ContentRegistryAccessRecord {
@@ -72,6 +89,8 @@ export interface RunningContentRegistryServer {
   readonly mcpUrl: string;
   readonly contentRoot: string;
   readonly fileCount: number;
+  /** Whether the taxonomy_* MCP tools are being served (seed or store present). */
+  readonly taxonomyEnabled: boolean;
   readonly httpServer: HttpServer;
   close(): Promise<void>;
 }
@@ -173,6 +192,10 @@ function listFiles(root: string, current = root): StaticFile[] {
     .sort((a, b) => a.name.localeCompare(b.name))
     .flatMap((entry): StaticFile[] => {
       const absolutePath = join(current, entry.name);
+      // The live taxonomy store shares .registry-store (the one writable
+      // deploy path) but is mutable state served through the taxonomy tools,
+      // never as immutable static content.
+      if (current === root && entry.name === "taxonomy") return [];
       if (entry.isDirectory()) return listFiles(root, absolutePath);
       if (!entry.isFile()) return [];
       const relativePath = relative(root, absolutePath).split(sep).join("/");
@@ -231,14 +254,95 @@ function pathFromResourceUri(uri: string): string {
   return parsed.pathname.replace(/^\/+/, "");
 }
 
+/** The taxonomy tools served next to the content resources. */
+const TAXONOMY_TOOLS = [
+  {
+    name: "taxonomy_resolve",
+    description:
+      "Server-side processor for one expertise query against the LIVE shared taxonomy " +
+      "(domain > field > subfield > topic). Checks for an exact match on a node name or " +
+      "curated alias; when none exists, runs the deterministic revise_query candidate " +
+      "search and returns candidate NAMES only (alphabetized, no scores). Every answer " +
+      "carries the taxonomy revision it was computed against.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "The research area to locate." },
+        optionLimit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 100,
+          description: "Maximum candidate names on a miss (default 25).",
+        },
+      },
+      required: ["query"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "taxonomy_tree",
+    description:
+      "The whole latest taxonomy as a names-only indented outline (indent depth encodes " +
+      "the level), stamped with the revision it was read at. Optional `root` (node id or " +
+      "exact name) exports one branch. This is the reference a placement reasoning step " +
+      "reads — it always reflects every user's committed edits.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        root: { type: "string", description: "Node id or exact name to export the subtree of." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "taxonomy_suggest",
+    description:
+      "Queue one run's placement decisions for the shared taxonomy. Append-only: entries " +
+      "are recorded with a receipt id and the revision they were decided against, and are " +
+      "NOT applied to the tree — suggestion processing is a separate, later concern.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        entries: {
+          type: "array",
+          maxItems: 400,
+          items: {
+            type: "object",
+            properties: {
+              term: { type: "string", description: "The pool member the decision is about." },
+              kind: { type: "string", description: "matched | place | already_present." },
+              detail: { description: "Structured decision payload as the client recorded it." },
+            },
+            required: ["term", "kind"],
+            additionalProperties: false,
+          },
+        },
+        submittedBy: { type: "string", description: "Opaque client/run identifier." },
+      },
+      required: ["entries"],
+      additionalProperties: false,
+    },
+  },
+] as const;
+
+function toolResult(value: unknown): { content: Array<{ type: "text"; text: string }> } {
+  return { content: [{ type: "text" as const, text: JSON.stringify(value) }] };
+}
+
 function createProtocolServer(
   contentRoot: string,
   getFiles: () => ReadonlyMap<string, StaticFile>,
   refresh: () => void,
+  taxonomy: TaxonomyService | null,
 ): Server {
   const server = new Server(
     { name: "brain-content-registry", version: "0.1.0" },
-    { capabilities: { resources: { listChanged: true } } },
+    {
+      capabilities: {
+        resources: { listChanged: true },
+        ...(taxonomy ? { tools: {} } : {}),
+      },
+    },
   );
 
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
@@ -274,6 +378,52 @@ function createProtocolServer(
       }],
     };
   });
+
+  if (taxonomy) {
+    server.setRequestHandler(ListToolsRequestSchema, async () => ({
+      tools: TAXONOMY_TOOLS.map((tool) => ({ ...tool })),
+    }));
+
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const args = (request.params.arguments ?? {}) as Record<string, unknown>;
+      try {
+        switch (request.params.name) {
+          case "taxonomy_resolve": {
+            if (typeof args.query !== "string" || args.query.trim() === "") {
+              throw new Error("taxonomy_resolve requires a non-empty query string");
+            }
+            const limit = typeof args.optionLimit === "number" ? args.optionLimit : undefined;
+            return toolResult(taxonomy.resolve(args.query, limit));
+          }
+          case "taxonomy_tree": {
+            const root = typeof args.root === "string" && args.root.trim() !== "" ? args.root : undefined;
+            return toolResult(taxonomy.tree(root));
+          }
+          case "taxonomy_suggest": {
+            if (!Array.isArray(args.entries)) {
+              throw new Error("taxonomy_suggest requires an entries array");
+            }
+            const entries = args.entries as TaxonomySuggestion[];
+            for (const entry of entries) {
+              if (typeof entry?.term !== "string" || typeof entry?.kind !== "string") {
+                throw new Error("every suggestion entry requires term and kind strings");
+              }
+            }
+            const submittedBy = typeof args.submittedBy === "string" ? args.submittedBy : undefined;
+            return toolResult(taxonomy.suggest(entries, submittedBy));
+          }
+          default:
+            throw new Error(`unknown tool "${request.params.name}"`);
+        }
+      } catch (error) {
+        const payload =
+          error instanceof TaxonomyError
+            ? { ok: false, code: error.code, message: error.message }
+            : { ok: false, code: "error", message: error instanceof Error ? error.message : String(error) };
+        return { ...toolResult(payload), isError: true };
+      }
+    });
+  }
 
   return server;
 }
@@ -376,6 +526,20 @@ export async function startContentRegistryServer(
     throw new Error(`content registry has no index.json below "${contentRoot}"`);
   }
 
+  // The LIVE shared taxonomy: materialized from the versioned seed into the
+  // writable store on first start, then served through the taxonomy_* tools.
+  // One service instance for the whole process — every session answers from
+  // the same single, revision-counted document.
+  const taxonomySeedPath = resolve(
+    options.taxonomySeedPath ??
+      join(repoRoot, "content-src", "brainstorm", "catalog", "taxonomy.json"),
+  );
+  const taxonomyStoreDir = resolve(options.taxonomyStoreDir ?? join(contentRoot, "taxonomy"));
+  const taxonomy =
+    existsSync(join(taxonomyStoreDir, "taxonomy.json")) || existsSync(taxonomySeedPath)
+      ? new TaxonomyService({ seedPath: taxonomySeedPath, storeDir: taxonomyStoreDir })
+      : null;
+
   const sessions = new Map<
     string,
     { transport: StreamableHTTPServerTransport; server: Server }
@@ -473,7 +637,7 @@ export async function startContentRegistryServer(
         return;
       }
 
-      const protocolServer = createProtocolServer(contentRoot, () => files, refreshIfStale);
+      const protocolServer = createProtocolServer(contentRoot, () => files, refreshIfStale, taxonomy);
       let transport!: StreamableHTTPServerTransport;
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
@@ -526,6 +690,7 @@ export async function startContentRegistryServer(
     mcpUrl: `${url}/mcp`,
     contentRoot,
     fileCount: files.size,
+    taxonomyEnabled: taxonomy !== null,
     httpServer,
     close: async () => {
       clearInterval(rateCleanup);
