@@ -155,8 +155,8 @@ test("taxonomy tools: exact resolve, candidate names on a miss, tree, and sugges
     assert.ok(branch.nodeCount > 100);
     assert.equal(branch.revision, hit.revision);
 
-    // Suggestions are queued with a receipt, never applied: the revision does
-    // not move and the queue file records the entry verbatim.
+    // Suggestions are saved with a receipt, never applied: the revision does
+    // not move, and the batch lands as its own <time>-<user>.json file.
     const receipt = await toolJson("taxonomy_suggest", {
       entries: [
         { term: "Message Passing Neural Networks", kind: "place", detail: { parent: "Artificial Intelligence" } },
@@ -165,18 +165,20 @@ test("taxonomy tools: exact resolve, candidate names on a miss, tree, and sugges
     });
     assert.equal(receipt.queued, 1);
     assert.ok(receipt.id.length > 0);
+    assert.match(receipt.file, /^[0-9T-]+Z-registry-test(?:-\d+)?\.json$/);
     const after = await toolJson("taxonomy_resolve", { query: "Message Passing Neural Networks" });
     assert.equal(after.found, false);
     assert.equal(after.revision, receipt.revision);
 
-    const queue = readFileSync(
-      join(defaultContentRoot(), "taxonomy", "suggestions.jsonl"),
-      "utf8",
-    ).trim().split("\n");
-    const last = JSON.parse(queue[queue.length - 1]!);
-    assert.equal(last.id, receipt.id);
-    assert.equal(last.entries[0].term, "Message Passing Neural Networks");
-    assert.equal(last.submittedBy, "registry-test");
+    const saved = JSON.parse(
+      readFileSync(
+        join(defaultContentRoot(), "taxonomy", "suggestions", receipt.file),
+        "utf8",
+      ),
+    );
+    assert.equal(saved.id, receipt.id);
+    assert.equal(saved.entries[0].term, "Message Passing Neural Networks");
+    assert.equal(saved.submittedBy, "registry-test");
   } finally {
     await transport.close().catch(() => undefined);
     await running.close();

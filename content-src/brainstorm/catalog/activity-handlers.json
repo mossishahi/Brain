@@ -55,9 +55,10 @@
       }
     },
     "experts.bridge": {
-      "description": "TEMPORARY seating bridge until the pool-based panel design lands: deterministically fold the matched positions and placement decisions into the legacy experts tree (department <- taxonomy field, umbrella <- subfield, leaf <- topic), summing each member's distinct-people count into its landing node and injecting the catch-all leaf for umbrella-level landings. Every node also carries the pool builder's input-topic relevance (the max over members landing at or below it), and EVERY level of the tree is sorted by that relevance, descending (ties by count, then name). Keeps panel.select and everything downstream running unchanged.",
+      "description": "TEMPORARY seating bridge until the pool-based panel design lands: deterministically fold the matched positions and placement decisions into the legacy experts tree (department <- taxonomy field, umbrella <- subfield, leaf <- topic), summing each member's distinct-people count into its landing node and injecting the catch-all leaf for umbrella-level landings. Every node also carries the pool builder's input-topic relevance (the max over members landing at or below it), and EVERY level of the tree is sorted by that relevance, descending (ties by count, then name). The pool's literature grounding rides through onto the tree, so the dashboard's papers/authors/interests record stays. Keeps panel.select and everything downstream running unchanged.",
       "deterministic": true,
       "inputs": {
+        "pool": { "kind": "artifact", "schema": "pool" },
         "matches": { "kind": "artifact", "schema": "poolMatches" },
         "placements": { "kind": "artifact", "schema": "placements" },
         "maxDepartments": { "kind": "positiveInteger" }

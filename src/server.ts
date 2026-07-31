@@ -297,9 +297,10 @@ const TAXONOMY_TOOLS = [
   {
     name: "taxonomy_suggest",
     description:
-      "Queue one run's placement decisions for the shared taxonomy. Append-only: entries " +
-      "are recorded with a receipt id and the revision they were decided against, and are " +
-      "NOT applied to the tree — suggestion processing is a separate, later concern.",
+      "Save one run's placement decisions for the shared taxonomy as their own " +
+      "<time>-<user>.json suggestion file. Entries are recorded with a receipt id and the " +
+      "revision they were decided against, and are NOT applied to the tree — suggestion " +
+      "processing is a separate, later concern.",
     inputSchema: {
       type: "object",
       properties: {

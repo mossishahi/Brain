@@ -117,9 +117,10 @@
       {
         "kind": "activity",
         "id": "bridge-experts",
-        "notes": "TEMPORARY until the pool-based seating design lands: deterministically fold matched positions and placement decisions into the legacy experts tree so panel.select and everything downstream keep working unchanged.",
+        "notes": "TEMPORARY until the pool-based seating design lands: deterministically fold matched positions and placement decisions into the legacy experts tree (the pool's literature grounding riding through) so panel.select and everything downstream keep working unchanged.",
         "handler": "experts.bridge",
         "bind": {
+          "pool": "pool",
           "matches": "poolMatches",
           "placements": "placements",
           "maxDepartments": "params.maxDepartments"

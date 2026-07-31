@@ -27,7 +27,6 @@ import {
   renameSync,
   statSync,
   writeFileSync,
-  appendFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -517,12 +516,15 @@ export interface TaxonomyServiceOptions {
 
 /**
  * The registry's taxonomy service: one live graph materialized from the
- * bundle seed, plus an append-only suggestion queue. Suggestion PROCESSING is
- * deliberately absent — queued decisions do not change the tree yet.
+ * bundle seed, plus a suggestion drop box. Suggestion PROCESSING is
+ * deliberately absent — queued decisions do not change the tree yet; as the
+ * TEMPORARY action, every submitted batch is saved as its own
+ * `<time>-<user>.json` file under `<storeDir>/suggestions/`, ready to be
+ * reviewed or replayed one file at a time.
  */
 export class TaxonomyService {
   readonly graph: TaxonomyGraph;
-  private readonly suggestionsFile: string;
+  private readonly suggestionsDir: string;
 
   constructor(options: TaxonomyServiceOptions) {
     const storeFile = join(options.storeDir, "taxonomy.json");
@@ -534,7 +536,7 @@ export class TaxonomyService {
       copyFileSync(options.seedPath, storeFile);
     }
     this.graph = TaxonomyGraph.load(storeFile);
-    this.suggestionsFile = join(options.storeDir, "suggestions.jsonl");
+    this.suggestionsDir = join(options.storeDir, "suggestions");
   }
 
   resolve(query: string, optionLimit?: number): ResolveResult {
@@ -550,24 +552,42 @@ export class TaxonomyService {
   }
 
   /**
-   * Queue one batch of placement decisions. Append-only: an id and receipt
-   * are returned so the submitting run can be traced; nothing is applied.
+   * Save one batch of placement decisions as its own suggestion file,
+   * named `<time>-<user>.json` (temporary handling: recorded, never
+   * applied). The receipt carries the file name so the batch can be traced.
    */
   suggest(entries: readonly TaxonomySuggestion[], submittedBy?: string): {
     id: string;
     receivedAt: string;
     revision: number;
     queued: number;
+    file: string;
   } {
     const id = randomUUID();
     const receivedAt = new Date().toISOString();
     const revision = this.graph.revision;
-    mkdirSync(dirname(this.suggestionsFile), { recursive: true });
-    appendFileSync(
-      this.suggestionsFile,
-      `${JSON.stringify({ id, receivedAt, revision, submittedBy: submittedBy ?? "", entries })}\n`,
+    const file = suggestionFileName(this.suggestionsDir, receivedAt, submittedBy);
+    mkdirSync(this.suggestionsDir, { recursive: true });
+    writeFileSync(
+      join(this.suggestionsDir, file),
+      `${JSON.stringify({ id, receivedAt, revision, submittedBy: submittedBy ?? "", entries }, null, 2)}\n`,
       "utf8",
     );
-    return { id, receivedAt, revision, queued: entries.length };
+    return { id, receivedAt, revision, queued: entries.length, file };
+  }
+}
+
+/**
+ * `<time>-<user>.json`: the ISO receipt time (filesystem-safe) followed by
+ * the sanitized submitter. A same-millisecond, same-user collision gets a
+ * numeric suffix rather than overwriting the earlier batch.
+ */
+function suggestionFileName(dir: string, receivedAt: string, submittedBy?: string): string {
+  const time = receivedAt.replace(/[:.]/g, "-");
+  const user = (submittedBy ?? "").replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "anonymous";
+  const base = `${time}-${user}`;
+  if (!existsSync(join(dir, `${base}.json`))) return `${base}.json`;
+  for (let n = 2; ; n += 1) {
+    if (!existsSync(join(dir, `${base}-${n}.json`))) return `${base}-${n}.json`;
   }
 }
