@@ -1,7 +1,7 @@
 {
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Multidisciplinary scientific panel: structure the submission (classifying its type against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline), assemble an expert panel, let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step (commentors, judge, bounded redevelopment), audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
