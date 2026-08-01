@@ -1,17 +1,17 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "verdicts": {
     "Pass": {
-      "description": "The step is sound and complete enough: no point you could raise would definitely lead the thinker to materially better next steps. Use verdict \"Pass\", a substantive one-or-two-sentence reason (at least 30 characters — never placeholder text), an empty suggestion, and the fixed evidence object with kind \"none\" and every detail field empty.",
-      "requires": ["verdict", "reason", "suggestion", "evidence"]
+      "description": "No demonstrable flaw stands anywhere in the reviewed steps: the step under review and every earlier one hold as written, and every previously recorded objection is resolved. Pass judges correctness and support only — never whether some extra point might enrich what comes later. Use verdict \"Pass\", set step to the current review position, a substantive one-or-two-sentence reason naming the check you actually made (at least 30 characters — never placeholder text), an empty suggestion, and the fixed evidence object with kind \"none\" and every detail field empty.",
+      "requires": ["verdict", "step", "reason", "suggestion", "evidence"]
     },
     "Build": {
-      "description": "The step is sound, but an important COMPLEMENTARY point would definitely improve the next steps. Use verdict \"Build\", a substantive reason (at least 30 characters), the concrete non-empty suggestion (at least 20 characters), and the fixed evidence object with kind \"none\" and every detail field empty.",
-      "requires": ["verdict", "reason", "suggestion", "evidence"]
+      "description": "One reviewed step is sound as far as it goes but has a NECESSARY gap in its own support: a missing justification, an unstated assumption doing real work, or an uncovered case its claim depends on. Build ONLY when the chain cannot stand without the addition — an enhancement that is merely nice to have is a Pass, not a Build. Use verdict \"Build\", set step to the gapped step (the current one or any earlier one), a substantive reason (at least 30 characters), the concrete non-empty suggestion (at least 20 characters), and the fixed evidence object with kind \"none\" and every detail field empty.",
+      "requires": ["verdict", "step", "reason", "suggestion", "evidence"]
     },
     "Interrupt": {
-      "description": "There is a real FLAW such that a wrong chain would be built on this step. Interrupt requires evidence: runnable script, self-contained math derivation, or real reference. Use verdict \"Interrupt\", the specific substantive reason (at least 30 characters), and the evidence object; leave the suggestion empty unless you have a concrete repair to hand the thinker. Without evidence choose Build or Pass.",
-      "requires": ["verdict", "reason", "suggestion", "evidence"]
+      "description": "A DEMONSTRATED flaw stands in one of the reviewed steps — the current one or any earlier one — such that the chain is wrong at or after it. Interrupt requires evidence: runnable script, self-contained math derivation, or real reference. A suspicion is not an Interrupt: verify it with your capabilities first, and if verification does not substantiate it, it is not a flaw. Use verdict \"Interrupt\", set step to the flawed step, the specific substantive reason (at least 30 characters), and the evidence object; leave the suggestion empty unless you have a concrete repair to hand the thinker.",
+      "requires": ["verdict", "step", "reason", "suggestion", "evidence"]
     }
   },
   "sequencing": {

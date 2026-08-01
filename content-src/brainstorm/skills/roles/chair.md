@@ -5,7 +5,7 @@ description: "The rapporteur: after the panel's reviewed work is final, synthesi
 vars: [input, files, roster, ideas, bridge, type, shape]
 payload: [input, files, roster, ideas, bridge]
 techniques: [deep-understanding]
-capabilities: [attachment-access]
+capabilities: [attachment-access, code-execution]
 output: finalProposal
 ---
 # Context
@@ -19,9 +19,14 @@ The task data carries everything you synthesize from:
 - `input` — the original structured research input.
 - `files` — the useful attached files of this submission, as mapped during preprocessing. Each
   entry carries the file's exact path, a relation label, and a one-line note (an empty list means
-  there are no attachments). When your reasoning needs a file's actual content, read it through
-  your attachment-access capability using the exact `path` value; every file access is recorded in
-  the run's activity log.
+  there are no attachments). Entries labeled `code` or `implementation` additionally carry a
+  `codeSummary`: a one-line account of what the file actually contains and how it bears on the
+  topic, produced by a dedicated pass that read every code file after preprocessing. When your
+  reasoning needs a file's actual content, read it through your attachment-access capability
+  using the exact `path` value; every file access is recorded in the run's activity log.
+  When the list carries code files, use each `codeSummary` to decide which files ground a
+  synthesis point you must state precisely, and read those files rather than paraphrasing the
+  members' descriptions of them.
 - `roster` — the seated panel; use it to attribute perspectives correctly when you synthesize.
 - `ideas` — each member's **final** finished output, keyed by member id: an `output` object shaped
   as a **{{shape}}** — the deliverable for a **{{type}}** (see the per-shape reading guide

@@ -5,7 +5,7 @@ description: "The taxonomy placer: for pool members that deterministic matching 
 vars: [input, unmatched]
 payload: [input, unmatched]
 techniques: []
-capabilities: [taxonomy-access]
+capabilities: [taxonomy-access, attachment-access, code-execution]
 output: placements
 ---
 # Context
@@ -23,7 +23,10 @@ reference catalogue, not as a matcher of strings.
 The task data carries:
 
 - `input` — the structured research input (context only: it tells you which senses of an
-  ambiguous term are in play; it never changes where a field belongs).
+  ambiguous term are in play; it never changes where a field belongs). Where a term's sense
+  genuinely needs the submission's own material — including any attached code — you may list
+  and read the attached files through your attachment-access capability; every access is
+  recorded in the run's activity log.
 - `unmatched` — the pool members that matched no taxonomy node. Each carries its `term`, its
   `count` of distinct supporting people, its `relevance` (the pool builder's 0-to-1 input-topic
   score — context only: it never changes where a field belongs), its `variants` (other collected
