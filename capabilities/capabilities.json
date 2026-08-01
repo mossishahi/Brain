@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "capabilities": {
     "web-search": {
       "description": "Query the public web and scholarly indexes (e.g. Semantic Scholar, Google Scholar, arXiv, ORCID, OpenAlex) and read the resulting pages.",
@@ -8,8 +8,8 @@
       "whenUnavailable": "Do NOT claim to have searched; state explicitly that web search was unavailable and rely only on existing context and your training knowledge. Do not fabricate URLs or DOIs."
     },
     "code-execution": {
-      "description": "Run short, self-contained scripts in a sandboxed interpreter with common numeric libraries available.",
-      "contract": "The runtime must execute a supplied script in isolation and return its stdout/stderr and exit status to the agent. No network or session-state access from inside the sandbox.",
+      "description": "Run short, self-contained scripts in a sandboxed interpreter with common numeric libraries available. The sandbox adds nothing of its own: standard output contains exactly what the script prints, in exactly the structure the script prints it — so print the values a checker needs as one clearly structured final line, and quote that output verbatim wherever evidence asks for a result.",
+      "contract": "The runtime must execute a supplied script in isolation and return its stdout/stderr and exit status to the agent, unaltered. No network or session-state access from inside the sandbox.",
       "operations": ["code.execute"],
       "whenUnavailable": "Do NOT claim to have run code; include the full script source in your output so a human can verify it manually. State explicitly that code execution was unavailable."
     },

@@ -5,7 +5,7 @@ description: "The post-review integration audit: read every member's finished ou
 vars: [input, files, roster, ideas, type]
 payload: [input, files, roster, ideas]
 techniques: [deep-understanding]
-capabilities: [web-search, attachment-access]
+capabilities: [web-search, code-execution, attachment-access]
 output: bridgeReport
 ---
 # Context
@@ -21,9 +21,14 @@ The task data carries everything you audit:
 - `input` — the original structured research input.
 - `files` — the useful attached files of this submission, as mapped during preprocessing. Each
   entry carries the file's exact path, a relation label, and a one-line note (an empty list means
-  there are no attachments). When your reasoning needs a file's actual content, read it through
-  your attachment-access capability using the exact `path` value; every file access is recorded in
-  the run's activity log.
+  there are no attachments). Entries labeled `code` or `implementation` additionally carry a
+  `codeSummary`: a one-line account of what the file actually contains and how it bears on the
+  topic, produced by a dedicated pass that read every code file after preprocessing. When your
+  reasoning needs a file's actual content, read it through your attachment-access capability
+  using the exact `path` value; every file access is recorded in the run's activity log.
+  When the list carries code files and two members' outputs disagree about what the attached
+  code does, the file is the decidable record: use each `codeSummary` to find the files the
+  disagreement turns on, and read them before recording a contradiction.
 - `roster` — the seated panel members and the expertise each one worked from.
 - `ideas` — each member's finished output, keyed by member id (reasoning chains are deliberately
   withheld): the `output` body, plus `novelty` and `literature` where the member's shape carries

@@ -27,6 +27,33 @@
         "maxItemsFromInput": "maxFiles"
       }
     },
+    "attachments.code": {
+      "description": "Project the useful files to the code-labeled entries (code / implementation), preserving order, plus their count. The count is what the workflow's condition tests to decide whether the code-annotation pass runs; the projection is the exact file list the annotator receives.",
+      "deterministic": true,
+      "inputs": {
+        "files": { "kind": "artifact", "schema": "usefulFiles" },
+        "maxFiles": { "kind": "positiveInteger" }
+      },
+      "outputSchema": "codeFiles",
+      "bounds": {
+        "outputField": "files",
+        "maxItemsFromInput": "maxFiles"
+      }
+    },
+    "attachments.annotate": {
+      "description": "Deterministic orchestrator step: fold the code annotator's one-line per-file summaries into the shared useful-file map by exact path match — every summarized entry gains its codeSummary, every other entry rides through unchanged, and a summary naming an unknown path fails the run instead of being dropped silently. The merged map replaces usefulFiles, so every later task reads the annotated version.",
+      "deterministic": true,
+      "inputs": {
+        "files": { "kind": "artifact", "schema": "usefulFiles" },
+        "annotations": { "kind": "artifact", "schema": "codeAnnotations" },
+        "maxFiles": { "kind": "positiveInteger" }
+      },
+      "outputSchema": "usefulFiles",
+      "bounds": {
+        "outputField": "files",
+        "maxItemsFromInput": "maxFiles"
+      }
+    },
     "taxonomy.match": {
       "description": "Deterministic orchestrator step, no model call: send every pool member's term to the shared taxonomy service (one taxonomy_resolve round-trip per member — the server checks for an exact name/alias match and otherwise runs its revise_query candidate search). Returns every member annotated with its match (position) or its candidate names, plus the projected unmatched subset the placer receives. Every answer carries the live taxonomy revision it was computed against.",
       "deterministic": true,

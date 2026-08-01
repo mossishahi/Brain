@@ -5,7 +5,7 @@ description: "Preprocess a raw research submission and its attachments into the 
 vars: [submission, typeOptions]
 payload: [submission]
 techniques: [deep-understanding]
-capabilities: [attachment-access]
+capabilities: [attachment-access, code-execution]
 output: processorOutput
 ---
 # Context
