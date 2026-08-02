@@ -137,7 +137,10 @@ Return a single JSON object with exactly these fields:
 {
   "output": {
     "type": "{{type}}",
-    "{{shape}}": { "...": "the sections from the outline above" }
+    "{{shape}}": { "...": "the sections from the outline above" },
+    "requested": [
+      { "title": "<a requested output's title, copied verbatim>", "response": ["<one paragraph per entry>"] }
+    ]
   },
   "novelty": "<only when the shape is paper, resolution, or survey — omit this key entirely otherwise; update it if your revision shifted it>"
 }
@@ -155,6 +158,11 @@ Rules:
 - `output` carries **only** the `{{shape}}` body key; every other shape key (`paper`,
   `resolution`, `verification`, `feasibility`, `critique`, `interpretation`, `survey`,
   `explanation`) must be entirely absent.
+- `output.requested` follows the same contract as your first pass: it exists **exactly when**
+  `input.requestedOutputs` is non-empty — one section per entry, in the same order, each `title`
+  copied verbatim, each `response` the deliverable itself. Re-examine every response against
+  your repaired chain: update the ones your repairs affect, carry the rest as delivered, and
+  keep each one addressed to the submission — never to the review.
 - **Paragraphs:** each paragraph is one array item — and each `submit_step` text exactly one
   paragraph — with no blank line inside it. Never combine multiple paragraphs in one string.
 - **LaTeX dialect:** standard, compilable LaTeX only — inline math `$...$`, display math
