@@ -31,7 +31,9 @@ The task data carries everything you synthesize from:
 - `ideas` — each member's **final** finished output, keyed by member id: an `output` object shaped
   as a **{{shape}}** — the deliverable for a **{{type}}** (see the per-shape reading guide
   below), plus a `novelty` paragraph when the shape is `paper`, `resolution`, or `survey`
-  (omitted otherwise).
+  (omitted otherwise). When the submitter explicitly asked for specific deliverables
+  (`input.requestedOutputs`), each `output` additionally carries `requested` — the member's
+  direct response sections, one per ask, titled after it.
   The members' reasoning chains are deliberately not given to you and must not be reconstructed,
   quoted, or speculated about — synthesize only from these finished outputs.
 - `bridge` — the integration audit conducted after review: each member's novelty claim audited
@@ -75,6 +77,16 @@ the `{{shape}}` entry:
   `commonMisconceptions`. `consensus` = the explanation members converge on; `tensions` = places
   members chose different (possibly conflicting) analogies or emphases — flag and resolve in
   favor of the clearer one; `novelDirections` is often empty.
+
+## Serving the requested outputs
+When the members' outputs carry `requested` sections, the submitter explicitly asked the board
+for those deliverables — `input.requestedOutputs` names each ask. They are first-class results,
+whatever the shape: read every member's response to each ask, weigh where the responses converge
+and where they clash exactly as you weigh the shape sections, and make sure your summary actually
+serves each ask — surface the panel's consolidated answer in the fields where it belongs
+(`consensus` for convergent responses, `tensions` for clashing ones, `actionItems` or
+`applications` where the ask calls for steps or uses). A summary that leaves an explicitly
+requested deliverable buried in the per-member records has not served the submitter.
 
 ## Weighing the integration audit
 Weigh the `bridge` audit — do not redo it. A `challenged` novelty claim weakens that member's

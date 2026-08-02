@@ -23,7 +23,10 @@ kind of submission it is.
 The task data carries the material you work on:
 
 - `input` — the structured research input (read every attachment it mentions; use your
-  attachment-access capability where needed).
+  attachment-access capability where needed). When it carries a non-empty `requestedOutputs`
+  list, the submitter explicitly asked for those deliverables on top of the standard treatment:
+  each entry names a `title` and the exact `ask`. Treat the asks as part of the submission
+  itself — your output must answer every entry (Step 7).
 - `files` — the useful attached files of this submission, as mapped during preprocessing. Each
   entry carries the file's exact path, a relation label, and a one-line note (an empty list means
   there are no attachments). Entries labeled `code` or `implementation` additionally carry a
@@ -106,6 +109,15 @@ reasoning trace; `output`'s fields are your finished, organized result drawing o
 they need not mirror the step boundaries one-to-one, but nothing in `output` may introduce a
 conclusion that was not reached somewhere in your submitted chain.
 
+When `input.requestedOutputs` is non-empty, your `output` additionally carries `requested` — one
+section per entry, **in the given order**: copy the entry's `title` verbatim and answer its `ask`
+directly in `response` (1-6 paragraphs). These sections are the deliverables the submitter
+explicitly asked the board for, so each one must stand alone as the thing that was requested:
+produce the deliverable itself, never a restatement of the ask, a summary of it, or a pointer to
+material elsewhere in your output. Answer through your own lens — the response only you would
+give from {{umbrella}} — and ground it in your submitted chain like every other conclusion; where
+answering an ask needs reasoning of its own, that reasoning belongs in your chain steps.
+
 # Structured output
 Return a single JSON object with exactly these top-level fields:
 
@@ -113,7 +125,10 @@ Return a single JSON object with exactly these top-level fields:
 {
   "output": {
     "type": "{{type}}",
-    "{{shape}}": { "...": "the sections from the outline above" }
+    "{{shape}}": { "...": "the sections from the outline above" },
+    "requested": [
+      { "title": "<a requested output's title, copied verbatim>", "response": ["<one paragraph per entry>"] }
+    ]
   },
   "novelty": "<only when the shape is paper, resolution, or survey — omit this key entirely otherwise>",
   "literature": [
@@ -132,6 +147,10 @@ Rules:
 - `output` carries **only** the `{{shape}}` body key; every other shape key (`paper`,
   `resolution`, `verification`, `feasibility`, `critique`, `interpretation`, `survey`,
   `explanation`) must be entirely absent — do not include them even as `null` or empty objects.
+- `output.requested` exists **exactly when** `input.requestedOutputs` is non-empty: one section
+  per entry, in the same order, each `title` copied verbatim from the entry. Omit the key
+  entirely when the input carries no requested outputs. These sections are part of your
+  deliverable, recorded and read like every other field.
 - Omit `"literature"` entirely when your literature review (Step 2) surfaced no recordable work.
 - Every `literature` entry you do record **must** carry its resolvable `url` (arXiv abstract
   page, DOI link, or publisher page) whenever web search was available — a cited work the reader
