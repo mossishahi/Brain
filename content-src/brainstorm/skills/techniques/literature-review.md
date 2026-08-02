@@ -1,7 +1,7 @@
 ---
 name: literature-review
 kind: technique
-description: "Establish, for a given research input, what already exists: a trusted literature map, the chronological ordering of the relevant works, their citation graph, and an explicit is-this-already-solved assessment — conducted from the using agent's own scientific vantage (department, field, working areas — filled per agent by the runtime) when one is declared, or as a general review aimed at the submission's own area when the vantage lines are empty; carried as working material that the caller positions its own contribution against."
+description: "Establish, for a given research input, what already exists: a trusted literature map, the chronological ordering of the relevant works, their citation graph, and an explicit is-this-already-solved assessment — conducted from the using agent's own scientific vantage (department, field, working areas — filled per agent by the runtime) when one is declared, as an interface review of the literature BETWEEN fields when the vantage is an interdisciplinary seat spanning several fields, or as a general review aimed at the submission's own area when the vantage lines are empty; carried as working material that the caller positions its own contribution against."
 vars: [department, umbrella, subfields]
 capabilities: [web-search]
 ---
@@ -36,6 +36,24 @@ you AIM, never what you ADMIT:
 - **Judge by the vantage's standards.** Relevance, strength of result, credibility of venue,
   seriousness of baseline: assess them as that field assesses them, and let each work's
   relation line say so.
+
+**When the vantage is an interdisciplinary seat** — its field names the space BETWEEN several
+fields rather than one of them (an interdisciplinary department, a field line spanning named
+disciplines, working areas that are interfaces) — this review is an INTERFACE review: the
+literature you map is the literature between the named fields, not any single field's own.
+The same aim/admit discipline applies, sharpened to the seams:
+
+- **Aim at the interfaces.** For each pair of the named fields whose interface plausibly bears
+  on the input, derive at least one facet that combines the two vocabularies — the phenomenon as
+  one field names it joined with the method or object as the other names it — and direct it at
+  the venues, communities, and author groups that publish across those fields. Do not spend
+  facets on any single field's interior; its own seat covers that.
+- **Admit what returns, from either side.** A decisive single-field work still enters the map —
+  read for what it means AT the interface: what it licenses, blocks, or settles for a crossing.
+- **Judge by the interface's standards.** Where an interface community exists, assess relevance,
+  strength, and venue credibility by its norms; where none exists yet, record a work as settling
+  a cross-field point only when it would satisfy BOTH parent fields' standards, and say so in
+  its relation line.
 
 **When the lines above are empty**, no vantage is declared and this is a GENERAL review: aim
 your queries at the submission's own area — the field the input itself belongs to — phrase them

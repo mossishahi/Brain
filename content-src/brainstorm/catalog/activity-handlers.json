@@ -108,6 +108,19 @@
         "outputField": "members",
         "maxItemsFromInput": "panelSize"
       }
+    },
+    "panel.weave": {
+      "description": "Deterministic seat weave, run after panel selection — no model call: append ONE interdisciplinary member whose expertise is the space BETWEEN the seated fields, derived from the seated members' umbrella terms (unique, in seat order) and marked seat=interdisciplinary. The member is a full panel member — it develops, is reviewed, and redevelops like every other seat; only its commenting skill differs, dispatched on the marker. Skipped (panel returned unchanged) when the panel spans fewer than two distinct umbrellas or when adding the seat would exceed maxSeats.",
+      "deterministic": true,
+      "inputs": {
+        "panel": { "kind": "artifact", "schema": "panel" },
+        "maxSeats": { "kind": "positiveInteger" }
+      },
+      "outputSchema": "panel",
+      "bounds": {
+        "outputField": "members",
+        "maxItemsFromInput": "maxSeats"
+      }
     }
   }
 }
