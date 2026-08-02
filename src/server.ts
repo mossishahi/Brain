@@ -30,6 +30,10 @@ import { TaxonomyError, TaxonomyService, type TaxonomySuggestion } from "./taxon
  * to the host runtime.
  */
 
+/** Version of this registry server process (also announced over MCP). */
+const REGISTRY_SERVER_NAME = "brain-content-registry";
+const REGISTRY_SERVER_VERSION = "0.1.0";
+
 export interface ContentRegistryServerOptions {
   readonly port?: number;
   readonly host?: string;
@@ -242,6 +246,102 @@ function resolveStaticFile(
   return file;
 }
 
+interface ServedBundle {
+  readonly id: string;
+  readonly latest: string;
+  readonly versions: readonly string[];
+  readonly releases?: Readonly<Record<string, { readonly notes?: string }>>;
+}
+
+/** The bundles the serving store's index currently lists. */
+function readServedBundles(contentRoot: string): readonly ServedBundle[] {
+  try {
+    const index = JSON.parse(
+      readFileSync(join(contentRoot, "index.json"), "utf8"),
+    ) as { bundles?: ServedBundle[] };
+    return Array.isArray(index.bundles) ? index.bundles : [];
+  } catch {
+    return [];
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * The human landing page at `/`: what this server is, its version, the
+ * bundle versions it serves (latest first, with release notes), and where
+ * the machine interfaces live. This is where the app's brain icon links to.
+ */
+function landingPage(
+  bundles: readonly ServedBundle[],
+  fileCount: number,
+  taxonomy: TaxonomyService | null,
+): string {
+  const bundleRows = bundles
+    .map((bundle) => {
+      const versions = [...bundle.versions].reverse();
+      const rows = versions
+        .map((version) => {
+          const notes = bundle.releases?.[version]?.notes ?? "";
+          const latest = version === bundle.latest;
+          return (
+            `<tr${latest ? ' class="latest"' : ""}>` +
+            `<td><code>${escapeHtml(bundle.id)}@${escapeHtml(version)}</code>` +
+            `${latest ? ' <span class="tag">latest</span>' : ""}</td>` +
+            `<td>${escapeHtml(notes)}</td></tr>`
+          );
+        })
+        .join("");
+      return rows;
+    })
+    .join("");
+  let taxonomyLine = "";
+  if (taxonomy) {
+    try {
+      const stats = taxonomy.stats();
+      taxonomyLine =
+        `<p class="dim">Live shared taxonomy: revision ${stats.revision} · ` +
+        `${stats.total} nodes · ${stats.curated} curated · ${stats.aliases} aliases</p>`;
+    } catch {
+      taxonomyLine = "";
+    }
+  }
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brain Registry</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.55 system-ui, sans-serif; max-width: 720px; margin: 48px auto; padding: 0 20px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .dim { color: color-mix(in srgb, currentColor 55%, transparent); }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  td { border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent); padding: 8px 10px 8px 0; vertical-align: top; }
+  tr.latest td { font-weight: 600; }
+  .tag { font-size: 11px; font-weight: 600; border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
+  code { font-size: 13px; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<h1>Brain Registry</h1>
+<p class="dim">${REGISTRY_SERVER_NAME} v${REGISTRY_SERVER_VERSION} · immutable skill/workflow bundles + the live shared taxonomy · ${fileCount} files served</p>
+<table><tbody>${bundleRows || '<tr><td class="dim">no published bundles</td><td></td></tr>'}</tbody></table>
+${taxonomyLine}
+<p class="dim">Machine interfaces: <a href="/v1/index.json">/v1/index.json</a> · <a href="/health">/health</a> · MCP at <code>/mcp</code>. Published versions are immutable; the Brain app resolves the latest one automatically for every new run.</p>
+</body>
+</html>
+`;
+}
+
 function resourceUri(relativePath: string): string {
   return `brain://file/${relativePath.split("/").map(encodeURIComponent).join("/")}`;
 }
@@ -337,7 +437,7 @@ function createProtocolServer(
   taxonomy: TaxonomyService | null,
 ): Server {
   const server = new Server(
-    { name: "brain-content-registry", version: "0.1.0" },
+    { name: REGISTRY_SERVER_NAME, version: REGISTRY_SERVER_VERSION },
     {
       capabilities: {
         resources: { listChanged: true },
@@ -584,10 +684,21 @@ export async function startContentRegistryServer(
       const url = new URL(req.url ?? "/", `http://${host.includes(":") ? `[${host}]` : host}`);
 
       if (req.method === "GET" && url.pathname === "/health") {
+        // ok/files stay first for existing probes; server + bundle versions
+        // let consumers show exactly what is deployed and served.
         sendText(
           res,
           200,
-          JSON.stringify({ ok: true, files: files.size }),
+          JSON.stringify({
+            ok: true,
+            files: files.size,
+            server: { name: REGISTRY_SERVER_NAME, version: REGISTRY_SERVER_VERSION },
+            bundles: readServedBundles(contentRoot).map((bundle) => ({
+              id: bundle.id,
+              latest: bundle.latest,
+              versions: bundle.versions,
+            })),
+          }),
           "application/json; charset=utf-8",
         );
         return;
@@ -595,6 +706,21 @@ export async function startContentRegistryServer(
       if (!allowRequest(rateWindows, address, requestsPerMinute)) {
         res.setHeader("retry-after", "60");
         sendText(res, 429, "rate limit exceeded");
+        return;
+      }
+
+      if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
+        refreshIfStale();
+        const body = landingPage(readServedBundles(contentRoot), files.size, taxonomy);
+        res.writeHead(200, {
+          "content-type": "text/html; charset=utf-8",
+          "content-length": Buffer.byteLength(body),
+          "cache-control": "no-cache",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "no-referrer",
+          "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
+        });
+        res.end(body);
         return;
       }
 

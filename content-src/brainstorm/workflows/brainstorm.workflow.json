@@ -188,10 +188,10 @@
       {
         "kind": "humanGate",
         "id": "confirm-panel",
-        "notes": "Optional checkpoint before any member starts thinking. The panel may only shrink here, never grow. Unattended runtimes may auto-approve (skippable).",
+        "notes": "Optional checkpoint before any member starts thinking. The automatic selection may only shrink here; the submitter may additionally seat explicit custom members (department, field, 1-3 focuses) — a host capability applied alongside the remove-only edit. Unattended runtimes may auto-approve (skippable), and the host may auto-approve an unanswered gate after a short countdown.",
         "gate": {
           "title": "Confirm the panel",
-          "prompt": "Review the seated panel before the brainstorm starts. Approve it as-is, or remove seats to shrink it. Seats can never be added at this gate.",
+          "prompt": "Review the seated panel before the brainstorm starts. Approve it as-is, remove seats to shrink it, or add your own custom seats (department, field, and 1-3 focuses). Left unanswered, the panel is approved as seated after a short countdown.",
           "show": "panel.members",
           "actions": [
             { "id": "approve", "description": "Proceed with the seated panel as shown." },

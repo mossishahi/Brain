@@ -185,6 +185,44 @@ test("taxonomy tools: exact resolve, candidate names on a miss, tree, and sugges
   }
 });
 
+test("the root page and health announce the server and bundle versions", async () => {
+  const running = await startContentRegistryServer({ port: 0 });
+  try {
+    const committed = JSON.parse(
+      readFileSync(join(defaultContentRoot(), "index.json"), "utf8"),
+    ) as { bundles: Array<{ id: string; latest: string }> };
+    const latest = committed.bundles.find((bundle) => bundle.id === "brainstorm")!.latest;
+
+    // The landing page is what the app's brain icon links to: a human page
+    // naming the server version and every served bundle version.
+    const page = await fetch(`${running.url}/`);
+    assert.equal(page.status, 200);
+    assert.match(page.headers.get("content-type") ?? "", /text\/html/);
+    const html = await page.text();
+    assert.match(html, /Brain Registry/);
+    assert.match(html, /brain-content-registry v0\.1\.0/);
+    assert.ok(html.includes(`brainstorm@${latest}`));
+    assert.match(html, /latest/);
+
+    const health = await fetch(`${running.url}/health`);
+    assert.equal(health.status, 200);
+    const payload = await health.json() as {
+      ok: boolean;
+      server: { name: string; version: string };
+      bundles: Array<{ id: string; latest: string; versions: string[] }>;
+    };
+    assert.equal(payload.ok, true);
+    assert.equal(payload.server.name, "brain-content-registry");
+    assert.match(payload.server.version, /^\d+\.\d+\.\d+$/);
+    const brainstorm = payload.bundles.find((bundle) => bundle.id === "brainstorm");
+    assert.ok(brainstorm);
+    assert.equal(brainstorm.latest, latest);
+    assert.ok(brainstorm.versions.includes(latest));
+  } finally {
+    await running.close();
+  }
+});
+
 test("rate limiting protects content while leaving health available", async () => {
   const running = await startContentRegistryServer({
     port: 0,
