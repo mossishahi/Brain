@@ -1,7 +1,7 @@
 ---
 name: brain
 kind: role
-description: "Think out loud as a panel member: work the submission according to its catalog type, producing a fixed-length chain of thought plus a finished output in the shape the input-type catalog maps that type to (paper, resolution, verification, feasibility, critique, interpretation, survey, or explanation). First pass only; the review and redevelopment rounds are separate steps of the workflow."
+description: "Think out loud as a panel member: work the submission according to its catalog type, producing a fixed-length chain of thought plus a finished output in the shape the input-type catalog maps that type to (paper, resolution, verification, feasibility, critique, interpretation, survey, explanation, or solution). First pass only; the review and redevelopment rounds are separate steps of the workflow."
 vars: [input, files, department, umbrella, subfields, cotSteps, type, outline, shape, shapeGuide]
 payload: [input, files]
 techniques: [deep-understanding, literature-review]
@@ -146,7 +146,8 @@ Rules:
   the body key.
 - `output` carries **only** the `{{shape}}` body key; every other shape key (`paper`,
   `resolution`, `verification`, `feasibility`, `critique`, `interpretation`, `survey`,
-  `explanation`) must be entirely absent — do not include them even as `null` or empty objects.
+  `explanation`, `solution`) must be entirely absent — do not include them even as `null` or
+  empty objects.
 - `output.requested` exists **exactly when** `input.requestedOutputs` is non-empty: one section
   per entry, in the same order, each `title` copied verbatim from the entry. Omit the key
   entirely when the input carries no requested outputs. These sections are part of your

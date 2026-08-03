@@ -77,6 +77,11 @@ the `{{shape}}` entry:
   `commonMisconceptions`. `consensus` = the explanation members converge on; `tensions` = places
   members chose different (possibly conflicting) analogies or emphases — flag and resolve in
   favor of the clearer one; `novelDirections` is often empty.
+- **`solution`**: read each member's `diagnosis`, `candidateSolutions`, `recommendation`, and
+  `validationPlan`. `consensus` = causes and fixes multiple members independently converge on;
+  `tensions` = competing diagnoses or incompatible recommendations, with what would discriminate
+  between them; `actionItems` = the consolidated fix-and-validate sequence, re-ranked across
+  members (the recommended fix first, its validation checks right behind it).
 
 ## Serving the requested outputs
 When the members' outputs carry `requested` sections, the submitter explicitly asked the board

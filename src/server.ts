@@ -395,6 +395,29 @@ const TAXONOMY_TOOLS = [
     },
   },
   {
+    name: "taxonomy_embeddings",
+    description:
+      "The node-embedding index of the LIVE taxonomy's current revision: node metadata " +
+      "(id, name, level, parent) parallel to L2-normalized vectors, plus the embedder " +
+      "manifest (id, dimension, thresholds, verification vectors). Computed and cached " +
+      "server-side so every client matches queries in the exact same space; clients cache " +
+      "the payload per revision and MUST verify their local embedder against the " +
+      "manifest's verification table before trusting their own query vectors.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        knownRevision: {
+          type: "integer",
+          minimum: 1,
+          description:
+            "The revision the client already has cached; when it matches the live " +
+            "revision the payload is elided (unchanged: true).",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: "taxonomy_suggest",
     description:
       "Save one run's placement decisions for the shared taxonomy as their own " +
@@ -499,6 +522,15 @@ function createProtocolServer(
           case "taxonomy_tree": {
             const root = typeof args.root === "string" && args.root.trim() !== "" ? args.root : undefined;
             return toolResult(taxonomy.tree(root));
+          }
+          case "taxonomy_embeddings": {
+            const embeddings = taxonomy.embeddings();
+            const known =
+              typeof args.knownRevision === "number" ? args.knownRevision : undefined;
+            if (known !== undefined && known === embeddings.revision) {
+              return toolResult({ revision: embeddings.revision, unchanged: true });
+            }
+            return toolResult(embeddings);
           }
           case "taxonomy_suggest": {
             if (!Array.isArray(args.entries)) {

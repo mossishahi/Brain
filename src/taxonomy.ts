@@ -31,6 +31,14 @@ import {
 import { dirname, join } from "node:path";
 import { randomUUID } from "node:crypto";
 
+import {
+  EMBEDDER_MANIFEST,
+  nodeEmbedding,
+  roundVector,
+  verifyEmbedder,
+  type EmbedderManifest,
+} from "./embedder.js";
+
 /** The four levels, ordered. A node's children are always the next level down. */
 export const LEVELS = ["domain", "field", "subfield", "topic"] as const;
 export type Level = (typeof LEVELS)[number];
@@ -327,6 +335,41 @@ export class TaxonomyGraph {
     return { query, found: false, status: "NA", revision: this.rev, beta, options, total: ranked.length };
   }
 
+  /**
+   * Metadata snapshot of every node at the current revision (no outline
+   * rendering): the record the embedding index is computed from and the
+   * client rebuilds paths with.
+   */
+  snapshot(): {
+    revision: number;
+    nodes: Array<{
+      id: string;
+      name: string;
+      level: Level;
+      parent?: string;
+      aliases?: string[];
+    }>;
+  } {
+    this.sync();
+    return {
+      revision: this.rev,
+      nodes: this.doc.nodes.map((node) => ({
+        id: node.id,
+        name: node.name,
+        level: node.level,
+        ...(node.parent ? { parent: node.parent } : {}),
+        ...(node.aliases && node.aliases.length > 0 ? { aliases: [...node.aliases] } : {}),
+      })),
+    };
+  }
+
+  /** Ancestor NAMES of a node (root first, excluding the node itself). */
+  ancestorNames(id: string): string[] {
+    this.sync();
+    const chain = this.ancestorsLocal(id);
+    return chain.slice(0, -1).map((node) => node.name);
+  }
+
   /** Names-only outline of the whole latest taxonomy (optionally one branch). */
   tree(rootId?: string): { revision: number; nodeCount: number; outline: string } {
     this.sync();
@@ -501,10 +544,25 @@ export class TaxonomyGraph {
 export interface TaxonomySuggestion {
   /** The pool member the decision is about. */
   readonly term: string;
-  /** matched | place | already_present — the decision kind the client reached. */
+  /** matched | place | already_present | insert | undecided — the decision kind. */
   readonly kind: string;
   /** Structured decision payload as the client recorded it. */
   readonly detail?: unknown;
+}
+
+/** The served node-embedding index of one taxonomy revision. */
+export interface TaxonomyEmbeddingsExport {
+  readonly revision: number;
+  readonly embedder: EmbedderManifest;
+  /** Node metadata, parallel to `vectors`. */
+  readonly nodes: ReadonlyArray<{
+    readonly id: string;
+    readonly name: string;
+    readonly level: Level;
+    readonly parent?: string;
+  }>;
+  /** L2-normalized, rounded vectors, parallel to `nodes`. */
+  readonly vectors: ReadonlyArray<readonly number[]>;
 }
 
 export interface TaxonomyServiceOptions {
@@ -525,6 +583,8 @@ export interface TaxonomyServiceOptions {
 export class TaxonomyService {
   readonly graph: TaxonomyGraph;
   private readonly suggestionsDir: string;
+  private readonly embeddingsDir: string;
+  private embeddingsCache: TaxonomyEmbeddingsExport | null = null;
 
   constructor(options: TaxonomyServiceOptions) {
     const storeFile = join(options.storeDir, "taxonomy.json");
@@ -537,6 +597,16 @@ export class TaxonomyService {
     }
     this.graph = TaxonomyGraph.load(storeFile);
     this.suggestionsDir = join(options.storeDir, "suggestions");
+    this.embeddingsDir = join(options.storeDir, "embeddings");
+    if (!verifyEmbedder(EMBEDDER_MANIFEST)) {
+      // The server's own implementation must reproduce the manifest it
+      // serves; a mismatch means the embedder file was edited without
+      // regenerating the verification table.
+      throw new TaxonomyError(
+        "conflict",
+        "the embedder implementation does not reproduce its own verification vectors — regenerate them (computeVerification) before serving",
+      );
+    }
   }
 
   resolve(query: string, optionLimit?: number): ResolveResult {
@@ -549,6 +619,54 @@ export class TaxonomyService {
 
   stats(): ReturnType<TaxonomyGraph["stats"]> {
     return this.graph.stats();
+  }
+
+  /**
+   * The node-embedding index of the CURRENT revision: one vector per node,
+   * computed server-side with the registry's embedder and cached per
+   * revision (memory + one `embeddings/rev-<N>.json` file), so every client
+   * matches in the exact same space. Recomputed lazily when the live tree
+   * moves to a new revision.
+   */
+  embeddings(): TaxonomyEmbeddingsExport {
+    const revision = this.graph.revision;
+    if (this.embeddingsCache && this.embeddingsCache.revision === revision) {
+      return this.embeddingsCache;
+    }
+    const file = join(this.embeddingsDir, `rev-${revision}-${EMBEDDER_MANIFEST.id}.json`);
+    if (existsSync(file)) {
+      const cached = JSON.parse(readFileSync(file, "utf8")) as TaxonomyEmbeddingsExport;
+      if (cached.revision === revision && cached.embedder?.id === EMBEDDER_MANIFEST.id) {
+        this.embeddingsCache = cached;
+        return cached;
+      }
+    }
+    const snapshot = this.graph.snapshot();
+    const nodes = snapshot.nodes.map((node) => ({
+      id: node.id,
+      name: node.name,
+      level: node.level,
+      ...(node.parent ? { parent: node.parent } : {}),
+    }));
+    const vectors = snapshot.nodes.map((node) =>
+      roundVector(
+        nodeEmbedding({
+          name: node.name,
+          aliases: node.aliases ?? [],
+          ancestors: this.graph.ancestorNames(node.id),
+        }),
+      ),
+    );
+    const built: TaxonomyEmbeddingsExport = {
+      revision: snapshot.revision,
+      embedder: EMBEDDER_MANIFEST,
+      nodes,
+      vectors,
+    };
+    mkdirSync(this.embeddingsDir, { recursive: true });
+    writeFileSync(file, `${JSON.stringify(built)}\n`, "utf8");
+    this.embeddingsCache = built;
+    return built;
   }
 
   /**

@@ -127,8 +127,22 @@ test("taxonomy tools: exact resolve, candidate names on a miss, tree, and sugges
     const tools = await client.listTools();
     assert.deepEqual(
       tools.tools.map((tool) => tool.name).sort(),
-      ["taxonomy_resolve", "taxonomy_suggest", "taxonomy_tree"],
+      ["taxonomy_embeddings", "taxonomy_resolve", "taxonomy_suggest", "taxonomy_tree"],
     );
+
+    // The node-embedding index: metadata parallel to vectors, the embedder
+    // manifest with its conformance table, and the revision-elision path.
+    const embeddings = await toolJson("taxonomy_embeddings", {});
+    assert.ok(embeddings.revision >= 1);
+    assert.equal(embeddings.embedder.id, "hash-ngram-v1");
+    assert.equal(embeddings.nodes.length, embeddings.vectors.length);
+    assert.ok(embeddings.nodes.length > 4000);
+    assert.equal(embeddings.vectors[0].length, embeddings.embedder.dim);
+    assert.ok(embeddings.embedder.verification.length > 0);
+    const unchanged = await toolJson("taxonomy_embeddings", {
+      knownRevision: embeddings.revision,
+    });
+    assert.deepEqual(unchanged, { revision: embeddings.revision, unchanged: true });
 
     // Exact hit: position + the revision it was answered from.
     const hit = await toolJson("taxonomy_resolve", { query: "artificial INTELLIGENCE" });

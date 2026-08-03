@@ -157,7 +157,7 @@ Rules:
   in the shape its type calls for, not the review history.
 - `output` carries **only** the `{{shape}}` body key; every other shape key (`paper`,
   `resolution`, `verification`, `feasibility`, `critique`, `interpretation`, `survey`,
-  `explanation`) must be entirely absent.
+  `explanation`, `solution`) must be entirely absent.
 - `output.requested` follows the same contract as your first pass: it exists **exactly when**
   `input.requestedOutputs` is non-empty — one section per entry, in the same order, each `title`
   copied verbatim, each `response` the deliverable itself. Re-examine every response against

@@ -1,8 +1,8 @@
 {
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
-  "version": "0.13.0",
-  "description": "Multidisciplinary scientific panel: structure the submission (classifying its type against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment re-emits the complete chain with unaffected steps copied verbatim — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
+  "version": "0.14.0",
+  "description": "Multidisciplinary scientific panel: structure the submission (preprocessing reads everything and builds the structured input plus the per-file relation map; a separate reasoning stage then classifies it against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline — by the submitter's actual ask, never the domain narrative, offering a primary and an alternative reading plus the explicitly-or-unmistakably requested outputs, with a skippable countdown gate where the submitter confirms or revises the decision before any panel cost is incurred), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment re-emits the complete chain with unaffected steps copied verbatim — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
       "description": "Maximum number of seats the deterministic panel.select activity may produce.",
@@ -42,14 +42,58 @@
       {
         "kind": "agent",
         "id": "process-input",
-        "notes": "Turn the raw submission into the structured input every downstream step reads. session.submission is the runtime-provided raw prompt plus attachment descriptors.",
+        "notes": "Turn the raw submission into the structured input every downstream step reads. session.submission is the runtime-provided raw prompt plus attachment descriptors. Deliberately does NOT classify: the type decision is the next stage's job, made from this record.",
         "skill": "processor",
         "route": "reasoning",
         "bind": {
-          "submission": "session.submission",
-          "typeOptions": "catalog.inputTypes.types"
+          "submission": "session.submission"
         },
         "output": { "key": "input", "schema": "processorOutput" }
+      },
+      {
+        "kind": "agent",
+        "id": "classify-input",
+        "notes": "Dedicated classification stage: a pure reasoning pass over the structured input and the attachment relation map (no file access) that decides the submission's type by the submitter's actual ask — explicit or implied — never by the domain narrative. Returns the primary reading, the strongest alternative (the two options the confirmation gate offers), the panel's chain-of-thought step count, the requested outputs including unmistakably implied asks, and the embedding input: the submission distilled into one paper-style title+abstract plus 3-8 single-concept facets, the clean retrieval text the semantic panel-assembly stage embeds and matches against the shared taxonomy.",
+        "skill": "classifier",
+        "route": "reasoning",
+        "bind": {
+          "input": { "ref": "input", "omit": ["files"] },
+          "files": "input.files",
+          "typeOptions": "catalog.inputTypes.types"
+        },
+        "output": { "key": "classification", "schema": "taskClassification" }
+      },
+      {
+        "kind": "activity",
+        "id": "apply-classification",
+        "notes": "Deterministic orchestrator step: fold the classifier's primary decision (type, cotSteps, requestedOutputs) into the structured input and REPLACE it, so every later task reads one merged record. The confirmation gate right after may overwrite type and requestedOutputs with the submitter's choice.",
+        "handler": "classification.apply",
+        "bind": {
+          "input": "input",
+          "classification": "classification",
+          "maxFiles": "params.maxAttachmentFiles"
+        },
+        "output": { "key": "input", "schema": "processorOutput" }
+      },
+      {
+        "kind": "humanGate",
+        "id": "confirm-classification",
+        "notes": "Optional checkpoint before any panel cost is incurred: the submitter confirms the classifier's primary reading, switches to the alternative or any other catalog type, and edits the requested outputs (select, add, remove). Left unanswered, the primary reading proceeds after a short countdown; unattended runtimes may auto-approve (skippable).",
+        "gate": {
+          "title": "Confirm the submission type",
+          "prompt": "Review how the submission was read before the panel is assembled. Approve the primary reading, or revise it: pick the alternative (or any listed type) and adjust the requested outputs the panel must answer. Left unanswered, the primary reading proceeds after a short countdown.",
+          "show": "classification",
+          "actions": [
+            { "id": "approve", "description": "Proceed with the classifier's primary reading as merged." },
+            {
+              "id": "revise",
+              "description": "Proceed with a revised reading: a different catalog type and/or an edited requested-output list.",
+              "edits": "input",
+              "editRule": "classification"
+            }
+          ]
+        },
+        "skippable": true
       },
       {
         "kind": "activity",
@@ -135,10 +179,11 @@
       {
         "kind": "activity",
         "id": "match-taxonomy",
-        "notes": "Deterministic orchestrator step, no model call: one taxonomy_resolve round-trip per pool member against the LIVE shared taxonomy on the registry — exact name/alias match, else the server-side revise_query candidate search. Output carries every member's match or candidate names, the unmatched projection for the placer, and the taxonomy revision answered from.",
+        "notes": "Deterministic orchestrator step, no model call: the HYBRID matching lane. Pillars first — one taxonomy_resolve round-trip per pool member against the LIVE shared taxonomy (exact name/alias match, untouchable). Then the semantic lane over the registry-served node-embedding index: still-unmatched terms are scored by cosine plus a small active-region boost warmed by the classifier's facets and the exact-match landings; an unambiguous score above the served threshold auto-matches, everything else carries its scored top candidates to the placer. Fail-safe: no served index or a conformance-failing local embedder turns the lane off and matching behaves exactly as before. Output carries every member's match or candidates, the unmatched projection for the placer, the lane status, and the taxonomy revision answered from.",
         "handler": "taxonomy.match",
         "bind": {
           "pool": "pool",
+          "classification": "classification",
           "maxMembers": "params.maxPoolMembers"
         },
         "output": { "key": "poolMatches", "schema": "poolMatches" }
