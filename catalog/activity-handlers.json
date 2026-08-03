@@ -1,6 +1,20 @@
 {
-  "version": "0.1.0",
+  "version": "0.3.0",
   "handlers": {
+    "classification.apply": {
+      "description": "Deterministic orchestrator step: fold the classifier's primary decision into the structured input — type and cotSteps written in, requestedOutputs replaced (omitted when empty) — and return the merged record that replaces `input` for every later task. The file map rides through unchanged; the confirmation gate downstream may overwrite type and requestedOutputs with the submitter's choice.",
+      "deterministic": true,
+      "inputs": {
+        "input": { "kind": "artifact", "schema": "processorOutput" },
+        "classification": { "kind": "artifact", "schema": "taskClassification" },
+        "maxFiles": { "kind": "positiveInteger" }
+      },
+      "outputSchema": "processorOutput",
+      "bounds": {
+        "outputField": "files",
+        "maxItemsFromInput": "maxFiles"
+      }
+    },
     "attachments.useful": {
       "description": "Project the processor's annotated file map to the entries whose relation label is not NA, preserving order. This is the only file list later model calls receive.",
       "deterministic": true,
@@ -55,10 +69,11 @@
       }
     },
     "taxonomy.match": {
-      "description": "Deterministic orchestrator step, no model call: send every pool member's term to the shared taxonomy service (one taxonomy_resolve round-trip per member — the server checks for an exact name/alias match and otherwise runs its revise_query candidate search). Returns every member annotated with its match (position) or its candidate names, plus the projected unmatched subset the placer receives. Every answer carries the live taxonomy revision it was computed against.",
+      "description": "Deterministic orchestrator step, no model call: the hybrid matching lane. Pillars decide — one taxonomy_resolve round-trip per pool member (exact name/alias match against the LIVE shared taxonomy). The semantic lane proposes — still-unmatched terms are scored against the registry-served node-embedding index (cosine plus a small active-region boost warmed by the classifier's facets and the exact-match landings, thresholds exactly as served in the embedder manifest): an unambiguous score above tauMatch auto-matches with matchedOn=embedding, everything else carries its scored top candidates for the placer to referee. Fail-safe: without a served index, or when the local embedder fails the served conformance vectors, the lane is off and matching behaves exactly as before it existed. Every answer carries the live taxonomy revision and the lane status.",
       "deterministic": true,
       "inputs": {
         "pool": { "kind": "artifact", "schema": "pool" },
+        "classification": { "kind": "artifact", "schema": "taskClassification" },
         "maxMembers": { "kind": "positiveInteger" }
       },
       "outputSchema": "poolMatches",
