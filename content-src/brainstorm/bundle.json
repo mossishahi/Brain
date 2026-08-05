@@ -9,7 +9,8 @@
       "catalog/activity-handlers.json",
       "catalog/input-types.json",
       "catalog/verdicts.json",
-      "catalog/departments.json"
+      "catalog/departments.json",
+      "catalog/taxonomy.json"
     ]
   }
 }
