@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
   createServer,
@@ -9,6 +9,7 @@ import {
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -59,6 +60,14 @@ export interface ContentRegistryServerOptions {
   readonly maxBodyBytes?: number;
   /** Maximum simultaneous MCP sessions. Default 500. */
   readonly maxSessions?: number;
+  /**
+   * Trust the last X-Forwarded-For hop for rate-limit keying. Defaults to
+   * trusting it only when the immediate peer is loopback (the documented
+   * reverse-proxy deployment); set false to always key on the socket address.
+   */
+  readonly trustProxy?: boolean;
+  /** Close MCP sessions idle for longer than this. Defaults to 30 minutes. */
+  readonly sessionIdleTimeoutSeconds?: number;
   /** Emits structured access records; disabled by default. */
   readonly accessLog?: (record: ContentRegistryAccessRecord) => void;
   /**
@@ -111,12 +120,34 @@ interface RateWindow {
   resetAt: number;
 }
 
-function remoteAddress(req: IncomingMessage): string {
+/**
+ * The rate-limit key for a request.
+ *
+ * A reverse proxy APPENDS the peer it saw to any client-supplied
+ * X-Forwarded-For, so only the LAST hop is trustworthy — the leading elements
+ * are whatever the client sent. Reading the first element (as this once did) let
+ * any client rotate a fabricated address per request, which both bypassed the
+ * limit entirely and grew the window map with arbitrary attacker-chosen keys.
+ *
+ * The header is consulted ONLY when the immediate peer is a trusted proxy;
+ * otherwise the socket address is the only thing worth keying on.
+ */
+function remoteAddress(req: IncomingMessage, trustProxy: boolean): string {
+  const socketAddress = req.socket.remoteAddress ?? "unknown";
+  if (!trustProxy) return socketAddress;
   const forwarded = req.headers["x-forwarded-for"];
   if (typeof forwarded === "string" && forwarded.length > 0) {
-    return forwarded.split(",")[0]!.trim();
+    const hops = forwarded.split(",");
+    const nearest = hops[hops.length - 1]!.trim();
+    if (nearest.length > 0) return nearest;
   }
-  return req.socket.remoteAddress ?? "unknown";
+  return socketAddress;
+}
+
+/** Whether the immediate peer is a loopback address, i.e. a local reverse proxy. */
+function isLoopbackPeer(req: IncomingMessage): boolean {
+  const address = req.socket.remoteAddress ?? "";
+  return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
 }
 
 function allowRequest(
@@ -152,21 +183,48 @@ export function defaultContentRoot(): string {
  * index. Returns true when the store changed. Delegates to the same script
  * used by CI and the app test suites, so there is exactly one materializer.
  */
+function materializerArgs(repoRoot: string, storeRoot: string, fetchTags: boolean): string[] {
+  return [
+    fileURLToPath(new URL("../../scripts/materialize-store.mjs", import.meta.url)),
+    "--repo",
+    repoRoot,
+    "--store",
+    storeRoot,
+    "--quiet",
+    ...(fetchTags ? ["--fetch"] : []),
+  ];
+}
+
+/** Synchronous materialization, used once at startup before the port opens. */
 function materializeStore(repoRoot: string, storeRoot: string, fetchTags: boolean): boolean {
   const before = readIndexText(storeRoot);
-  execFileSync(
-    process.execPath,
-    [
-      fileURLToPath(new URL("../../scripts/materialize-store.mjs", import.meta.url)),
-      "--repo",
-      repoRoot,
-      "--store",
-      storeRoot,
-      "--quiet",
-      ...(fetchTags ? ["--fetch"] : []),
-    ],
-    { stdio: ["ignore", "ignore", "inherit"] },
-  );
+  execFileSync(process.execPath, materializerArgs(repoRoot, storeRoot, fetchTags), {
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  return readIndexText(storeRoot) !== before;
+}
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * Off-request materialization. The rescan spawns a child process and — with
+ * fetchTags — performs a NETWORK git fetch, so running it inside a request
+ * handler stalled the whole single-threaded server for its full duration and
+ * queued every concurrent request behind it. Refreshes now run on a timer and
+ * requests are always answered from the store as it currently stands
+ * (stale-while-revalidate).
+ */
+async function materializeStoreAsync(
+  repoRoot: string,
+  storeRoot: string,
+  fetchTags: boolean,
+  timeoutMs: number,
+): Promise<boolean> {
+  const before = readIndexText(storeRoot);
+  await execFileAsync(process.execPath, materializerArgs(repoRoot, storeRoot, fetchTags), {
+    timeout: timeoutMs,
+    killSignal: "SIGKILL",
+  });
   return readIndexText(storeRoot) !== before;
 }
 
@@ -635,6 +693,8 @@ export async function startContentRegistryServer(
   const requestsPerMinute = options.requestsPerMinute ?? 300;
   const maxBodyBytes = options.maxBodyBytes ?? 1024 * 1024;
   const maxSessions = options.maxSessions ?? 500;
+  const trustProxy = options.trustProxy;
+  const sessionIdleMs = (options.sessionIdleTimeoutSeconds ?? 1800) * 1000;
   for (const [name, value] of [
     ["requestsPerMinute", requestsPerMinute],
     ["maxBodyBytes", maxBodyBytes],
@@ -675,7 +735,7 @@ export async function startContentRegistryServer(
 
   const sessions = new Map<
     string,
-    { transport: StreamableHTTPServerTransport; server: Server }
+    { transport: StreamableHTTPServerTransport; server: Server; lastSeenAt: number }
   >();
   const rateWindows = new Map<string, RateWindow>();
 
@@ -683,23 +743,38 @@ export async function startContentRegistryServer(
   // request after the TTL: the store gains the version, the file map is
   // rebuilt, and connected MCP clients get a resources list_changed push.
   let lastScanAt = Date.now();
-  const refreshIfStale = (): void => {
-    if (!releaseMode || Date.now() - lastScanAt < refreshTtlMs) return;
+  let refreshing = false;
+  const refreshNow = async (): Promise<void> => {
+    if (refreshing) return;
+    refreshing = true;
     lastScanAt = Date.now();
     try {
-      if (!materializeStore(repoRoot, contentRoot, fetchTags)) return;
+      if (!(await materializeStoreAsync(repoRoot, contentRoot, fetchTags, refreshTtlMs))) return;
       files = new Map(listFiles(contentRoot).map((file) => [file.relativePath, file]));
       for (const { server } of sessions.values()) {
         void server.sendResourceListChanged();
       }
     } catch {
-      // A failed rescan leaves the previous store serving; retried after TTL.
+      // A failed rescan leaves the previous store serving; retried on the next tick.
+    } finally {
+      refreshing = false;
     }
+  };
+  /**
+   * Requests never wait for a rescan: this only SCHEDULES one when the store is
+   * stale and returns immediately, so the current store is served while the
+   * refresh happens in the background.
+   */
+  const refreshIfStale = (): void => {
+    if (!releaseMode || refreshing || Date.now() - lastScanAt < refreshTtlMs) return;
+    void refreshNow();
   };
 
   const httpServer = createServer(async (req, res) => {
     const startedAt = Date.now();
-    const address = remoteAddress(req);
+    // Deployment shape: Caddy terminates TLS and proxies to loopback, so a
+    // loopback peer is the trusted proxy and its appended hop is the real client.
+    const address = remoteAddress(req, trustProxy ?? isLoopbackPeer(req));
     res.setHeader("x-content-type-options", "nosniff");
     res.setHeader("referrer-policy", "no-referrer");
     res.once("finish", () => {
@@ -774,6 +849,7 @@ export async function startContentRegistryServer(
       const known =
         typeof sessionId === "string" ? sessions.get(sessionId) : undefined;
       if (known) {
+        known.lastSeenAt = Date.now();
         await known.transport.handleRequest(
           req,
           res,
@@ -801,7 +877,7 @@ export async function startContentRegistryServer(
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id) => {
-          sessions.set(id, { transport, server: protocolServer });
+          sessions.set(id, { transport, server: protocolServer, lastSeenAt: Date.now() });
         },
       });
       transport.onclose = () => {
@@ -833,6 +909,22 @@ export async function startContentRegistryServer(
 
   const port = await new Promise<number>((resolvePort, reject) => {
     httpServer.once("error", reject);
+    // One background timer owns both periodic duties. Sessions are otherwise
+    // only removed on a clean transport close, so abandoned ones (a sleeping
+    // laptop, a dropped network, a SIGKILLed worker) accumulated until
+    // maxSessions was exhausted and every new client got a 503 until restart.
+    const maintenance = setInterval(() => {
+      refreshIfStale();
+      const cutoff = Date.now() - sessionIdleMs;
+      for (const [id, session] of sessions) {
+        if (session.lastSeenAt > cutoff) continue;
+        sessions.delete(id);
+        void session.transport.close().catch(() => undefined);
+      }
+    }, Math.min(refreshTtlMs, 60_000));
+    maintenance.unref();
+    httpServer.once("close", () => clearInterval(maintenance));
+
     httpServer.listen(options.port ?? 0, host, () => {
       httpServer.off("error", reject);
       const address = httpServer.address();
