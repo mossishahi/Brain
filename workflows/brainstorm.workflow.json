@@ -1,7 +1,7 @@
 {
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Multidisciplinary scientific panel: structure the submission (preprocessing reads everything and builds the structured input plus the per-file relation map; a separate reasoning stage then classifies it against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline — by the submitter's actual ask, never the domain narrative, offering a primary and an alternative reading plus the explicitly-or-unmistakably requested outputs, with a skippable countdown gate where the submitter confirms or revises the decision before any panel cost is incurred), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment re-emits the complete chain with unaffected steps copied verbatim — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
@@ -33,6 +33,12 @@
       "default": 13,
       "min": 3,
       "max": 13
+    },
+    "maxReviewRounds": {
+      "description": "Review rounds permitted at one walk position: the initial review plus at most (maxReviewRounds - 1) redevelopments. The ONLY place this budget is declared — the loop bound and the redevelop guard both derive from it.",
+      "default": 4,
+      "min": 1,
+      "max": 10
     }
   },
   "root": {
@@ -48,7 +54,10 @@
         "bind": {
           "submission": "session.submission"
         },
-        "output": { "key": "input", "schema": "processorOutput" }
+        "output": {
+          "key": "input",
+          "schema": "processorOutput"
+        }
       },
       {
         "kind": "agent",
@@ -57,11 +66,19 @@
         "skill": "classifier",
         "route": "reasoning",
         "bind": {
-          "input": { "ref": "input", "omit": ["files"] },
+          "input": {
+            "ref": "input",
+            "omit": [
+              "files"
+            ]
+          },
           "files": "input.files",
-          "typeOptions": "catalog.inputTypes.types"
+          "typeOptions": "bundle.inputTypes.types"
         },
-        "output": { "key": "classification", "schema": "taskClassification" }
+        "output": {
+          "key": "classification",
+          "schema": "taskClassification"
+        }
       },
       {
         "kind": "activity",
@@ -73,7 +90,10 @@
           "classification": "classification",
           "maxFiles": "params.maxAttachmentFiles"
         },
-        "output": { "key": "input", "schema": "processorOutput" }
+        "output": {
+          "key": "input",
+          "schema": "processorOutput"
+        }
       },
       {
         "kind": "humanGate",
@@ -84,7 +104,10 @@
           "prompt": "Review how the submission was read before the panel is assembled. Approve the primary reading, or revise it: pick the alternative (or any listed type) and adjust the requested outputs the panel must answer. Left unanswered, the primary reading proceeds after a short countdown.",
           "show": "classification",
           "actions": [
-            { "id": "approve", "description": "Proceed with the classifier's primary reading as merged." },
+            {
+              "id": "approve",
+              "description": "Proceed with the classifier's primary reading as merged."
+            },
             {
               "id": "revise",
               "description": "Proceed with a revised reading: a different catalog type and/or an edited requested-output list.",
@@ -104,7 +127,10 @@
           "input": "input",
           "maxFiles": "params.maxAttachmentFiles"
         },
-        "output": { "key": "usefulFiles", "schema": "usefulFiles" }
+        "output": {
+          "key": "usefulFiles",
+          "schema": "usefulFiles"
+        }
       },
       {
         "kind": "activity",
@@ -115,7 +141,10 @@
           "input": "input",
           "maxFiles": "params.maxAttachmentFiles"
         },
-        "output": { "key": "ignoredFiles", "schema": "ignoredFiles" }
+        "output": {
+          "key": "ignoredFiles",
+          "schema": "ignoredFiles"
+        }
       },
       {
         "kind": "activity",
@@ -126,13 +155,19 @@
           "files": "usefulFiles",
           "maxFiles": "params.maxAttachmentFiles"
         },
-        "output": { "key": "codeFiles", "schema": "codeFiles" }
+        "output": {
+          "key": "codeFiles",
+          "schema": "codeFiles"
+        }
       },
       {
         "kind": "condition",
         "id": "maybe-annotate-code",
         "notes": "The code-annotation pass runs only when the submission actually carries code files; a code-free run skips it without a model call.",
-        "if": { "ref": "codeFiles.count", "notEquals": 0 },
+        "if": {
+          "ref": "codeFiles.count",
+          "notEquals": 0
+        },
         "then": {
           "kind": "sequence",
           "id": "annotate-code-flow",
@@ -144,10 +179,18 @@
               "skill": "code-annotator",
               "route": "balanced",
               "bind": {
-                "input": { "ref": "input", "omit": ["files"] },
+                "input": {
+                  "ref": "input",
+                  "omit": [
+                    "files"
+                  ]
+                },
                 "files": "codeFiles.files"
               },
-              "output": { "key": "codeAnnotations", "schema": "codeAnnotations" }
+              "output": {
+                "key": "codeAnnotations",
+                "schema": "codeAnnotations"
+              }
             },
             {
               "kind": "activity",
@@ -159,7 +202,10 @@
                 "annotations": "codeAnnotations",
                 "maxFiles": "params.maxAttachmentFiles"
               },
-              "output": { "key": "usefulFiles", "schema": "usefulFiles" }
+              "output": {
+                "key": "usefulFiles",
+                "schema": "usefulFiles"
+              }
             }
           ]
         }
@@ -171,10 +217,18 @@
         "skill": "pool-builder",
         "route": "reasoning",
         "bind": {
-          "input": { "ref": "input", "omit": ["files"] },
+          "input": {
+            "ref": "input",
+            "omit": [
+              "files"
+            ]
+          },
           "files": "usefulFiles.files"
         },
-        "output": { "key": "pool", "schema": "pool" }
+        "output": {
+          "key": "pool",
+          "schema": "pool"
+        }
       },
       {
         "kind": "activity",
@@ -186,7 +240,10 @@
           "classification": "classification",
           "maxMembers": "params.maxPoolMembers"
         },
-        "output": { "key": "poolMatches", "schema": "poolMatches" }
+        "output": {
+          "key": "poolMatches",
+          "schema": "poolMatches"
+        }
       },
       {
         "kind": "agent",
@@ -195,10 +252,18 @@
         "skill": "placer",
         "route": "reasoning",
         "bind": {
-          "input": { "ref": "input", "omit": ["files"] },
+          "input": {
+            "ref": "input",
+            "omit": [
+              "files"
+            ]
+          },
           "unmatched": "poolMatches.unmatched"
         },
-        "output": { "key": "placements", "schema": "placements" }
+        "output": {
+          "key": "placements",
+          "schema": "placements"
+        }
       },
       {
         "kind": "activity",
@@ -210,7 +275,10 @@
           "placements": "placements",
           "maxMembers": "params.maxPoolMembers"
         },
-        "output": { "key": "suggestionReceipt", "schema": "suggestionReceipt" }
+        "output": {
+          "key": "suggestionReceipt",
+          "schema": "suggestionReceipt"
+        }
       },
       {
         "kind": "activity",
@@ -223,18 +291,24 @@
           "placements": "placements",
           "maxDepartments": "params.maxDepartments"
         },
-        "output": { "key": "experts", "schema": "experts" }
+        "output": {
+          "key": "experts",
+          "schema": "experts"
+        }
       },
       {
         "kind": "activity",
         "id": "select-panel",
-        "notes": "Provider-neutral deterministic runtime transform. The registered panel.select handler re-weights every umbrella as its own count times the sum of its subfields' counts, seats the panelSize highest, and gives each seat all of its umbrella's subfields; equal scores keep tree order.",
+        "notes": "Provider-neutral deterministic runtime transform, no model call. The registered panel.select handler mixes every department/umbrella/topic node into one queue ordered by count x relevance, seats the highest while capacity remains, and prefers the more specific node when a descendant would seat itself; see the handler's own contract in catalog/activity-handlers.json for the authoritative algorithm.",
         "handler": "panel.select",
         "bind": {
           "experts": "experts",
           "panelSize": "params.panelSize"
         },
-        "output": { "key": "panel", "schema": "panel" }
+        "output": {
+          "key": "panel",
+          "schema": "panel"
+        }
       },
       {
         "kind": "activity",
@@ -245,7 +319,10 @@
           "panel": "panel",
           "maxSeats": "params.maxSeats"
         },
-        "output": { "key": "panel", "schema": "panel" }
+        "output": {
+          "key": "panel",
+          "schema": "panel"
+        }
       },
       {
         "kind": "humanGate",
@@ -256,7 +333,10 @@
           "prompt": "Review the seated panel before the brainstorm starts. Approve it as-is, remove seats to shrink it, or add your own custom seats (department, field, and 1-3 focuses). Left unanswered, the panel is approved as seated after a short countdown.",
           "show": "panel.members",
           "actions": [
-            { "id": "approve", "description": "Proceed with the seated panel as shown." },
+            {
+              "id": "approve",
+              "description": "Proceed with the seated panel as shown."
+            },
             {
               "id": "shrink",
               "description": "Remove one or more seats, then proceed with the remaining panel.",
@@ -280,19 +360,28 @@
           "skill": "brain",
           "route": "reasoning",
           "bind": {
-            "input": { "ref": "input", "omit": ["files"] },
+            "input": {
+              "ref": "input",
+              "omit": [
+                "files"
+              ]
+            },
             "files": "usefulFiles.files",
             "department": "member.department",
             "umbrella": "member.umbrella",
             "subfields": "member.subfields",
             "cotSteps": "input.cotSteps",
             "type": "input.type",
-            "outline": "catalog.inputTypes.outlines[input.type]",
-            "shape": "catalog.inputTypes.shapes[input.type]",
-            "shapeGuide": "catalog.inputTypes.shapeGuides[input.type]"
+            "outline": "bundle.inputTypes.outlines[input.type]",
+            "shape": "bundle.inputTypes.shapes[input.type]",
+            "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]"
           },
-          "output": { "key": "ideas[member.id]", "schema": "brainIdea" }
-        }
+          "output": {
+            "key": "ideas[member.id]",
+            "schema": "brainIdea"
+          }
+        },
+        "maxConcurrency": 6
       },
       {
         "kind": "forEach",
@@ -312,10 +401,21 @@
           "body": {
             "kind": "repeatUntil",
             "id": "review-round",
-            "notes": "One iteration = one review round at the current walk position: gather comments (each targeting the current step or any earlier one), judge over the actual chain, and redevelop if the judge did not Pass. Bounded: round 1 is the initial review and at most 3 redevelopments follow (maxIterations 4). onExhausted=proceed is the forced pass: after the last permitted round the chain stands as-is and the walk advances. review.allowedVerdicts is computed by the runtime from catalog.verdicts.sequencing and this position's previous round (a Build may not immediately follow a Build); review.history is the member's anonymized objection ledger, refreshed by the runtime every round.",
-            "maxIterations": 4,
+            "notes": "One iteration = one review round at the current walk position: gather comments (each targeting the current step or any earlier one), judge over the actual chain, and redevelop if the judge did not Pass. Bounded by the maxReviewRounds param — the loop compiles to that param's declared ceiling and exits on the runtime-stamped reviews[member.id].finalRound flag, so the budget is declared in exactly ONE place. onExhausted=proceed is the backstop forced pass. reviews[member.id].allowedVerdicts is computed by the runtime from bundle.verdicts.sequencing and this position's previous round (a Build may not immediately follow a Build); reviews[member.id].history is the seat's anonymized objection ledger, refreshed every round. All review state is seat-qualified so two members' walks never collide.",
+            "maxIterations": "params.maxReviewRounds",
             "onExhausted": "proceed",
-            "until": { "ref": "round.decision.verdict", "equals": "Pass" },
+            "until": {
+              "any": [
+                {
+                  "ref": "reviews[member.id].current.decision.verdict",
+                  "equals": "Pass"
+                },
+                {
+                  "ref": "reviews[member.id].finalRound",
+                  "equals": true
+                }
+              ]
+            },
             "body": {
               "kind": "sequence",
               "id": "review-round-body",
@@ -331,7 +431,10 @@
                   "body": {
                     "kind": "condition",
                     "id": "dispatch-comment",
-                    "if": { "ref": "commentor.seat", "equals": "interdisciplinary" },
+                    "if": {
+                      "ref": "commentor.seat",
+                      "equals": "interdisciplinary"
+                    },
                     "then": {
                       "kind": "agent",
                       "id": "comment-step-bridge",
@@ -339,20 +442,31 @@
                       "skill": "interdisciplinary-commentor",
                       "route": "reasoning",
                       "bind": {
-                        "input": { "ref": "input", "omit": ["files"] },
+                        "input": {
+                          "ref": "input",
+                          "omit": [
+                            "files"
+                          ]
+                        },
                         "files": "usefulFiles.files",
                         "department": "commentor.department",
                         "umbrella": "commentor.umbrella",
                         "subfields": "commentor.subfields",
                         "roster": "panel.members",
-                        "chain": { "ref": "ideas[member.id].cot", "through": "stepIndex" },
+                        "chain": {
+                          "ref": "ideas[member.id].cot",
+                          "through": "stepIndex"
+                        },
                         "currentStep": "stepIndex",
-                        "history": "review.history",
-                        "verdictOptions": "review.allowedVerdicts",
+                        "history": "reviews[member.id].history",
+                        "verdictOptions": "reviews[member.id].allowedVerdicts",
                         "type": "input.type",
-                        "typeGuidance": "catalog.inputTypes.guidance[input.type]"
+                        "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                       },
-                      "output": { "key": "round.comments[commentor.id]", "schema": "comment" }
+                      "output": {
+                        "key": "reviews[member.id].current.comments[commentor.id]",
+                        "schema": "comment"
+                      }
                     },
                     "else": {
                       "kind": "agent",
@@ -360,21 +474,33 @@
                       "skill": "commentor",
                       "route": "reasoning",
                       "bind": {
-                        "input": { "ref": "input", "omit": ["files"] },
+                        "input": {
+                          "ref": "input",
+                          "omit": [
+                            "files"
+                          ]
+                        },
                         "files": "usefulFiles.files",
                         "department": "commentor.department",
                         "umbrella": "commentor.umbrella",
                         "subfields": "commentor.subfields",
-                        "chain": { "ref": "ideas[member.id].cot", "through": "stepIndex" },
+                        "chain": {
+                          "ref": "ideas[member.id].cot",
+                          "through": "stepIndex"
+                        },
                         "currentStep": "stepIndex",
-                        "history": "review.history",
-                        "verdictOptions": "review.allowedVerdicts",
+                        "history": "reviews[member.id].history",
+                        "verdictOptions": "reviews[member.id].allowedVerdicts",
                         "type": "input.type",
-                        "typeGuidance": "catalog.inputTypes.guidance[input.type]"
+                        "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                       },
-                      "output": { "key": "round.comments[commentor.id]", "schema": "comment" }
+                      "output": {
+                        "key": "reviews[member.id].current.comments[commentor.id]",
+                        "schema": "comment"
+                      }
                     }
-                  }
+                  },
+                  "maxConcurrency": 6
                 },
                 {
                   "kind": "agent",
@@ -383,26 +509,44 @@
                   "skill": "judge",
                   "route": "reasoning",
                   "bind": {
-                    "input": { "ref": "input", "omit": ["files"] },
+                    "input": {
+                      "ref": "input",
+                      "omit": [
+                        "files"
+                      ]
+                    },
                     "files": "usefulFiles.files",
-                    "chain": { "ref": "ideas[member.id].cot", "through": "stepIndex" },
-                    "comments": "round.comments",
+                    "chain": {
+                      "ref": "ideas[member.id].cot",
+                      "through": "stepIndex"
+                    },
+                    "comments": "reviews[member.id].current.comments",
                     "currentStep": "stepIndex",
-                    "history": "review.history",
-                    "verdictOptions": "review.allowedVerdicts",
+                    "history": "reviews[member.id].history",
+                    "verdictOptions": "reviews[member.id].allowedVerdicts",
                     "type": "input.type",
-                    "typeGuidance": "catalog.inputTypes.guidance[input.type]"
+                    "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                   },
-                  "output": { "key": "round.decision", "schema": "judgeDecision" }
+                  "output": {
+                    "key": "reviews[member.id].current.decision",
+                    "schema": "judgeDecision"
+                  },
+                  "reviewPhase": "judging"
                 },
                 {
                   "kind": "condition",
                   "id": "maybe-redevelop",
-                  "notes": "Redevelop only when the judge did not Pass AND a redevelopment budget remains (review.round is the 1-based round counter; on the final permitted round a failing verdict is recorded and the step is force-passed by onExhausted instead).",
+                  "notes": "Redevelop only when the judge did not Pass AND a redevelopment budget remains. Both conditions read runtime state — the round budget lives solely in the maxReviewRounds param, never as a literal here.",
                   "if": {
                     "all": [
-                      { "ref": "round.decision.verdict", "notEquals": "Pass" },
-                      { "ref": "review.round", "notEquals": 4 }
+                      {
+                        "ref": "reviews[member.id].current.decision.verdict",
+                        "notEquals": "Pass"
+                      },
+                      {
+                        "ref": "reviews[member.id].finalRound",
+                        "notEquals": true
+                      }
                     ]
                   },
                   "then": {
@@ -412,29 +556,45 @@
                     "skill": "redeveloper",
                     "route": "reasoning",
                     "bind": {
-                      "input": { "ref": "input", "omit": ["files"] },
+                      "input": {
+                        "ref": "input",
+                        "omit": [
+                          "files"
+                        ]
+                      },
                       "files": "usefulFiles.files",
                       "department": "member.department",
                       "umbrella": "member.umbrella",
                       "subfields": "member.subfields",
                       "chain": "ideas[member.id].cot",
                       "feedback": {
-                        "ref": "round.decision",
-                        "pick": ["verdict", "reason", "suggestion", "evidence", "issues"]
+                        "ref": "reviews[member.id].current.decision",
+                        "pick": [
+                          "verdict",
+                          "reason",
+                          "suggestion",
+                          "evidence",
+                          "issues"
+                        ]
                       },
                       "currentStep": "stepIndex",
-                      "history": "review.history",
+                      "history": "reviews[member.id].history",
                       "totalSteps": "input.cotSteps",
                       "type": "input.type",
-                      "outline": "catalog.inputTypes.outlines[input.type]",
-                      "shape": "catalog.inputTypes.shapes[input.type]",
-                      "shapeGuide": "catalog.inputTypes.shapeGuides[input.type]"
+                      "outline": "bundle.inputTypes.outlines[input.type]",
+                      "shape": "bundle.inputTypes.shapes[input.type]",
+                      "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]"
                     },
-                    "output": { "key": "round.revision", "schema": "redevelopment" }
+                    "output": {
+                      "key": "reviews[member.id].current.revision",
+                      "schema": "redevelopment"
+                    },
+                    "reviewPhase": "redeveloping"
                   }
                 }
               ]
-            }
+            },
+            "seat": "member.id"
           }
         }
       },
@@ -445,13 +605,28 @@
         "skill": "integrator",
         "route": "reasoning",
         "bind": {
-          "input": { "ref": "input", "omit": ["files"] },
+          "input": {
+            "ref": "input",
+            "omit": [
+              "files"
+            ]
+          },
           "files": "usefulFiles.files",
           "roster": "panel.members",
-          "ideas": { "ref": "ideas", "pick": ["output", "novelty", "literature"] },
+          "ideas": {
+            "ref": "ideas",
+            "pick": [
+              "output",
+              "novelty",
+              "literature"
+            ]
+          },
           "type": "input.type"
         },
-        "output": { "key": "bridge", "schema": "bridgeReport" }
+        "output": {
+          "key": "bridge",
+          "schema": "bridgeReport"
+        }
       },
       {
         "kind": "agent",
@@ -460,15 +635,29 @@
         "skill": "chair",
         "route": "writing",
         "bind": {
-          "input": { "ref": "input", "omit": ["files"] },
+          "input": {
+            "ref": "input",
+            "omit": [
+              "files"
+            ]
+          },
           "files": "usefulFiles.files",
           "roster": "panel.members",
-          "ideas": { "ref": "ideas", "pick": ["output", "novelty"] },
+          "ideas": {
+            "ref": "ideas",
+            "pick": [
+              "output",
+              "novelty"
+            ]
+          },
           "bridge": "bridge",
           "type": "input.type",
-          "shape": "catalog.inputTypes.shapes[input.type]"
+          "shape": "bundle.inputTypes.shapes[input.type]"
         },
-        "output": { "key": "proposal", "schema": "finalProposal" }
+        "output": {
+          "key": "proposal",
+          "schema": "finalProposal"
+        }
       },
       {
         "kind": "terminal",
