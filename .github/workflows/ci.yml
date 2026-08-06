@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['*/v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Releases are annotated tags and the serving store is materialized
+          # from them, so a shallow clone would leave the registry with nothing
+          # to serve and the tests with nothing to assert against.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  # The editable source tree is what gets published, so it must be publishable
+  # at all times: a content change that cannot load is caught here rather than
+  # after a release tag has been cut and consumers have pinned it.
+  content-is-loadable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: brain
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: mossishahi/Brain-app
+          path: app
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Build the content validator
+        working-directory: app
+        run: |
+          npm ci
+          npm run build -w @brainstorm-agentic/core
+          npm run build -w @brainstorm-agentic/content
+
+      - name: The editable content tree loads and cross-validates
+        run: |
+          node --input-type=module -e '
+            import { loadContent, validateBundle } from "./app/packages/content/dist/src/index.js";
+            const bundle = loadContent("./brain/content-src/brainstorm");
+            const issues = validateBundle(bundle);
+            if (issues.length > 0) {
+              console.error(issues.map((i) => `[${i.code}] ${i.path}: ${i.message}`).join("\n"));
+              process.exit(1);
+            }
+            const workflow = Object.values(bundle.workflows)[0];
+            console.log(`content-src loads: ${workflow.name} v${workflow.version}`);
+          '
+
+      - name: The embedder copies are byte-identical
+        run: diff -u brain/src/embedder.ts app/packages/core/src/embedder.ts
