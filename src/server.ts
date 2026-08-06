@@ -6,10 +6,20 @@ import {
   type Server as HttpServer,
   type ServerResponse,
 } from "node:http";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { gzipSync } from "node:zlib";
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -68,6 +78,10 @@ export interface ContentRegistryServerOptions {
   readonly trustProxy?: boolean;
   /** Close MCP sessions idle for longer than this. Defaults to 30 minutes. */
   readonly sessionIdleTimeoutSeconds?: number;
+  /** Body cap for one diagnostic report. Defaults to 8 MiB (gzipped on write). */
+  readonly maxDiagnosticBytes?: number;
+  /** Days ingested telemetry and diagnostics are kept. Defaults to 90. */
+  readonly ingestRetentionDays?: number;
   /** Emits structured access records; disabled by default. */
   readonly accessLog?: (record: ContentRegistryAccessRecord) => void;
   /**
@@ -249,15 +263,84 @@ function mediaType(path: string): string {
   }
 }
 
+/**
+ * Receive-and-save ingest for opt-out telemetry and user-initiated diagnostics.
+ *
+ * Deliberately dumb: it appends what it is given and does nothing else — no
+ * grouping, no search, no dashboard. Everything lands under .registry-store,
+ * the only path the deployment's systemd unit can write, and every directory
+ * used here is listed in NEVER_SERVED so submitted data is never served back
+ * out as static content or as an MCP resource.
+ *
+ * Records are gzipped on write (this JSON compresses ~10x) and partitioned by
+ * UTC day, which is also the unit retention prunes.
+ */
+function ingestDir(storeRoot: string, kind: "telemetry" | "diagnostics"): string {
+  const dir = join(storeRoot, kind);
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+/** Appends a batch of telemetry records to the day's gzipped JSONL shard. */
+function appendTelemetry(storeRoot: string, records: readonly unknown[]): number {
+  const day = new Date().toISOString().slice(0, 10);
+  const file = join(ingestDir(storeRoot, "telemetry"), `${day}.jsonl.gz`);
+  const lines = records.map((record) => `${JSON.stringify(record)}\n`).join("");
+  // gzip members concatenate: appending a fresh member keeps the file a valid
+  // gzip stream that `zcat` reads end to end, without rewriting what is there.
+  appendFileSync(file, gzipSync(Buffer.from(lines, "utf8")));
+  return records.length;
+}
+
+/** Writes one diagnostic report as its own gzipped file. */
+function writeDiagnostic(storeRoot: string, report: unknown): string {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const name = `${stamp}-${randomUUID().slice(0, 8)}.json.gz`;
+  const file = join(ingestDir(storeRoot, "diagnostics"), name);
+  writeFileSync(file, gzipSync(Buffer.from(JSON.stringify(report), "utf8")));
+  return name;
+}
+
+/**
+ * Deletes ingested data older than the retention window. Disk is the binding
+ * constraint on a small host, and data nobody has looked at in months is not
+ * worth an outage.
+ */
+function pruneIngest(storeRoot: string, retentionDays: number): void {
+  const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+  for (const kind of ["telemetry", "diagnostics"] as const) {
+    const dir = join(storeRoot, kind);
+    if (!existsSync(dir)) continue;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isFile()) continue;
+      const path = join(dir, entry.name);
+      try {
+        if (statSync(path).mtimeMs < cutoff) rmSync(path, { force: true });
+      } catch {
+        // A file that vanished under us needs no pruning.
+      }
+    }
+  }
+}
+
+/** Top-level store directories that are written to and must never be served. */
+const NEVER_SERVED: ReadonlySet<string> = new Set(["taxonomy", "telemetry", "diagnostics"]);
+
+/** Records accepted in one telemetry POST; a spool flush is far smaller. */
+const MAX_TELEMETRY_BATCH = 500;
+
 function listFiles(root: string, current = root): StaticFile[] {
   return readdirSync(current, { withFileTypes: true })
     .sort((a, b) => a.name.localeCompare(b.name))
     .flatMap((entry): StaticFile[] => {
       const absolutePath = join(current, entry.name);
-      // The live taxonomy store shares .registry-store (the one writable
-      // deploy path) but is mutable state served through the taxonomy tools,
-      // never as immutable static content.
-      if (current === root && entry.name === "taxonomy") return [];
+      // .registry-store is the deployment's ONE writable path, so mutable
+      // state lives beside the immutable bundles. None of it may ever be
+      // served: the taxonomy is answered through its tools, and the ingest
+      // directories hold submitted data — diagnostics can carry a submitter's
+      // unpublished research, so serving them would be a disclosure, not a bug
+      // in presentation. Any new writable directory MUST be added here.
+      if (current === root && NEVER_SERVED.has(entry.name)) return [];
       if (entry.isDirectory()) return listFiles(root, absolutePath);
       if (!entry.isFile()) return [];
       const relativePath = relative(root, absolutePath).split(sep).join("/");
@@ -655,6 +738,10 @@ function readJsonBody(
   });
 }
 
+function sendJson(res: ServerResponse, status: number, value: unknown): void {
+  sendText(res, status, JSON.stringify(value), "application/json; charset=utf-8");
+}
+
 function sendText(
   res: ServerResponse,
   status: number,
@@ -695,6 +782,8 @@ export async function startContentRegistryServer(
   const maxSessions = options.maxSessions ?? 500;
   const trustProxy = options.trustProxy;
   const sessionIdleMs = (options.sessionIdleTimeoutSeconds ?? 1800) * 1000;
+  const maxDiagnosticBytes = options.maxDiagnosticBytes ?? 8 * 1024 * 1024;
+  const ingestRetentionDays = options.ingestRetentionDays ?? 90;
   for (const [name, value] of [
     ["requestsPerMinute", requestsPerMinute],
     ["maxBodyBytes", maxBodyBytes],
@@ -831,6 +920,58 @@ export async function startContentRegistryServer(
         return;
       }
 
+      // Ingest: receive and save. Rate limiting above already applies.
+      if (req.method === "POST" && url.pathname === "/v1/telemetry") {
+        let batch: unknown;
+        try {
+          batch = await readJsonBody(req, maxBodyBytes);
+        } catch (error) {
+          sendText(res, 413, error instanceof Error ? error.message : "body too large");
+          return;
+        }
+        const records = Array.isArray(batch)
+          ? batch
+          : Array.isArray((batch as { events?: unknown })?.events)
+            ? (batch as { events: unknown[] }).events
+            : undefined;
+        if (!records) {
+          sendText(res, 400, "expected an array of records, or { events: [...] }");
+          return;
+        }
+        if (records.length > MAX_TELEMETRY_BATCH) {
+          sendText(res, 400, `batch exceeds ${MAX_TELEMETRY_BATCH} records`);
+          return;
+        }
+        try {
+          const accepted = appendTelemetry(contentRoot, records);
+          sendJson(res, 200, { accepted });
+        } catch {
+          sendText(res, 500, "could not record telemetry");
+        }
+        return;
+      }
+      if (req.method === "POST" && url.pathname === "/v1/diagnostics") {
+        // Diagnostics carry a run's own logs and are far larger than telemetry,
+        // so they get their own (still bounded) cap rather than raising the
+        // limit for every route.
+        let report: unknown;
+        try {
+          report = await readJsonBody(req, maxDiagnosticBytes);
+        } catch (error) {
+          sendText(res, 413, error instanceof Error ? error.message : "report too large");
+          return;
+        }
+        if (typeof report !== "object" || report === null || Array.isArray(report)) {
+          sendText(res, 400, "expected a report object");
+          return;
+        }
+        try {
+          sendJson(res, 200, { received: writeDiagnostic(contentRoot, report) });
+        } catch {
+          sendText(res, 500, "could not record the report");
+        }
+        return;
+      }
       if (req.method === "GET" && url.pathname.startsWith("/v1/")) {
         const relativePath = url.pathname === "/v1/index.json"
           ? "index.json"
@@ -915,6 +1056,11 @@ export async function startContentRegistryServer(
     // maxSessions was exhausted and every new client got a 503 until restart.
     const maintenance = setInterval(() => {
       refreshIfStale();
+      try {
+        pruneIngest(contentRoot, ingestRetentionDays);
+      } catch {
+        // Retention is housekeeping; never let it take the service down.
+      }
       const cutoff = Date.now() - sessionIdleMs;
       for (const [id, session] of sessions) {
         if (session.lastSeenAt > cutoff) continue;

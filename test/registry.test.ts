@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { gunzipSync } from "node:zlib";
 import test from "node:test";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -250,5 +251,67 @@ test("rate limiting protects content while leaving health available", async () =
     assert.equal((await fetch(`${running.url}/health`)).status, 200);
   } finally {
     await running.close();
+  }
+});
+
+test("ingest saves telemetry and diagnostics to disk and never serves them back", async () => {
+  const server = await startContentRegistryServer({ host: "127.0.0.1", port: 0 });
+  try {
+    const base = server.url;
+
+    const accepted = await fetch(`${base}/v1/telemetry`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify([
+        { type: "run.summary", eventId: "e1", installId: "i1", summary: { status: "completed" } },
+        { type: "heartbeat", eventId: "e2", installId: "i1" },
+      ]),
+    });
+    assert.equal(accepted.status, 200);
+    assert.deepEqual(await accepted.json(), { accepted: 2 });
+
+    const report = await fetch(`${base}/v1/diagnostics`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ runId: "r1", note: "TOP-SECRET-SUBMISSION-TEXT" }),
+    });
+    assert.equal(report.status, 200);
+    const received = ((await report.json()) as { received: string }).received;
+    assert.match(received, /\.json\.gz$/);
+
+    // Saved, gzipped, under the one writable store path.
+    const storeRoot = defaultContentRoot();
+    const telemetryDay = `${new Date().toISOString().slice(0, 10)}.jsonl.gz`;
+    const spooled = gunzipSync(readFileSync(join(storeRoot, "telemetry", telemetryDay)))
+      .toString("utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as { eventId: string });
+    assert.deepEqual(spooled.map((entry) => entry.eventId), ["e1", "e2"]);
+
+    // NEVER served back. A diagnostic can carry a submitter's unpublished
+    // research, so serving it would be a disclosure, not a rendering bug.
+    const asStatic = await fetch(`${base}/v1/diagnostics/${received}`);
+    assert.equal(asStatic.status, 404, "diagnostics are not static content");
+    const index = (await (await fetch(`${base}/health`)).json()) as { files: number };
+    assert.ok(index.files > 0);
+
+    const client = new Client({ name: "leak-probe", version: "0.0.0" });
+    await client.connect(new StreamableHTTPClientTransport(new URL(server.mcpUrl)));
+    try {
+      const resources = await client.listResources();
+      for (const resource of resources.resources) {
+        assert.ok(
+          !resource.uri.includes("diagnostics") && !resource.uri.includes("telemetry"),
+          `ingested data must not be an MCP resource: ${resource.uri}`,
+        );
+      }
+    } finally {
+      await client.close();
+    }
+  } finally {
+    rmSync(join(defaultContentRoot(), "telemetry"), { recursive: true, force: true });
+    rmSync(join(defaultContentRoot(), "diagnostics"), { recursive: true, force: true });
+    await server.close();
   }
 });
