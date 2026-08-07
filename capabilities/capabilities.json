@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "capabilities": {
     "web-search": {
       "description": "Query the public web and scholarly indexes (e.g. Semantic Scholar, Google Scholar, arXiv, ORCID, OpenAlex) and read the resulting pages.",
@@ -14,10 +14,10 @@
       "whenUnavailable": "Do NOT claim to have run code; include the full script source in your output so a human can verify it manually. State explicitly that code execution was unavailable."
     },
     "attachment-access": {
-      "description": "Read the content of files attached to the submission under review.",
-      "contract": "The runtime must resolve each attachment named in the agent's input to its full content (or a faithful text rendition) on request.",
-      "operations": ["attachment.list", "attachment.read"],
-      "whenUnavailable": "Do NOT claim to have read attachments; state explicitly that attachment access was unavailable and reason only from the metadata and descriptions provided in your input."
+      "description": "Read and search the content of files attached to the submission under review: list the inventory, read one file, or search every text attachment for a word, phrase, or regular expression in a single deterministic call (matching lines with file path and line number).",
+      "contract": "The runtime must resolve each attachment named in the agent's input to its full content (or a faithful text rendition) on request, and must answer inventory and search requests deterministically host-side — never by making the agent read files one by one to locate something.",
+      "operations": ["attachment.list", "attachment.read", "attachment.search"],
+      "whenUnavailable": "Do NOT claim to have read or searched attachments; state explicitly that attachment access was unavailable and reason only from the metadata and descriptions provided in your input."
     },
     "taxonomy-access": {
       "description": "Read the LIVE shared scientific taxonomy (domain > field > subfield > topic) maintained by the Brain Registry: fetch the complete latest tree as a names-only outline, and resolve a field name to its exact position.",
