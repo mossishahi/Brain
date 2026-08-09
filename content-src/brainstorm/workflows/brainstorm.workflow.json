@@ -2,7 +2,7 @@
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
   "version": "0.16.0",
-  "description": "Multidisciplinary scientific panel: structure the submission (preprocessing reads everything and builds the structured input plus the per-file relation map; a separate reasoning stage then classifies it against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline — by the submitter's actual ask, never the domain narrative, offering a primary and an alternative reading plus the explicitly-or-unmistakably requested outputs, with a skippable countdown gate where the submitter confirms or revises the decision before any panel cost is incurred), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment re-emits the complete chain with unaffected steps copied verbatim — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
+  "description": "Multidisciplinary scientific panel: structure the submission (preprocessing reads everything and builds the structured input plus the per-file relation map; a separate reasoning stage then classifies it against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline — by the submitter's actual ask, never the domain narrative, offering a primary and an alternative reading plus the explicitly-or-unmistakably requested outputs, with a skippable countdown gate where the submitter confirms or revises the decision before any panel cost is incurred), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step with every seat's walk running in parallel and isolated to its own state — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment re-emits the complete chain with unaffected steps copied verbatim — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
       "description": "Maximum number of seats the deterministic panel.select activity may produce.",
@@ -381,15 +381,15 @@
             "schema": "brainIdea"
           }
         },
-        "maxConcurrency": 6
+        "maxConcurrency": 13
       },
       {
         "kind": "forEach",
         "id": "review-members",
-        "notes": "Review every member's chain of thought, one member at a time.",
+        "notes": "Review every member's chain of thought — every seat in parallel, each walk isolated. A seat's review reads only its own chain (ideas[member.id]), its own round state (reviews[member.id]), and its own anonymized ledger; no walk shares notes or history with another, and the runtime's per-seat state merge enforces that isolation. maxConcurrency is the panel's structural ceiling (the maxSeats param's max), not a tunable: every seat runs at once.",
         "items": "panel.members",
         "itemVar": "member",
-        "mode": "sequential",
+        "mode": "parallel",
         "body": {
           "kind": "forEach",
           "id": "review-steps",
@@ -500,7 +500,7 @@
                       }
                     }
                   },
-                  "maxConcurrency": 6
+                  "maxConcurrency": 12
                 },
                 {
                   "kind": "agent",
@@ -596,7 +596,8 @@
             },
             "seat": "member.id"
           }
-        }
+        },
+        "maxConcurrency": 13
       },
       {
         "kind": "agent",
