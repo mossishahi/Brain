@@ -5,7 +5,7 @@ description: "Think out loud as a panel member: work the submission according to
 vars: [input, files, department, umbrella, subfields, cotSteps, type, outline, shape, shapeGuide]
 payload: [input, files]
 techniques: [deep-understanding, literature-review]
-capabilities: [web-search, code-execution, attachment-access]
+capabilities: [web-search, code-execution, attachment-access, gpu-execution]
 output: brainIdea
 ---
 # Context
@@ -76,7 +76,11 @@ claim, a check of one methodological point, an example to ground one explanation
 web-search capability as needed. Wherever a step of yours turns on a computation — a bound, a
 numeric example, a counterexample check — run it with your code-execution capability instead of
 asserting it: the sandbox returns exactly what your script prints, and a printed result the
-panel can check outlives any assertion.
+panel can check outlives any assertion. When a check genuinely needs accelerator hardware (a
+training probe, a GPU-bound benchmark) and the gpu-execution capability is available, submit it
+there: your script runs verbatim on the cluster and the job log comes back exactly as your
+script printed it — and if the job fails, the failure returns to you as a bug report to debug,
+fix, and resubmit.
 
 **5. Shape-specific procedure and output.** Your deliverable is a **{{shape}}**.
 

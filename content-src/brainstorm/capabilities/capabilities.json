@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "capabilities": {
     "web-search": {
       "description": "Query the public web and scholarly indexes (e.g. Semantic Scholar, Google Scholar, arXiv, ORCID, OpenAlex) and read the resulting pages.",
@@ -8,10 +8,16 @@
       "whenUnavailable": "Do NOT claim to have searched; state explicitly that web search was unavailable and rely only on existing context and your training knowledge. Do not fabricate URLs or DOIs."
     },
     "code-execution": {
-      "description": "Run short, self-contained scripts in a sandboxed interpreter with common numeric libraries available. The sandbox adds nothing of its own: standard output contains exactly what the script prints, in exactly the structure the script prints it — so print the values a checker needs as one clearly structured final line, and quote that output verbatim wherever evidence asks for a result.",
-      "contract": "The runtime must execute a supplied script in isolation and return its stdout/stderr and exit status to the agent, unaltered. No network or session-state access from inside the sandbox.",
+      "description": "Run short, self-contained scripts in a sandboxed interpreter with common numeric libraries available. The sandbox adds nothing of its own: standard output contains exactly what the script prints, in exactly the structure the script prints it — so print the values a checker needs as one clearly structured final line, and quote that output verbatim wherever evidence asks for a result. A failed run comes back to you, the submitter, as a bug report: debug it from the returned stderr/stdout, fix your script, and rerun — reruns are safe.",
+      "contract": "The runtime must execute a supplied script in isolation and return its stdout/stderr and exit status to the agent, unaltered. No network or session-state access from inside the sandbox. Failures are returned to the submitting agent to debug — the runtime never edits or retries the script on the agent's behalf.",
       "operations": ["code.execute"],
       "whenUnavailable": "Do NOT claim to have run code; include the full script source in your output so a human can verify it manually. State explicitly that code execution was unavailable."
+    },
+    "gpu-execution": {
+      "description": "Submit a self-contained bash script to the deployment's GPU queue and wait for it to finish. The host runs your script VERBATIM inside the deployment owner's GPU submission template (partition, GPU count, environment setup come from that template) under a wall-clock ceiling, and returns the finished job's complete stdout/stderr log exactly as your script printed it — print results in the structure you want them returned, and print everything you need: files the script writes are listed by name but their content is not returned. A failed job comes back to you, the submitter, as a bug report: debug it from the returned log, fix your script, and resubmit — resubmitting is safe while you resolve the bug.",
+      "contract": "The runtime must splice the agent's script unchanged into the user-configured GPU submission template, enforce the deployment's time ceiling at submission, and return the finished job's log and terminal state unaltered. When the job fails, the runtime must return the diagnostic log to the submitting agent as a bug report — the agent owns debugging its own script and may resubmit a corrected version; the runtime never edits or retries the script on the agent's behalf.",
+      "operations": ["gpu.run"],
+      "whenUnavailable": "Do NOT claim to have run anything on a GPU. GPU runs are available only when the deployment owner completes the GPU submission template in Settings; state that GPU execution was unavailable and include the exact script you would have submitted in your output so a human can run it manually."
     },
     "attachment-access": {
       "description": "Read and search the content of files attached to the submission under review: list the inventory, read one file, or search every text attachment for a word, phrase, or regular expression in a single deterministic call (matching lines with file path and line number).",

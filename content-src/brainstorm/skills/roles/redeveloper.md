@@ -5,7 +5,7 @@ description: "Re-develop a panel member's chain after review: given the judgemen
 vars: [input, files, department, umbrella, subfields, chain, feedback, currentStep, history, totalSteps, type, outline, shape, shapeGuide]
 payload: [input, files, chain, feedback, history]
 techniques: [deep-understanding]
-capabilities: [web-search, code-execution, attachment-access]
+capabilities: [web-search, code-execution, attachment-access, gpu-execution]
 output: redevelopment
 ---
 # Context
@@ -89,7 +89,10 @@ the feedback together: for each issue, read the step it is pinned to and locate 
 
 **3. Verify the repair before writing it.** When an issue's evidence is a script, run it with
 your code-execution capability against your intended fix — the sandbox returns exactly what the
-script prints, so print what settles the point and confirm the flaw is gone. When the evidence
+script prints, so print what settles the point and confirm the flaw is gone. When the check
+genuinely needs accelerator hardware and the gpu-execution capability is available, submit it
+there instead: your script runs verbatim on the cluster, the job log returns exactly as printed,
+and a failed job comes back to you as a bug report to debug, fix, and resubmit. When the evidence
 is a reference, read it through your web-search capability and make your repair answer what it
 actually shows. When it is a derivation, work it through and make your fixed step carry the
 corrected reasoning.
