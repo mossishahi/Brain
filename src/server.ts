@@ -134,6 +134,9 @@ interface RateWindow {
   resetAt: number;
 }
 
+/** One rate-limit window. Declared in /health so clients pace 429 retries. */
+const RATE_WINDOW_MS = 60_000;
+
 /**
  * The rate-limit key for a request.
  *
@@ -172,7 +175,7 @@ function allowRequest(
 ): boolean {
   const current = windows.get(address);
   if (!current || current.resetAt <= now) {
-    windows.set(address, { count: 1, resetAt: now + 60_000 });
+    windows.set(address, { count: 1, resetAt: now + RATE_WINDOW_MS });
     return true;
   }
   current.count += 1;
@@ -889,6 +892,10 @@ export async function startContentRegistryServer(
             ok: true,
             files: files.size,
             server: { name: REGISTRY_SERVER_NAME, version: REGISTRY_SERVER_VERSION },
+            // The declared budget: clients pace their 429 retries by this
+            // window instead of assuming the documented one. Health itself
+            // is exempt from the limit, so it stays readable while throttled.
+            rateLimit: { requestsPerMinute, windowMs: RATE_WINDOW_MS },
             bundles: readServedBundles(contentRoot).map((bundle) => ({
               id: bundle.id,
               latest: bundle.latest,
@@ -900,7 +907,7 @@ export async function startContentRegistryServer(
         return;
       }
       if (!allowRequest(rateWindows, address, requestsPerMinute)) {
-        res.setHeader("retry-after", "60");
+        res.setHeader("retry-after", String(RATE_WINDOW_MS / 1000));
         sendText(res, 429, "rate limit exceeded");
         return;
       }

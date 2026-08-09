@@ -224,11 +224,14 @@ test("the root page and health announce the server and bundle versions", async (
     const payload = await health.json() as {
       ok: boolean;
       server: { name: string; version: string };
+      rateLimit: { requestsPerMinute: number; windowMs: number };
       bundles: Array<{ id: string; latest: string; versions: string[] }>;
     };
     assert.equal(payload.ok, true);
     assert.equal(payload.server.name, "brain-content-registry");
     assert.match(payload.server.version, /^\d+\.\d+\.\d+$/);
+    // The declared budget clients pace their 429 retries by.
+    assert.deepEqual(payload.rateLimit, { requestsPerMinute: 300, windowMs: 60_000 });
     const brainstorm = payload.bundles.find((bundle) => bundle.id === "brainstorm");
     assert.ok(brainstorm);
     assert.equal(brainstorm.latest, latest);
@@ -248,7 +251,14 @@ test("rate limiting protects content while leaving health available", async () =
     const limited = await fetch(`${running.url}/v1/index.json`);
     assert.equal(limited.status, 429);
     assert.equal(limited.headers.get("retry-after"), "60");
-    assert.equal((await fetch(`${running.url}/health`)).status, 200);
+    // Health stays reachable while throttled AND declares the configured
+    // budget, so a throttled client can learn how long to pace itself.
+    const health = await fetch(`${running.url}/health`);
+    assert.equal(health.status, 200);
+    const payload = (await health.json()) as {
+      rateLimit: { requestsPerMinute: number; windowMs: number };
+    };
+    assert.deepEqual(payload.rateLimit, { requestsPerMinute: 1, windowMs: 60_000 });
   } finally {
     await running.close();
   }
