@@ -40,8 +40,12 @@ HTTP:
 - `GET /v1/bundles/{bundle}/{version}/{path}`
 - `GET /health`
 
-MCP is available at `/mcp` using **resources only** (`resources/list` and `resources/read`).
-Brain Registry advertises no executable MCP tools.
+MCP is available at `/mcp`. Bundle content is served through **resources only**
+(`resources/list` and `resources/read`) — no tool returns bundle files. When the shared-taxonomy
+store is enabled (a taxonomy seed or an existing store is present, which is the default), the
+server additionally advertises exactly four taxonomy tools: `taxonomy_resolve`, `taxonomy_tree`,
+`taxonomy_embeddings`, and `taxonomy_suggest`. Reads answer from the latest committed revision;
+`taxonomy_suggest` appends to a review queue and never mutates the tree.
 Consumers read `index.json` and one manifest first, then request exact role/technique resources
 only when needed. The service applies safe-path checks, bounded request bodies/sessions, and a
 per-client rate limit.
