@@ -2,7 +2,7 @@
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
   "version": "0.19.0",
-  "description": "Multidisciplinary scientific panel: structure the submission (preprocessing reads everything and builds the structured input plus the per-file relation map; a separate reasoning stage then classifies it against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline — by the submitter's actual ask, never the domain narrative, offering a primary and an alternative reading plus the explicitly-or-unmistakably requested outputs, with a skippable countdown gate where the submitter confirms or revises the decision before any panel cost is incurred), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step with every seat's walk running in parallel and isolated to its own state — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment re-emits the complete chain with unaffected steps copied verbatim — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
+  "description": "Multidisciplinary scientific panel: structure the submission (preprocessing reads everything and builds the structured input plus the per-file relation map; a separate reasoning stage then classifies it against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline — by the submitter's actual ask, never the domain narrative, offering a primary and an alternative reading plus the explicitly-or-unmistakably requested outputs, with a skippable countdown gate where the submitter confirms or revises the decision before any panel cost is incurred), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, assembled by the runtime), review each member chain of thought step by step with every seat's walk running in parallel and isolated to its own state — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger — scoped by the runtime to this position's rounds, the objections still unanswered, and a collapsed record of closed positions — carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment re-emits the complete chain with unaffected steps copied verbatim — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
       "description": "Maximum number of seats the deterministic panel.select activity may produce.",
@@ -402,7 +402,7 @@
           "body": {
             "kind": "repeatUntil",
             "id": "review-round",
-            "notes": "One iteration = one review round at the current walk position: gather comments (each targeting the current step or any earlier one), judge over the actual chain, and redevelop if the judge did not Pass. Bounded by the maxReviewRounds param — the loop compiles to that param's declared ceiling and exits on the runtime-stamped reviews[member.id].finalRound flag, so the budget is declared in exactly ONE place. onExhausted=proceed is the backstop forced pass. reviews[member.id].allowedVerdicts is computed by the runtime from bundle.verdicts.sequencing and this position's previous round (a Build may not immediately follow a Build); reviews[member.id].history is the seat's anonymized objection ledger, refreshed every round. All review state is seat-qualified so two members' walks never collide.",
+            "notes": "One iteration = one review round at the current walk position: gather comments (each targeting the current step or any earlier one), judge over the actual chain, and redevelop if the judge did not Pass. Bounded by the maxReviewRounds param — the loop compiles to that param's declared ceiling and exits on the runtime-stamped reviews[member.id].finalRound flag, so the budget is declared in exactly ONE place. onExhausted=proceed is the backstop forced pass. reviews[member.id].allowedVerdicts is computed by the runtime from bundle.verdicts.sequencing and this position's previous round (a Build may not immediately follow a Build); reviews[member.id].record is the seat's anonymized objection ledger SCOPED to what is still actionable, refreshed every round — this position's rounds verbatim, objections an earlier position ran out of rounds to settle carried whole (standing), and closed positions collapsed to what may not be re-opened (settled/clean). All review state is seat-qualified so two members' walks never collide.",
             "maxIterations": "params.maxReviewRounds",
             "onExhausted": "proceed",
             "until": {
@@ -459,8 +459,9 @@
                           "through": "stepIndex"
                         },
                         "currentStep": "stepIndex",
-                        "history": "reviews[member.id].history",
+                        "history": "reviews[member.id].record",
                         "verdictOptions": "reviews[member.id].allowedVerdicts",
+                        "verdictCatalog": "bundle.verdicts.verdicts",
                         "type": "input.type",
                         "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                       },
@@ -490,8 +491,9 @@
                           "through": "stepIndex"
                         },
                         "currentStep": "stepIndex",
-                        "history": "reviews[member.id].history",
+                        "history": "reviews[member.id].record",
                         "verdictOptions": "reviews[member.id].allowedVerdicts",
+                        "verdictCatalog": "bundle.verdicts.verdicts",
                         "type": "input.type",
                         "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                       },
@@ -523,8 +525,9 @@
                     },
                     "comments": "reviews[member.id].current.comments",
                     "currentStep": "stepIndex",
-                    "history": "reviews[member.id].history",
+                    "history": "reviews[member.id].record",
                     "verdictOptions": "reviews[member.id].allowedVerdicts",
+                    "verdictCatalog": "bundle.verdicts.verdicts",
                     "type": "input.type",
                     "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                   },
@@ -553,7 +556,7 @@
                   "then": {
                     "kind": "agent",
                     "id": "redevelop-idea",
-                    "notes": "The reviser re-emits the COMPLETE chain through submit_step: steps the confirmed issues implicate (at any position) are rewritten, every unaffected step is copied verbatim, and the paper and novelty are replaced. The runtime — never the model — computes the touched/untouched change-set by exact comparison, records it in the ledger, and the next round re-reviews at the same walk position with that change-set in view.",
+                    "notes": "The reviser delivers a PATCH: the steps the confirmed issues implicate (at any position) through submit_step, and the developed sections its repair changed. It receives its own previous output to revise rather than regenerating it. The host carries every step and section the patch does not name, so untouched text is byte-identical by construction; the runtime — never the model — then computes the touched/untouched change-set by exact comparison, records it in the ledger, and the next round re-reviews at the same walk position with that change-set in view.",
                     "skill": "redeveloper",
                     "route": "reasoning",
                     "bind": {
@@ -568,6 +571,7 @@
                       "umbrella": "member.umbrella",
                       "subfields": "member.subfields",
                       "chain": "ideas[member.id].cot",
+                      "previousOutput": "ideas[member.id].output",
                       "feedback": {
                         "ref": "reviews[member.id].current.decision",
                         "pick": [
@@ -579,7 +583,7 @@
                         ]
                       },
                       "currentStep": "stepIndex",
-                      "history": "reviews[member.id].history",
+                      "history": "reviews[member.id].record",
                       "totalSteps": "input.cotSteps",
                       "type": "input.type",
                       "outline": "bundle.inputTypes.outlines[input.type]",
@@ -588,7 +592,7 @@
                     },
                     "output": {
                       "key": "reviews[member.id].current.revision",
-                      "schema": "redevelopment"
+                      "schema": "redevelopmentPatch"
                     },
                     "reviewPhase": "redeveloping"
                   }
