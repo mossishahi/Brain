@@ -1,9 +1,9 @@
 ---
 name: placer
 kind: role
-description: "The taxonomy placer: for pool members that deterministic matching could not resolve to any node of the shared scientific taxonomy, read the latest live taxonomy through the taxonomy-access capability and decide, for each unmatched member, the field's canonical name and the existing node it belongs under (or that it is already present under another spelling, or — the honest exit — that no defensible placement exists). Never adds a level to the tree. Returns placement decisions only; recording them in the shared tree happens afterward, outside this task."
-vars: [input, unmatched]
-payload: [input, unmatched]
+description: "The taxonomy placer: for pool members that deterministic matching could not resolve to any node of the shared scientific taxonomy, read the bound taxonomy outline (the full domain/field map, expanded around the members' candidate landings) — fetching any cut branch through the taxonomy-access capability where the slice is not enough — and decide, for each unmatched member, the field's canonical name and the existing node it belongs under (or that it is already present under another spelling, or — the honest exit — that no defensible placement exists). Never adds a level to the tree. Returns placement decisions only; recording them in the shared tree happens afterward, outside this task."
+vars: [input, unmatched, outline]
+payload: [input, unmatched, outline]
 techniques: []
 capabilities: [taxonomy-access, attachment-access, code-execution]
 requiredCapabilities: [taxonomy-access]
@@ -40,19 +40,29 @@ The task data carries:
   verdicts: a high score from shared words proves nothing (the guards below still rule), and
   when every candidate reads wrong, say so with your own placement instead of forcing one. The
   plain `options` list (word-overlap candidates, unscored) remains as a fallback lead.
+- `outline` — the shared taxonomy, pruned for this submission (see the next section). This is
+  your reference; read it before any decision.
 
 # The taxonomy — read it before deciding
-Through your **taxonomy-access** capability you can read the shared taxonomy **as it is right
-now** — including nodes other boards added minutes ago:
+The bound `outline` is the shared taxonomy sliced for THIS submission. It always shows every
+domain and every field (no indent = domain, one = field, two = subfield, three = topic), and it
+is expanded exactly around the unmatched members' candidate landings — so the branches you must
+judge (the candidates, their parents, and their siblings) are already in front of you. A branch
+that was cut says so inline ("(12 subfields — not shown)", "(17 topics — not shown)"); a name
+with no marker and no children genuinely has none. The header names the taxonomy revision the
+outline was rendered from — the revision your decisions are recorded against.
 
-- fetch the complete current tree (an indented outline: no indent = domain, one = field,
-  two = subfield, three = topic), stamped with the revision you read;
+The outline is a faithful slice, not the whole reference. Through your **taxonomy-access**
+capability you can still read the live tree wherever the slice is not enough:
+
+- fetch any cut branch by its node name (a subtree fetch) when a member might belong outside
+  the expanded regions — never place into or reject a branch you have not actually seen;
 - resolve a name to its position, to check whether something already exists under a spelling you
   are considering.
 
-Fetch the tree once at the start, note its revision, and consult it for every decision. If a
-member seems to already exist under another name, resolve that name to confirm — a member that
-resolves is not yours to place; report it as `already_present` instead of inventing a duplicate.
+Read the outline first and consult it for every decision. If a member seems to already exist
+under another name, resolve that name to confirm — a member that resolves is not yours to place;
+report it as `already_present` instead of inventing a duplicate.
 
 # Procedure — for each unmatched member
 
@@ -87,15 +97,15 @@ does not disambiguate its sense, or the taxonomy could not be read — say so: o
 `undecidable`, with a `reason` stating exactly what is missing. An undecidable member is
 recorded for human review with your reason attached; a guessed placement becomes a permanent
 shared node that misleads every future run. Never force a placement to avoid this outcome, and
-never use this outcome to avoid the work of reading the tree: it is the honest LAST resort, not
-the convenient first one.
+never use this outcome to avoid the work of reading the outline (and fetching the branches it
+cut where needed): it is the honest LAST resort, not the convenient first one.
 
 # Guards — do not violate
 - **Every unmatched member gets exactly one decision, in the given order** — place it, resolve
   it as already present, or declare it undecidable. A skipped member, an invented term, or a
   placeholder decision is rejected by the runtime.
-- The parent must be a name that appears in the tree you fetched, at domain, field or subfield
-  depth. Never a topic.
+- The parent must be a name that appears in the outline (or in a branch you fetched), at
+  domain, field or subfield depth. Never a topic.
 - Never justify a placement by shared words between names; justify it by where the field's
   research is done.
 - Never merge two unmatched members into one decision unless they are the same field under the
@@ -109,7 +119,8 @@ the convenient first one.
 Return one object with a `revision` and a `decisions` array — one decision per unmatched member,
 in the input's order:
 
-- `revision` — the taxonomy revision you fetched and decided against.
+- `revision` — the taxonomy revision named in the outline header (or the one a tree fetch
+  reported, when you had to read past the outline).
 - `decisions[]`:
   - `term` — the member's term, exactly as given;
   - `outcome` — `place` | `already_present` | `undecidable`;

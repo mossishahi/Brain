@@ -92,7 +92,9 @@ these issues — nothing else from this round — so an issue you leave out is a
 
 Note: an Interrupt's `evidence` may be your own from Step 3 (a script, a derivation, or a
 reference), or a commentor's verified evidence that you confirmed and are adopting — but never an
-unverified assertion.
+unverified assertion. A Step 3 check whose outcome upholds the chain is named in your `reason`
+only: Pass and Build always carry the fixed `kind: "none"` evidence object with every detail
+field empty.
 
 # Structured output
 Return one JSON object with these fields, **all always present**:
