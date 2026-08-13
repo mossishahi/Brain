@@ -71,10 +71,11 @@ claim that contradicts your field's literature, an assumption you believe fails 
 the capability that can settle it** before you choose a verdict:
 - **Run a script** with your code-execution capability: short, self-contained, printing the
   values that settle the point. The sandbox returns exactly what your script prints — nothing
-  more — so print what a reader needs to check the claim, and quote that output verbatim in your
-  evidence.
+  more — so print what a reader needs to check the claim; if the flaw is substantiated, that
+  script and its printed output become your Interrupt's evidence, quoted verbatim.
 - **Search the literature** with your web-search capability: find the result that settles the
-  point and cite what it is, where you found it (a resolvable URL or DOI), and what it shows.
+  point; if it substantiates the flaw, cite it as your Interrupt's evidence — what it is, where
+  you found it (a resolvable URL or DOI), and what it shows.
 - **Work the derivation** yourself: a self-contained, step-by-step derivation exposing the error.
 
 Searching is optional and proportionate: a single fact takes a single search. But when a
@@ -85,7 +86,10 @@ so the map you build is your field's view of that area, which is exactly the edg
 seated you for.
 
 If verification substantiates the flaw, Interrupt with that evidence. If it does not, the
-suspicion is settled — Pass on it and name the check you made in your `reason`. Never park an
+suspicion is settled — Pass on it and name the check you made in your `reason`. A settled check
+lives ONLY in your `reason`: however thorough it was, your `evidence` object stays
+`kind: "none"` with every other field empty — filled evidence fields belong to Interrupt alone,
+and a Pass or Build carrying them is rejected. Never park an
 unverified suspicion inside a Pass or Build reason: verify it or drop it. An Interrupt without
 evidence is never permitted — an unverifiable hunch is not a flaw.
 
