@@ -2,7 +2,7 @@
 name: judge
 kind: role
 description: "The judgement: read the thinker's chain of thought so far, weigh the commentors' verdicts against the actual step text, check earlier objections against what the last revision changed, and emit ONE decision — Pass, Build, or Interrupt — plus the de-duplicated issues[] repair signal, weighing verified evidence over authority."
-vars: [input, files, chain, comments, currentStep, history, verdictOptions, type, typeGuidance]
+vars: [input, files, chain, comments, currentStep, history, verdictOptions, verdictCatalog, type, typeGuidance]
 payload: [input, files, chain, comments, currentStep, history, verdictOptions]
 techniques: [deep-understanding]
 capabilities: [web-search, code-execution, attachment-access]
@@ -26,6 +26,15 @@ What counts as a good or bad step depends on what kind of submission this is. Fo
 
 {{typeGuidance}}
 
+# The board's verdicts
+Every verdict the board can issue, and what each one requires of the ruling that issues it:
+
+{{verdictCatalog}}
+
+Which of them are open to you in THIS round is task data (`verdictOptions`), and it can be
+narrower than the list above — a ruling that follows a Build, for instance, cannot be another
+Build. Read the definitions here; take the permitted set from there.
+
 # Input
 The task data carries the material you judge:
 
@@ -47,11 +56,19 @@ The task data carries the material you judge:
 - `comments` — the commentors' verdicts on the reasoning so far, keyed by commentor id. Each
   carries a `verdict`, the `step` it targets, a `reason`, and possibly a `suggestion` or
   `evidence`.
-- `history` — the board's record of this chain's review so far, one entry per completed round:
-  the verdict, the confirmed issues (each pinned to a step), and — after a revision — exactly
-  which steps the thinker changed (`touched`) and which were carried verbatim (`untouched`).
-  Entries carry content only, never who said what. An empty list means this is the first round.
-- `verdictOptions` — the verdicts available to you this round.
+- `history` — the board's record of this chain's review, scoped to what is still actionable:
+  - `rounds` — the completed rounds at the CURRENT position, in order. Each carries the verdict,
+    the confirmed issues (each pinned to a step), and — after a revision — exactly which steps the
+    thinker changed (`touched`) and which were carried verbatim (`untouched`).
+  - `standing` — objections from earlier positions that were never answered: the round budget ran
+    out while they still stood. Every one is open.
+  - `settled` — earlier positions that are closed, one entry each: the `step`, how many `rounds` it
+    took, whether it `passed` or was `force-passed`, the `objections` raised there, the steps its
+    revisions rewrote (`revised`), and the `closingReason` that ended it.
+  - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
+  Entries carry content only, never who said what. All four empty means this is the first round.
+- `verdictOptions` — the NAMES of the verdicts available to you this round; what each one means
+  and requires is defined above.
 
 # Procedure
 
@@ -65,11 +82,14 @@ one of: a runnable or executed script demonstrating the claim, a self-contained 
 derivation, or a concrete citable reference) or **"authority"** (assertion only, however
 confident it sounds).
 
-**2. Check the record.** When `history` shows a previous round's issues and a revision's
+**2. Check the record.** When `history.rounds` shows a previous round's issues and a revision's
 change-set, verify resolution yourself: for each previously confirmed must-address issue, did a
 touched step actually resolve it — or did the revision talk around it, or break something that
-was sound? An issue the revision failed to resolve stays open and belongs in your `issues` again;
-an issue the record shows resolved is settled and never re-litigated.
+was sound? An issue the revision failed to resolve stays open and belongs in your `issues` again.
+`history.standing` carries objections an earlier position ran out of rounds to settle: where one
+bears on the steps you are ruling on now, it is still open and belongs in your `issues` too.
+Anything in `history.settled` or `history.clean` is closed and never re-litigated — its
+`closingReason` records the check that ended it.
 
 **3. Weigh and, if needed, check.** Verified comments outweigh on-authority comments — a lone
 verified flaw can outweigh several unverified opinions, but an unverified minority opinion does
