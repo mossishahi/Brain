@@ -248,7 +248,7 @@
       {
         "kind": "agent",
         "id": "place-fields",
-        "notes": "Part two of the former decomposer: for the members deterministic matching could not resolve, read the whole latest shared taxonomy through the taxonomy-access capability and decide each member's canonical name and existing parent (or report it already present under another spelling). Decisions only — recording happens in the next step.",
+        "notes": "Part two of the former decomposer: for the members deterministic matching could not resolve, read the bound taxonomy outline — the full domain/field skeleton expanded around the members' candidate landings, rendered deterministically by the match step from the run's pinned taxonomy — and decide each member's canonical name and existing parent (or report it already present under another spelling), fetching any cut branch through the taxonomy-access capability where the slice is not enough. Decisions only — recording happens in the next step.",
         "skill": "placer",
         "route": "reasoning",
         "bind": {
@@ -258,7 +258,8 @@
               "files"
             ]
           },
-          "unmatched": "poolMatches.unmatched"
+          "unmatched": "poolMatches.unmatched",
+          "outline": "poolMatches.placerOutline"
         },
         "output": {
           "key": "placements",
