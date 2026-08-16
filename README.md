@@ -58,6 +58,9 @@ npm run build
 node dist/src/main.js --host 127.0.0.1 --port 51011
 ```
 
+Node.js **22.13 or newer** is required (`engine-strict` fails installs on an older Node) — the
+same floor as the Brain app, so one Node serves the whole pipeline.
+
 To expose it remotely, bind an externally reachable interface behind TLS and authentication:
 
 ```bash
