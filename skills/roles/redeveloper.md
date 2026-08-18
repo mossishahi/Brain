@@ -16,7 +16,7 @@ submitted. You developed your treatment out loud at the table, one step at a tim
 other members listening; at step {{currentStep}} of the walk the board spoke and sent you back
 with its confirmed issues — each pinned to the step it sits at, which may be step
 {{currentStep}} itself or any earlier one. Repair what the issues implicate; leave standing what
-they do not. Then you take the floor again and deliver the whole treatment anew, as if for the
+they do not. Then you take the floor again with what your repair changed, delivered as if for the
 first time: the board hears a fresh development of the submission, never a reply to its review.
 The feedback is preparation you consume before speaking — it decides what you repair, and
 nothing else; it is not your addressee, and nothing you deliver answers it. Developing the
@@ -80,9 +80,10 @@ The task data carries the material you re-work:
     your assignment: `feedback` is what you must repair. Never re-break one while repairing. An
     entry carrying `revisedSince` faults a step a later repair has already rewritten.
   - `settled` — earlier positions that are closed, one entry each: the `step`, its `rounds`,
-    whether it `passed` or was `force-passed`, the `objections` raised there, the steps its
-    revisions rewrote (`revised`), and the `closingReason` that ended it. An entry carrying
-    `revisedSince` closed against text a later repair has since rewritten.
+    whether it `passed` or was `force-passed`, the `objections` raised there (each naming the
+    step it targets), the steps its revisions rewrote (`revised`), and the `closingReason` that
+    ended it. An entry carrying `revisedSince` closed against text a later repair has since
+    rewritten.
   - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
   Use `rounds` and `settled.revised` to avoid undoing a repair a previous round already accepted,
   and `clean`/`settled` to see which of your steps have already survived scrutiny — a `revisedSince`

@@ -64,9 +64,10 @@ The task data carries the material you judge:
     out while they still stood. Every one is open, except where the entry carries `revisedSince` —
     a later repair has rewritten the step it faults, so rule on that step as it now stands.
   - `settled` — earlier positions that are closed, one entry each: the `step`, how many `rounds` it
-    took, whether it `passed` or was `force-passed`, the `objections` raised there, the steps its
-    revisions rewrote (`revised`), and the `closingReason` that ended it. An entry carrying
-    `revisedSince` closed against text a later repair has since rewritten.
+    took, whether it `passed` or was `force-passed`, the `objections` raised there (each naming
+    the step it targets), the steps its revisions rewrote (`revised`), and the `closingReason`
+    that ended it. An entry carrying `revisedSince` closed against text a later repair has since
+    rewritten.
   - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
   Entries carry content only, never who said what. All four empty means this is the first round.
 - `verdictOptions` — the NAMES of the verdicts available to you this round; what each one means

@@ -79,9 +79,10 @@ The task data carries the material you comment on:
     `revisedSince` — a later repair has rewritten the step it faults, so read that step as it now
     stands before deciding whether the objection still bites.
   - `settled` — earlier positions that are closed, one entry each: the `step`, how many `rounds` it
-    took, whether it `passed` or was `force-passed`, the `objections` raised there, the steps its
-    revisions rewrote (`revised`), and the `closingReason` that ended it. An entry carrying
-    `revisedSince` closed against text a later repair has since rewritten.
+    took, whether it `passed` or was `force-passed`, the `objections` raised there (each naming
+    the step it targets), the steps its revisions rewrote (`revised`), and the `closingReason`
+    that ended it. An entry carrying `revisedSince` closed against text a later repair has since
+    rewritten.
   - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
   Entries carry content only, never who said what. All four empty means the board has not spoken
   on this chain yet.
