@@ -1,6 +1,7 @@
 {
   "bundle": "brainstorm",
   "runtimeProtocol": "brainstorm.workflow/v1",
+  "minAppVersion": "0.2.46",
   "entrypoints": {
     "workflow": "workflows/brainstorm.workflow.json",
     "controls": [

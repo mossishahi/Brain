@@ -97,6 +97,7 @@ function materialize(release) {
           version: release.version,
           runtimeProtocol: meta.runtimeProtocol,
           entrypoints: meta.entrypoints,
+          minAppVersion: meta.minAppVersion,
         }),
       );
     }

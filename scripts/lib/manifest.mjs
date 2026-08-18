@@ -24,9 +24,15 @@ function walk(directory, manifestPath) {
 }
 
 /** Hashes every file below `versionDir` (except manifest.json) into a manifest object. */
-export function buildManifest(versionDir, { bundle, version, runtimeProtocol, entrypoints }) {
+export function buildManifest(
+  versionDir,
+  { bundle, version, runtimeProtocol, entrypoints, minAppVersion },
+) {
   if (typeof runtimeProtocol !== "string" || runtimeProtocol.length === 0) {
     throw new Error("runtimeProtocol is required for a manifest");
+  }
+  if (minAppVersion !== undefined && !/^\d+\.\d+\.\d+$/.test(String(minAppVersion))) {
+    throw new Error(`minAppVersion must be a plain semver, got "${minAppVersion}"`);
   }
   const manifestPath = join(versionDir, "manifest.json");
   const files = walk(versionDir, manifestPath).map((path) => {
@@ -43,6 +49,12 @@ export function buildManifest(versionDir, { bundle, version, runtimeProtocol, en
     bundle,
     version,
     runtimeProtocol,
+    // The oldest app release that can run this bundle. The runtime protocol
+    // says which CONTRACT the content speaks; this says which app actually
+    // implements the parts this version uses, so a host too old to bind a
+    // field the workflow names is turned away before it spends anything
+    // rather than dying mid-run against content that looks valid.
+    ...(minAppVersion !== undefined ? { minAppVersion: String(minAppVersion) } : {}),
     ...(entrypoints ? { entrypoints } : {}),
     files,
   };

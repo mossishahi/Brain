@@ -62,6 +62,23 @@ for (const path of [meta.entrypoints.workflow, ...meta.entrypoints.controls]) {
     throw new Error(`entrypoint "${path}" is missing from the source tree`);
   }
 }
+// The app floor rides into the manifest and turns away a host too old to run
+// this content, so a malformed one has to fail here rather than silently
+// become no floor at all.
+if (
+  meta.minAppVersion !== undefined &&
+  !/^\d+\.\d+\.\d+$/.test(String(meta.minAppVersion))
+) {
+  throw new Error(
+    `bundle.json minAppVersion must be a plain semver, got "${meta.minAppVersion}"`,
+  );
+}
+if (meta.minAppVersion === undefined) {
+  console.warn(
+    "warning: bundle.json declares no minAppVersion — any app version will accept this " +
+      "release, including one too old to bind everything the workflow names.",
+  );
+}
 
 const git = (args, options = {}) =>
   execFileSync("git", ["-C", root, ...args], { encoding: "utf8", ...options }).trim();
