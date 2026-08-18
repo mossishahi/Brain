@@ -77,14 +77,17 @@ The task data carries the material you re-work:
   - `rounds` — the completed rounds at the CURRENT position, in order: their verdicts, their
     confirmed issues, and which steps each earlier revision `touched` and carried `untouched`.
   - `standing` — objections an earlier position ran out of rounds to settle. They are context, not
-    your assignment: `feedback` is what you must repair. Never re-break one while repairing.
+    your assignment: `feedback` is what you must repair. Never re-break one while repairing. An
+    entry carrying `revisedSince` faults a step a later repair has already rewritten.
   - `settled` — earlier positions that are closed, one entry each: the `step`, its `rounds`,
     whether it `passed` or was `force-passed`, the `objections` raised there, the steps its
-    revisions rewrote (`revised`), and the `closingReason` that ended it.
+    revisions rewrote (`revised`), and the `closingReason` that ended it. An entry carrying
+    `revisedSince` closed against text a later repair has since rewritten.
   - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
   Use `rounds` and `settled.revised` to avoid undoing a repair a previous round already accepted,
-  and `clean`/`settled` to see which of your steps have already survived scrutiny. Entries carry
-  content only, never who said what.
+  and `clean`/`settled` to see which of your steps have already survived scrutiny — a `revisedSince`
+  entry has not: its step changed after it closed, so nothing there is settled by that record.
+  Entries carry content only, never who said what.
 
 # Procedure
 
