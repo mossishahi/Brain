@@ -61,10 +61,12 @@ The task data carries the material you judge:
     the confirmed issues (each pinned to a step), and — after a revision — exactly which steps the
     thinker changed (`touched`) and which were carried verbatim (`untouched`).
   - `standing` — objections from earlier positions that were never answered: the round budget ran
-    out while they still stood. Every one is open.
+    out while they still stood. Every one is open, except where the entry carries `revisedSince` —
+    a later repair has rewritten the step it faults, so rule on that step as it now stands.
   - `settled` — earlier positions that are closed, one entry each: the `step`, how many `rounds` it
     took, whether it `passed` or was `force-passed`, the `objections` raised there, the steps its
-    revisions rewrote (`revised`), and the `closingReason` that ended it.
+    revisions rewrote (`revised`), and the `closingReason` that ended it. An entry carrying
+    `revisedSince` closed against text a later repair has since rewritten.
   - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
   Entries carry content only, never who said what. All four empty means this is the first round.
 - `verdictOptions` — the NAMES of the verdicts available to you this round; what each one means
@@ -87,9 +89,12 @@ change-set, verify resolution yourself: for each previously confirmed must-addre
 touched step actually resolve it — or did the revision talk around it, or break something that
 was sound? An issue the revision failed to resolve stays open and belongs in your `issues` again.
 `history.standing` carries objections an earlier position ran out of rounds to settle: where one
-bears on the steps you are ruling on now, it is still open and belongs in your `issues` too.
+bears on the steps you are ruling on now, it is still open and belongs in your `issues` too — one
+marked `revisedSince` faults a step a later repair has already rewritten, so read that step as it
+now stands and file the objection again only if the flaw survived the rewrite.
 Anything in `history.settled` or `history.clean` is closed and never re-litigated — its
-`closingReason` records the check that ended it.
+`closingReason` records the check that ended it. A `settled` entry marked `revisedSince` is the
+exception: its step changed after it closed, so that check no longer covers what stands there now.
 
 **3. Weigh and, if needed, check.** Verified comments outweigh on-authority comments — a lone
 verified flaw can outweigh several unverified opinions, but an unverified minority opinion does

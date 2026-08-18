@@ -75,10 +75,13 @@ The task data carries the material you comment on:
     the confirmed issues (each pinned to a step), and — after a revision — exactly which steps the
     thinker changed (`touched`) and which were carried verbatim (`untouched`).
   - `standing` — objections from earlier positions that were never answered: the board's round
-    budget ran out while they still stood. Every one is open.
+    budget ran out while they still stood. Every one is open, except where the entry carries
+    `revisedSince` — a later repair has rewritten the step it faults, so read that step as it now
+    stands before deciding whether the objection still bites.
   - `settled` — earlier positions that are closed, one entry each: the `step`, how many `rounds` it
     took, whether it `passed` or was `force-passed`, the `objections` raised there, the steps its
-    revisions rewrote (`revised`), and the `closingReason` that ended it.
+    revisions rewrote (`revised`), and the `closingReason` that ended it. An entry carrying
+    `revisedSince` closed against text a later repair has since rewritten.
   - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
   Entries carry content only, never who said what. All four empty means the board has not spoken
   on this chain yet.
@@ -94,8 +97,11 @@ remaining steps will likely need. Then read `history`. `rounds` is this position
 which objections were already confirmed here, which steps the last revision touched, and which it
 left alone. `standing` is what nobody has answered yet. `settled` and `clean` are closed business:
 never re-raise an objection `settled` records as resolved, and never re-run a check its
-`closingReason` shows was already made. Never repeat a `standing` issue as if it were your
-discovery — spend your round where the between-space sees something the record does not yet hold.
+`closingReason` shows was already made — unless the entry carries `revisedSince`, which means a
+later repair rewrote that step after it closed: the check went with the text it was made against,
+and the crossings that step now makes are open to you like any other. Never repeat a `standing`
+issue as if it were your discovery — spend your round where the between-space sees something the
+record does not yet hold.
 
 **2. Verify every suspicion — before any verdict.** A suspicion you neither verify nor discard is
 worthless to the board. When a crossing triggers one — a borrowed result that looks misstated, a
