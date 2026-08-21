@@ -4,7 +4,7 @@ kind: role
 description: "The taxonomy placer: for pool members that deterministic matching could not resolve to any node of the shared scientific taxonomy, read the bound taxonomy outline (the full domain/field map, expanded around the members' candidate landings) — fetching any cut branch through the taxonomy-access capability where the slice is not enough — and decide, for each unmatched member, the field's canonical name and the existing node it belongs under (or that it is already present under another spelling, or — the honest exit — that no defensible placement exists). Never adds a level to the tree. Returns placement decisions only; recording them in the shared tree happens afterward, outside this task."
 vars: [input, unmatched, outline]
 payload: [input, unmatched, outline]
-techniques: []
+techniques: [writing-style]
 capabilities: [taxonomy-access, code-execution]
 requiredCapabilities: [taxonomy-access]
 output: placements

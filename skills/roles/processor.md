@@ -4,7 +4,7 @@ kind: role
 description: "Preprocess a raw research submission and its attachments into the clean structured input (title, question, context, attachments, assumptions) plus a per-file relation map (label + note per attached file, NA for useless ones) that every downstream brainstorm step reads. Runs first; classifying the submission's type is deliberately NOT this step's job — a dedicated classifier stage decides it from this step's structured record."
 vars: [submission]
 payload: [submission]
-techniques: [deep-understanding]
+techniques: [deep-understanding, writing-style]
 capabilities: [attachment-access, code-execution]
 output: processorOutput
 ---

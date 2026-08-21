@@ -4,7 +4,7 @@ kind: role
 description: "The expertise pool builder: from the structured research input, retrieve the most relevant recent literature, enumerate every author, collect their stated research interests verbatim, and return one unified pool of expertise terms in which every entry carries its full origin — who stated it, on which paper's byline, and how many distinct people support it — plus a calibrated 0-to-1 relevance score tying the area to the input topic. The pool is the factual record later deterministic matching and placement steps work from; this role builds no tree and chooses no experts."
 vars: [input, files]
 payload: [input, files]
-techniques: [deep-understanding, academic-profile-lookup, term-unification]
+techniques: [deep-understanding, academic-profile-lookup, term-unification, writing-style]
 capabilities: [web-search, code-execution]
 output: pool
 ---
