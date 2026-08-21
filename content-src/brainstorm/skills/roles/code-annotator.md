@@ -4,7 +4,7 @@ kind: role
 description: "The code annotation pass: right after preprocessing, read every attached code file one by one and return a one-line summary per file — what the file contains and how it bears on the input topic. The runtime folds the summaries into the shared attachment map every later panel task reads; this role describes only — it never judges, repairs, or develops anything."
 vars: [input, files]
 payload: [input, files]
-techniques: []
+techniques: [writing-style]
 capabilities: [attachment-access, code-execution]
 output: codeAnnotations
 ---

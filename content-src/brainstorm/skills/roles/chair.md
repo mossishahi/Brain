@@ -4,7 +4,7 @@ kind: role
 description: "The rapporteur: after the panel's reviewed work is final, synthesize the original input and every member's finished output into one coherent executive summary with prioritized action items, framed to fit what kind of submission it is."
 vars: [input, files, roster, ideas, bridge, type, shape]
 payload: [input, files, roster, ideas, bridge]
-techniques: [deep-understanding]
+techniques: [deep-understanding, writing-style]
 capabilities: [attachment-access, code-execution]
 output: finalProposal
 ---

@@ -4,7 +4,7 @@ kind: role
 description: "The post-review integration audit: read every member's finished output, verify each novelty claim across fields, and map the contradictions and unexplored seams between the seats. Advisory input to the chair; produces no synthesis and reworks nothing."
 vars: [input, files, roster, ideas, type]
 payload: [input, files, roster, ideas]
-techniques: [deep-understanding]
+techniques: [deep-understanding, writing-style]
 capabilities: [web-search, code-execution, attachment-access]
 output: bridgeReport
 ---

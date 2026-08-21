@@ -4,7 +4,7 @@ kind: role
 description: "Classify a preprocessed submission against the input-type catalog by the submitter's actual ask: decide the primary type, the strongest alternative reading (the second option a human confirms between), the panel's chain-of-thought step count, the requested outputs — explicit asks plus asks the submission unmistakably implies — and the embedding input: the submission distilled into one paper-style title+abstract and 3-8 single-concept facets, the clean retrieval text the semantic panel-assembly stage embeds and matches against the shared research taxonomy. Pure reasoning over the structured input and the attachment map; reads no files."
 vars: [input, files, typeOptions]
 payload: [input, files]
-techniques: [deep-understanding]
+techniques: [deep-understanding, writing-style]
 output: taskClassification
 ---
 # Context
