@@ -5,7 +5,7 @@ description: "The expertise pool builder: from the structured research input, re
 vars: [input, files]
 payload: [input, files]
 techniques: [deep-understanding, academic-profile-lookup, term-unification]
-capabilities: [web-search, code-execution, attachment-access]
+capabilities: [web-search, code-execution]
 output: pool
 ---
 # Context
@@ -30,12 +30,12 @@ The task data carries the submission you work from:
   entry carries the file's exact path, a relation label, and a one-line note (an empty list means
   there are no attachments). Entries labeled `code` or `implementation` additionally carry a
   `codeSummary`: a one-line account of what the file actually contains and how it bears on the
-  topic, produced by a dedicated pass that read every code file after preprocessing. When your
-  work needs a file's actual content, read it through your attachment-access capability using
-  the exact `path` value; every file access is recorded in the run's activity log.
-  When the list carries code files, the submitter's own code is part of the topic's core
-  phenomenon: use each `codeSummary` to decide which files sharpen your understanding of what
-  the submission actually does, and read those files before deriving your retrieval queries.
+  topic, produced by a dedicated pass that read every code file after preprocessing. This list
+  and its summaries are your only window onto the attachments — you do not read file content
+  yourself. When the list carries code files, the submitter's own code is part of the topic's
+  core phenomenon: read every `codeSummary` alongside `input` before deriving your retrieval
+  queries in Step 1; a topic's core phenomenon is drawn from `input` and these summaries
+  together, never from opening a file.
 
 # Procedure
 
