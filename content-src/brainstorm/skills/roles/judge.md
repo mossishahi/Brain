@@ -64,8 +64,9 @@ The task data carries the material you judge:
   you is only what a seat actually wrote.
 - `history` — the board's record of this chain's review, scoped to what is still actionable:
   - `rounds` — the completed rounds at the CURRENT position, in order. Each carries the verdict,
-    the confirmed issues (each pinned to a step), and — after a revision — exactly which steps the
-    thinker changed (`touched`) and which were carried verbatim (`untouched`).
+    the confirmed issues (each pinned to a step), and — after a revision — which of the steps
+    delivered so far the thinker changed (`touched`) and which were carried verbatim
+    (`untouched`).
   - `standing` — objections from earlier positions that were never answered: the round budget ran
     out while they still stood. Every one is open, except where the entry carries `revisedSince` —
     a later repair has rewritten the step it faults, so rule on that step as it now stands.
@@ -75,7 +76,8 @@ The task data carries the material you judge:
     that ended it. An entry carrying `revisedSince` closed against text a later repair has since
     rewritten.
   - `clean` — the step numbers of earlier positions that passed in one round with nothing raised.
-  Entries carry content only, never who said what. All four empty means this is the first round.
+  Entries carry content only, never who said what, and no entry names a step past the reasoning
+  delivered so far. All four empty means this is the first round.
 - `verdictOptions` — the NAMES of the verdicts available to you this round; what each one means
   and requires is defined above.
 

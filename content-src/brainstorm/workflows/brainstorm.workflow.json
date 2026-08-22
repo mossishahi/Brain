@@ -446,7 +446,8 @@
                         "input": {
                           "ref": "input",
                           "omit": [
-                            "files"
+                            "files",
+                            "cotSteps"
                           ]
                         },
                         "files": "usefulFiles.files",
@@ -479,7 +480,8 @@
                         "input": {
                           "ref": "input",
                           "omit": [
-                            "files"
+                            "files",
+                            "cotSteps"
                           ]
                         },
                         "files": "usefulFiles.files",
@@ -515,7 +517,8 @@
                     "input": {
                       "ref": "input",
                       "omit": [
-                        "files"
+                        "files",
+                        "cotSteps"
                       ]
                     },
                     "files": "usefulFiles.files",
