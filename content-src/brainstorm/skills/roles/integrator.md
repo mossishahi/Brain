@@ -31,8 +31,8 @@ The task data carries everything you audit:
   disagreement turns on, and read them before recording a contradiction.
 - `roster` — the seated panel members and the expertise each one worked from.
 - `ideas` — each member's finished output, keyed by member id (reasoning chains are deliberately
-  withheld): the `output` body, plus `novelty` and `literature` where the member's shape carries
-  them. When the submitter explicitly asked for specific deliverables, each `output` additionally
+  withheld): the `output` body, plus `novelty` and `literature` where the member recorded them.
+  When the submitter explicitly asked for specific deliverables, each `output` additionally
   carries `requested` — the member's response sections, one per ask. Audit those sections like
   any other output content: their claims count for contradictions, and a gap between the
   members' responses to one ask counts for seams.
@@ -63,15 +63,12 @@ empty list is again valid.
 # Structured output
 Return a single JSON object with exactly these three fields, all always present:
 
-- `noveltyAudit` — one entry per audited member, each with `memberId`, the `claim` restated
-  precisely, `status` (`clear` or `challenged`), a substantive `note` of at least 30 characters
-  saying how the audit reached this status, and one fixed `evidence` object whose seven fields
-  are always present (`kind`, `code`, `result`, `derivation`, `citation`, `locator`, `shows`):
-  - `clear`: `kind: "none"` and every other evidence field `""`;
-  - `challenged`: `kind: "reference"`, non-empty `citation`, `locator`, and `shows`, every
-    unrelated field `""`.
-
-  An empty array when no member carries a novelty statement.
+- `noveltyAudit` — one entry per audited member: the `claim` restated precisely, its `status`,
+  and a substantive `note` saying how the audit reached that status. The `evidence` object:
+  `clear` carries `kind: "none"` with every other field `""`; `challenged` carries
+  `kind: "reference"` with non-empty `citation`, `locator`, and `shows` — the work that
+  challenges the claim, located so a reader can check it. An empty array when no member carries
+  a novelty statement.
 - `contradictions` — entries of `members` (two or more member ids) and a `description` of at
   least 30 characters stating the incompatible claims.
 - `seams` — entries of `between` (the expertise or members the seam connects), the `gap` no

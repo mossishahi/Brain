@@ -371,9 +371,9 @@
             "department": "member.department",
             "umbrella": "member.umbrella",
             "subfields": "member.subfields",
+            "board": "panel.members",
             "cotSteps": "input.cotSteps",
             "type": "input.type",
-            "outline": "bundle.inputTypes.outlines[input.type]",
             "shape": "bundle.inputTypes.shapes[input.type]",
             "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]"
           },
@@ -424,7 +424,7 @@
                 {
                   "kind": "forEach",
                   "id": "gather-comments",
-                  "notes": "Every panel member except the thinker comments in parallel. Commentors see chain steps 1..stepIndex (never the developed paper) plus the anonymized objection ledger, and may fault the current step or any earlier one — the comment's `step` field names the target. The panel's interdisciplinary seat comments through its own skill (roster-aware, covering the areas between the seated fields); every disciplinary seat uses the standard commentor skill.",
+                  "notes": "Every panel member except the thinker comments in parallel. Commentors see chain steps 1..stepIndex (never the developed paper), the anonymized objection ledger, and the thinker's per-step working notes for the same steps (the runtime-captured thinking behind each step's current text — confidential to the board: the thinker is never told they are read, so no comment may quote or hint at them; they raise suspicions to verify, never verdicts). A commentor may fault the current step or any earlier one — the comment's `step` field names the target. The panel's interdisciplinary seat comments through its own skill (roster-aware, covering the areas between the seated fields); every disciplinary seat uses the standard commentor skill.",
                   "items": "panel.members",
                   "itemVar": "commentor",
                   "exclude": "member",
@@ -461,10 +461,14 @@
                         },
                         "currentStep": "stepIndex",
                         "history": "reviews[member.id].record",
+                        "thoughts": {
+                          "ref": "thoughts[member.id]",
+                          "through": "stepIndex"
+                        },
                         "verdictOptions": "reviews[member.id].allowedVerdicts",
                         "verdictCatalog": "bundle.verdicts.verdicts",
                         "type": "input.type",
-                        "typeGuidance": "bundle.inputTypes.guidance[input.type]"
+                        "shape": "bundle.inputTypes.shapes[input.type]"
                       },
                       "output": {
                         "key": "reviews[member.id].current.comments[commentor.id]",
@@ -488,16 +492,20 @@
                         "department": "commentor.department",
                         "umbrella": "commentor.umbrella",
                         "subfields": "commentor.subfields",
+                        "shape": "bundle.inputTypes.shapes[input.type]",
                         "chain": {
                           "ref": "ideas[member.id].cot",
                           "through": "stepIndex"
                         },
                         "currentStep": "stepIndex",
                         "history": "reviews[member.id].record",
+                        "thoughts": {
+                          "ref": "thoughts[member.id]",
+                          "through": "stepIndex"
+                        },
                         "verdictOptions": "reviews[member.id].allowedVerdicts",
                         "verdictCatalog": "bundle.verdicts.verdicts",
-                        "type": "input.type",
-                        "typeGuidance": "bundle.inputTypes.guidance[input.type]"
+                        "type": "input.type"
                       },
                       "output": {
                         "key": "reviews[member.id].current.comments[commentor.id]",
@@ -510,9 +518,10 @@
                 {
                   "kind": "agent",
                   "id": "judge-step",
-                  "notes": "One judgement over all comments of this round, grounded in the chain itself: the judge reads steps 1..stepIndex, verifies every comment against the actual step text, checks the ledger's earlier objections against the last revision's change-set, and returns the de-duplicated issues[] repair signal.",
+                  "notes": "One judgement over all comments of this round, grounded in the chain itself: the judge reads steps 1..stepIndex, verifies every comment against the actual step text, checks the ledger's earlier objections against the last revision's change-set, and returns the de-duplicated issues[] repair signal. fastPassUnanimous: a round in which EVERY commentor passed is recorded as a fast pass by the runtime — a passing comment may carry no evidence, so a unanimous round holds nothing to weigh and no repair signal to compose, and the judge is not convened; the recorded decision's reason names the fast pass.",
                   "skill": "judge",
                   "route": "reasoning",
+                  "fastPassUnanimous": true,
                   "bind": {
                     "input": {
                       "ref": "input",
@@ -573,6 +582,7 @@
                       "department": "member.department",
                       "umbrella": "member.umbrella",
                       "subfields": "member.subfields",
+                      "board": "panel.members",
                       "chain": "ideas[member.id].cot",
                       "previousOutput": "ideas[member.id].output",
                       "feedback": {
@@ -589,7 +599,6 @@
                       "history": "reviews[member.id].record",
                       "totalSteps": "input.cotSteps",
                       "type": "input.type",
-                      "outline": "bundle.inputTypes.outlines[input.type]",
                       "shape": "bundle.inputTypes.shapes[input.type]",
                       "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]"
                     },

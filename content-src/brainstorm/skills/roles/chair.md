@@ -30,8 +30,8 @@ The task data carries everything you synthesize from:
 - `roster` — the seated panel; use it to attribute perspectives correctly when you synthesize.
 - `ideas` — each member's **final** finished output, keyed by member id: an `output` object shaped
   as a **{{shape}}** — the deliverable for a **{{type}}** (see the per-shape reading guide
-  below), plus a `novelty` paragraph when the shape is `paper`, `resolution`, or `survey`
-  (omitted otherwise). When the submitter explicitly asked for specific deliverables
+  below), plus a `novelty` paragraph where the member stated one (a member that made no such
+  claim omits it). When the submitter explicitly asked for specific deliverables
   (`input.requestedOutputs`), each `output` additionally carries `requested` — the member's
   direct response sections, one per ask, titled after it.
   The members' reasoning chains are deliberately not given to you and must not be reconstructed,
@@ -50,7 +50,7 @@ The `finalProposal` fields below are deliberately shape-neutral labels — read 
 the `{{shape}}` entry:
 
 - **`paper`**: read each member's paper (abstract/introduction/method/discussion/
-  conclusion) and `novelty`. `consensus` = directions members converge on; `tensions` = disagreements;
+  conclusion) and `novelty` where stated. `consensus` = directions members converge on; `tensions` = disagreements;
   `novelDirections` = ideas no single member's discipline would have produced alone.
 - **`resolution`**: read each member's `problemStatement`, `approach`, `derivation`, `status`, and
   `significance`. `consensus` = points every attempt agrees on (including agreement that it is
@@ -69,8 +69,8 @@ the `{{shape}}` entry:
 - **`interpretation`**: read each member's `candidateInterpretations` and `mostLikelyInterpretation`.
   `consensus` = the interpretation multiple members converge on; `tensions` = genuinely
   contested readings; `actionItems` = what further check would discriminate between them.
-- **`survey`**: read each member's `landscapeMap`, `consensusAndFrontier`, and `novelty` (here:
-  the frontier works and what remains beyond them). `consensus` = the state of the art members
+- **`survey`**: read each member's `landscapeMap`, `consensusAndFrontier`, and `novelty` where
+  stated (the frontier works and what remains beyond them). `consensus` = the state of the art members
   agree on; `tensions` = disagreements about where the frontier actually is; `novelDirections` =
   gaps only visible once the members' maps are combined.
 - **`explanation`**: read each member's `coreIntuition`, `formalTreatment`, and

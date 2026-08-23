@@ -145,72 +145,28 @@ comment you confirmed adds nothing, because the confirmed problem already travel
 round in which the chain reads clean to you leaves every box empty, whatever the seats wrote.
 
 # Structured output
-Return one JSON object with these fields, **all always present**:
-- `verdict`: `Pass`, `Build`, or `Interrupt`;
+Return one JSON object; the result schema carries its exact fields. What the schema cannot
+state:
+- `verdict`: exactly one of `verdictOptions` — this round's permitted set, never the full
+  catalog.
 - `reason`: the final decision reason — the one problem the decision rests on, or, for Pass, the
-  check that upholds the chain;
-- `suggestion`: for Build, a concrete non-empty string. For
-  Pass/Interrupt leave it `""`; if you attach a repair hint to an Interrupt it is passed to the
-  thinker as optional context;
-- `evidence`: one fixed object with `kind`, `code`, `result`, `derivation`, `citation`, `locator`,
-  and `shows`, all always present;
-- `issues`: the distinct confirmed problems of this round — one entry per problem, each with
-  `step` (the 1-based chain step it sits at, never beyond `currentStep`), `part` (`"part1"`,
-  `"part2"`, `"part3"`, or `"part4"` — the part of that step the problem sits in, always one of
-  the four), `point` (the problem itself, stated so it stands without the part it names),
-  `basis` (`"verified"` | `"authority"`), `evidence` (the fixed seven-field object;
-  `kind: "none"` with empty fields exactly when basis is `"authority"`), `suggestion` (may be
-  `""`), and `mustAddress` (boolean). **Empty exactly when the verdict is Pass.** Build/Interrupt
-  require at least one must-address issue, and Interrupt at least one that is verified;
-- `flaws`: your own marked chain — one entry per step from 1 through `currentStep`, each entry
-  carrying `step` (that 1-based number) and all four part keys `part1`, `part2`, `part3`, `part4`.
-  Write a review point into a box only where you yourself fault that part; every other box stays
-  `""`. The board strips the empty boxes before the record is written, so an empty box costs
-  nothing and an invented one costs a round;
-- `assessment`: an array with one object per commentor, preserving input order:
-  `{ "commentorId": "<id>", "basis": "verified" | "authority" }`.
-
-For Pass/Build use `kind: "none"` and set every other evidence field to `""`. For Interrupt:
-script requires `code` (and may have `result`); math requires `derivation`; reference requires
-`citation`, `locator`, and `shows`. Set every unrelated field to `""`.
-Do not add any other keys beyond these.
-
-A worked example — the fourth step is under review, one problem survives your checks, and your own
-marks fill one box out of sixteen:
-
-```json
-{
-  "verdict": "Interrupt",
-  "reason": "Step 3 asserts a convergence rate its own condition needs, and the derivation one seat supplied shows the stratum floor does not give that rate.",
-  "suggestion": "",
-  "evidence": { "kind": "math", "code": "", "result": "", "derivation": "<the adopted derivation, verbatim>", "citation": "", "locator": "", "shows": "" },
-  "issues": [
-    {
-      "step": 3,
-      "part": "part3",
-      "point": "The rate $n^{-1/3}$ claimed for the estimated selection probabilities is asserted rather than derived, and the stratified design cited for it bounds only the smallest probability.",
-      "basis": "verified",
-      "evidence": { "kind": "math", "code": "", "result": "", "derivation": "<the adopted derivation, verbatim>", "citation": "", "locator": "", "shows": "" },
-      "suggestion": "Derive the rate from the pilot draw, or weaken the unbiasedness claim to the rate the design actually supports.",
-      "mustAddress": true
-    }
-  ],
-  "flaws": [
-    { "step": 1, "part1": "", "part2": "", "part3": "", "part4": "" },
-    { "step": 2, "part1": "", "part2": "", "part3": "", "part4": "" },
-    { "step": 3, "part1": "", "part2": "", "part3": "", "part4": "The forward reference to Step 5 promises a bound the chain has not yet reached. The promise is not a fault today, but Step 5 now carries it." },
-    { "step": 4, "part1": "", "part2": "", "part3": "", "part4": "" }
-  ],
-  "assessment": [
-    { "commentorId": "<id>", "basis": "verified" },
-    { "commentorId": "<id>", "basis": "authority" }
-  ]
-}
-```
-
-Fifteen empty boxes and one filled is what a real round looks like. The confirmed problem travels
-as an issue, so the box beside it stays empty: `flaws` carries what only you saw, and duplicating
-the issue there tells the reviser nothing twice.
+  check that upholds the chain.
+- `suggestion`: for Build, a concrete non-empty string; for Pass/Interrupt leave it `""` (a
+  repair hint attached to an Interrupt is passed to the thinker as optional context).
+- `evidence`: Pass and Build always carry `kind: "none"` with every other field `""`. An
+  Interrupt carries the strongest confirmation: `script` requires non-empty `code` (and may
+  carry `result`), `math` requires a non-empty `derivation`, and `reference` requires
+  `citation`, `locator`, and `shows` — every unrelated field stays `""`, and an unverified
+  assertion is never evidence.
+- `issues`: one entry per DISTINCT confirmed problem, as Step 4 built them — each `point` stated
+  so it stands without the part it names, each issue's `evidence` at `kind: "none"` exactly when
+  its basis is `"authority"`. **Empty exactly when the verdict is Pass.** Build/Interrupt
+  require at least one must-address issue, and Interrupt at least one that is verified.
+- `flaws`: the draft of Step 5 — write a review point only into the boxes you yourself fault,
+  and leave every other box `""`. The board strips the empty boxes before the record is written.
+  A real round leaves most boxes empty, and a confirmed problem already travels as an issue —
+  duplicating it in a box tells the reviser nothing twice.
+- `assessment`: one entry per commentor, preserving input order.
 
 Your submission is **final and recorded verbatim** — never submit placeholder, trial, or test
 values (`"test"`, `"ok"`, …) in any field.
