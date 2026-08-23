@@ -68,24 +68,11 @@ Return a single JSON object with exactly these fields:
     member would open it). For `NA` entries the note may be empty (or state briefly why it is
     useless).
 
-  Use an empty list when the submission has no attachments. Example shape (structure only —
-  derive all values from the actual input):
-
-```json
-{
-  "files": [
-    { "path": "attachments/1-repo/src/train.py", "label": "code", "note": "Training loop of the submitter's prototype; defines the loss discussed in the prompt." },
-    { "path": "attachments/1-repo/package-lock.json", "label": "NA", "note": "" },
-    { "path": "attachments/2-web/survey.pdf", "label": "similar-method", "note": "Survey covering the baseline family the idea competes with." }
-  ]
-}
-```
+  Use an empty list when the submission has no attachments.
 
 Rules:
 - If a field cannot be determined from the input, leave it empty rather than inventing content.
-- Do not copy field values from any example; derive everything from the actual input.
-- Do NOT emit a `type`, `cotSteps`, or `requestedOutputs` field: classification is the next
-  stage's job, decided from your record — never yours.
+- Classification is the next stage's job, decided from your record — never yours.
 - Every inventory file appears in `files` exactly once; never add entries for paths that are not
   in the inventory.
 - **Your result is final and recorded verbatim, and every later stage reads it as the submission

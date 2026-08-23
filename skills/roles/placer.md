@@ -160,34 +160,6 @@ in the input's order:
   - for `undecidable`: only the `term` and a `reason` naming precisely what information was
     missing — no name, parent, aliases, or node.
 
-Example shape (structure only):
-
-```json
-{
-  "revision": 12,
-  "decisions": [
-    {
-      "term": "Normalizing Flows",
-      "outcome": "place",
-      "name": "Normalizing Flows",
-      "parent": "Artificial Intelligence",
-      "aliases": ["Normalising Flows", "Flow-based Models"],
-      "reason": "Invertible neural density models; researched in machine-learning groups, a natural peer of Variational Autoencoders and Diffusion Models."
-    },
-    {
-      "term": "Statistical ML",
-      "outcome": "already_present",
-      "node": "Statistical Machine Learning",
-      "reason": "Resolves to an existing topic under Artificial Intelligence; an alias, not a new node."
-    },
-    {
-      "term": "Differential Geometry",
-      "outcome": "place",
-      "name": "Differential Geometry",
-      "parent": "Geometry and Topology",
-      "aliases": ["Differential geometry"],
-      "reason": "A candidate name match exists ('Advanced Differential Geometry Research') but its neighborhood is Astronomy and Astrophysics (cosmology, gravitational waves) — a different discipline than this member's own paper, a pure-mathematics geometry paper. Two fields sharing a name; this one gets its own node beside the existing 'Riemannian Geometry' topic already under Geometry and Topology."
-    }
-  ]
-}
-```
+Derive every value from the actual tree and the members in front of you; a `reason` earns its
+place by naming the neighborhood evidence the decision rests on (Steps 2 and 2b), never by
+restating the outcome.

@@ -138,59 +138,6 @@ matching against the shared taxonomy happens afterward, outside this task.
     `ambiguous`/`no_profile` authors use empty `affiliation`/`url` and an empty `interests`
     array — never backfill.
 
-Example shape (structure only — derive all values from the actual input):
-
-```json
-{
-  "members": [
-    {
-      "term": "Graph Neural Networks",
-      "count": 3,
-      "relevance": 0.95,
-      "variants": ["Graph Neural Networks", "GNNs"],
-      "origins": [
-        { "name": "A. Author", "paper": "Latent Graph Inference with Differentiable Top-k", "stated": "Graph Neural Networks" },
-        { "name": "C. Author", "paper": "Latent Graph Inference with Differentiable Top-k", "stated": "GNNs" },
-        { "name": "D. Author", "paper": "Spectral Views of Message Passing", "stated": "Graph Neural Networks" }
-      ]
-    },
-    {
-      "term": "Optimal Transport",
-      "count": 1,
-      "relevance": 0.4,
-      "variants": ["Optimal Transport"],
-      "origins": [
-        { "name": "A. Author", "paper": "Latent Graph Inference with Differentiable Top-k", "stated": "Optimal Transport" }
-      ]
-    }
-  ],
-  "grounding": {
-    "papers": [
-      {
-        "title": "Latent Graph Inference with Differentiable Top-k",
-        "authors": ["A. Author", "B. Author", "C. Author"],
-        "year": 2023,
-        "venue": "NeurIPS",
-        "url": "https://example.org/abs/2301.00000",
-        "relation": "Learns sparse graphs end to end; motivates the retrieval queries."
-      }
-    ],
-    "scholars": [
-      {
-        "name": "A. Author",
-        "affiliation": "TU Eindhoven",
-        "url": "https://scholar.example.org/a-author",
-        "profile": "ok",
-        "interests": ["Graph Neural Networks", "Optimal Transport"]
-      },
-      {
-        "name": "B. Author",
-        "affiliation": "",
-        "url": "",
-        "profile": "no_profile",
-        "interests": []
-      }
-    ]
-  }
-}
-```
+Derive every value from what you actually retrieved and read — never from an example or a
+guess. A member's `origins` must account for its whole `count`, one entry per supporting
+person, so the pool stays reproducible from the grounding record alone.
