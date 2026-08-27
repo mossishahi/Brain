@@ -1,17 +1,15 @@
 ---
 name: writing-style
 kind: technique
-description: "The board's house style for every text value a seat emits: one idea per sentence, active voice, present tense, no bare pronoun as a subject, no noun cluster longer than three words, and the fixed sizes — a chain step in four parts of at most 500 characters each, no sentence over 200 characters, a review point of at most two sentences under 150 characters each."
+description: "The board's house style for every text value a seat emits: one idea per sentence, active voice, present tense, no bare pronoun as a subject, no noun cluster longer than two words, no parenthetical remarks, em dashes, or sentence interrupters, and the fixed sizes — a chain step in four parts of at most 500 characters each, no sentence over 200 characters, a review point of at most two sentences under 150 characters each."
 vars: []
 capabilities: []
 ---
 # Technique: Writing Style
 
-Every text value you emit goes to a reader who reads it once, at the speed of a live session, and
-must be able to check it against the material in front of them. A sentence a colleague has to
-re-read is a sentence that stops carrying its claim. The rules below are the board's house style,
-and they hold for every string in your output — a chain step, a section of the developed body, a
-verdict reason, a flaw, an issue, a suggestion.
+You MUST write in the following style and narrative:
+- style: an **ASD-STE100**-inspired style proper for scientific discussion.
+- narrative: a **pedagogy**-inspired narrative proper for scientific discussion.
 
 ## The sentence
 
@@ -26,12 +24,15 @@ verdict reason, a flaw, an issue, a suggestion.
    estimator", "the sampling step". A reader who must look backwards to find the referent has
    already lost the sentence, and a rewrite that moves the earlier sentence breaks the reference
    silently.
-5. **No noun cluster longer than three words.** Break a longer one with a preposition: write "the
+5. **No noun cluster longer than two words.** Break a longer one with a preposition: write "the
    variance of the gradient estimator", never "gradient estimator variance behaviour". A stacked
    cluster hides which noun the modifiers attach to, and every reader resolves the stack
    differently.
 6. **No sentence longer than 200 characters.** A sentence past that length carries more than one
    idea, whatever its punctuation says.
+
+7. **No complex structure.** You are not allowed to use parenthetical remarks, em dashes, or
+   sentence interrupters.
 
 ## The sizes
 

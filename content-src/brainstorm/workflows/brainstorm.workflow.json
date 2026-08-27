@@ -531,6 +531,7 @@
                       ]
                     },
                     "files": "usefulFiles.files",
+                    "board": "panel.members",
                     "chain": {
                       "ref": "ideas[member.id].cot",
                       "through": "stepIndex"
@@ -541,6 +542,8 @@
                     "verdictOptions": "reviews[member.id].allowedVerdicts",
                     "verdictCatalog": "bundle.verdicts.verdicts",
                     "type": "input.type",
+                    "shape": "bundle.inputTypes.shapes[input.type]",
+                    "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]",
                     "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                   },
                   "output": {
