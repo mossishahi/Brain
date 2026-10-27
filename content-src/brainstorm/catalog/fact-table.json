@@ -1,0 +1,60 @@
+{
+  "version": "0.2.0",
+  "accessMode": "supreme-mediated/v1",
+  "consultation": {
+    "skill": "supreme_judge_consult",
+    "route": "reasoning",
+    "output": "factConsultation"
+  },
+  "verifier": {
+    "skill": "supreme_judge",
+    "route": "reasoning",
+    "output": "factVerdict"
+  },
+  "updates": "delete-or-replace/v1",
+  "reconsideration": {
+    "chain": {
+      "skill": "reconsider-chain",
+      "route": "reasoning",
+      "output": "chainReconsiderationParts"
+    },
+    "gameReport": {
+      "skill": "reconsider-game-report",
+      "route": "reasoning",
+      "output": "gameReportReconsideration"
+    },
+    "comment": {
+      "skill": "reconsider-comment",
+      "route": "reasoning",
+      "output": "commentReconsideration"
+    }
+  },
+  "cases": {
+    "justified": "The supreme judge finds an existing justified entry whose meaning and verified conditions cover the requested claim, even when the wording differs. The judge explains equivalence or the supporting implication, names the actual entry, and the host returns its current badge and revision hash; no new entry is needed. A narrower result never silently licenses a broader claim.",
+    "justified-new": "The supreme judge's own check confirms the claim under the conditions stated. A new badge enters the table under those conditions, and the submitter cites it.",
+    "narrowed": "The claim holds, but only under narrower conditions than stated. A badge for the narrowed claim enters the table; the submitter restates its claim within those conditions and revisits every step that needed the broader one.",
+    "conflict": "The claim contradicts an entry of the table that stands, or one the evidence cannot tell apart from it. No badge is given, and the submitter reconsiders every step it meant to build on the claim. Two claims the evidence cannot tell apart are both disputed, and nobody may rely on either.",
+    "refuted": "The supreme judge's own check shows the claim false under the conditions stated. Nothing enters the table; the submitter drops it and everything that rests on it.",
+    "unverified": "The claim could not be checked with the supreme judge's capabilities or within its time. No badge is given: obtain checkable evidence or keep the claim unresolved. It may scope an explicitly conditional argument, but calling it an assumption does not establish that it holds or justify an unconditional conclusion.",
+    "not-a-fact": "There is no independently asserted substantive fact to verify: for example, a nonfactual opinion or design preference, ordinary connective reasoning, or a statement about the review process. Directly inspectable reasoning can stand without its own badge. Mathematical claims, derivations, and familiar background are not categorically excluded; verify a substantive checkable result using its proof, computation, or source."
+  },
+  "methods": {
+    "re-executed": "The supreme judge ran the computation itself with its code-execution capability, at the claimed conditions, and read the result from the output its own script printed.",
+    "source-quoted": "The supreme judge read the source itself — the attached file at the cited path and line, or the work at a locator that resolves — and quotes the passage that states the fact.",
+    "record-match": "The supreme judge matched the value against the board's own record — the structured input or an attached record — read by itself.",
+    "judgement-only": "The supreme judge independently checked the proof, derivation, or argument without an execution or external source, and records the reasoning and conditions that establish the claim. A rigorous original proof is valid evidence; this method is not permission to certify an unsupported assertion.",
+    "none": "Nothing was checked."
+  },
+  "resolutions": {
+    "incumbent-stands": "The entry in the table holds and the submitted claim does not: the ruling is a conflict, and the entry is unchanged.",
+    "incumbent-revoked": "The supreme judge's check shows the entry in the table is wrong and the submitted claim holds: the entry is deleted from the table and the claim's new badge replaces it. Every member whose work cites the deleted entry receives the ruling's explanation at once and is asked to reconsider that work.",
+    "both-narrowed": "Both hold, each under its own conditions: the entry keeps narrower conditions from now on, and the submitted claim gets its own badge under its conditions.",
+    "disputed": "The evidence cannot tell the entry and the claim apart: both are marked disputed, and nobody may rely on either until a later ruling settles it."
+  },
+  "limits": {
+    "submissionsPerTask": 6,
+    "relatedFacts": 8,
+    "lookupResults": 5,
+    "verificationMinutes": 30
+  }
+}

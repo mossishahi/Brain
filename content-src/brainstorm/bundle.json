@@ -1,7 +1,7 @@
 {
   "bundle": "brainstorm",
   "runtimeProtocol": "brainstorm.workflow/v1",
-  "minAppVersion": "0.2.73",
+  "minAppVersion": "0.2.86",
   "entrypoints": {
     "workflow": "workflows/brainstorm.workflow.json",
     "controls": [
@@ -11,7 +11,9 @@
       "catalog/input-types.json",
       "catalog/verdicts.json",
       "catalog/departments.json",
-      "catalog/taxonomy.json"
+      "catalog/taxonomy.json",
+      "catalog/taxonomy-texts.json",
+      "catalog/fact-table.json"
     ]
   }
 }

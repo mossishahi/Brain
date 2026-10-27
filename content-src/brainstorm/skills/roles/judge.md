@@ -4,8 +4,8 @@ kind: role
 description: "The judgement: read the thinker's chain of thought so far, weigh the commentors' verdicts against the actual step text, check earlier objections against what the last revision changed, and emit ONE decision — Pass, Build, or Interrupt — plus the de-duplicated issues[] repair signal, each issue pinned to a step and to the part of that step it sits in, plus the judge's own marks on the chain, weighing verified evidence over authority."
 vars: [input, files, chain, comments, currentStep, history, verdictOptions, verdictCatalog, type, typeGuidance, board, shape, shapeGuide]
 payload: [input, files, chain, comments, currentStep, history, verdictOptions]
-techniques: [deep-understanding, writing-style]
-capabilities: [web-search, code-execution, attachment-access]
+techniques: [deep-understanding, writing-style, gpu-verification, claim-evidence]
+capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: judgeDecisionParts
 ---
 # Context
@@ -71,6 +71,11 @@ The task data carries the material you judge:
   read in order are that step's whole text. The parts carry no assigned meaning — the thinker cut
   one step at three seams — so rule on the step whole and use the part numbers only to say
   **where** something sits.
+- Independently asserted substantive claims in the chain carry **justification badges** from the board's fact table, cited inline as
+  `[F:n]`. You ask the supreme judge about them through the `fact_table` conversation tool (your `fact-table` capability): call it once
+  with `{"mode": "status"}` and the judge explains the current standing of every badge the chain cites, step by step, with an alert
+  for each one the table no longer holds as justified (deleted or disputed) or has narrowed
+  since.
 - `comments` — the commentors' verdicts on the reasoning so far, keyed by commentor id. Each
   carries a `verdict`, a `reason`, its `flaws` — the marks that commentor wrote on the chain, each
   naming a `step` and the part of that step it faults — and possibly a `suggestion` or `evidence`.
@@ -107,7 +112,11 @@ qualification it does — is discounted as unfounded, whatever its confidence. C
 surviving comment as **"verified"** (its point is backed — normally in its `evidence` key — by
 one of: a runnable or executed script demonstrating the claim, a self-contained mathematical
 derivation, or a concrete citable reference) or **"authority"** (assertion only, however
-confident it sounds).
+confident it sounds). A fact-table badge counts as a concrete citable reference when `status` shows
+it `justified` under conditions that cover the point, and the table's **conflict** answer to a
+claim is verified evidence against that claim (a refuted claim has no entry); a badge's locator
+resolves through the
+tool, never through a web search.
 
 **2. Check the record.** When `history.rounds` shows a previous round's issues and a revision's
 change-set, verify resolution yourself: for each previously confirmed must-address issue, did a
@@ -128,7 +137,18 @@ not resolve the contradiction by fiat: settle it with **one** check of your own 
 a literature lookup with your web-search capability, a derivation you work through yourself, or,
 if a comment supplied a runnable script, running it with your code-execution capability. Before
 adopting reference evidence, confirm the citation is real: its locator must resolve to the work
-it names.
+it names. When the disputed computation needs accelerator hardware, use gpu-execution under
+the included gpu-verification technique. Queue, scheduler and environment failures leave the
+claim unverified; they do not establish which comment is correct.
+When the contradiction turns on an independently asserted substantive claim, consult the supreme judge
+through `fact_table` for that verification: `lookup` asks about the claim, and
+when no entry settles it, `submit` the claim the decision turns on — the supreme judge's answer
+settles it for the whole board. A step whose conclusion rests on a badge the table no longer holds
+as justified has a flaw at that step: raise it as an issue pinned to that step, whichever step it
+is, with the table's answer as its evidence. A fact without a badge is not a flaw by itself — it
+is one only when a check fails it. A directly inspectable contradiction between supported
+displayed statements can instead be checked in the reasoning itself, without a separate
+badge; examine any implicit substantive premises before treating that reasoning as sufficient.
 
 **4. Decide, and compose the repair signal.** Choose **exactly one** verdict from
 `verdictOptions`, the options available THIS round (and ONLY these — any other verdict is not
@@ -173,6 +193,9 @@ state:
   carry `result`), `math` requires a non-empty `derivation`, and `reference` requires
   `citation`, `locator`, and `shows` — every unrelated field stays `""`, and an unverified
   assertion is never evidence.
+- A fact-table badge (or the table's conflict answer, naming its recorded entry) is
+  `reference` evidence: `citation` the id as `[F:n]`, `locator` `fact-table:F:n`, `shows` the
+  entry's claim and conditions.
 - `issues`: one entry per DISTINCT confirmed problem, as Step 4 built them — each `point` stated
   so it stands without the part it names, each issue's `evidence` at `kind: "none"` exactly when
   its basis is `"authority"`. **Empty exactly when the verdict is Pass.** Build/Interrupt

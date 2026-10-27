@@ -107,7 +107,15 @@ zero surrounding context, so every sentence must stand alone; and vectors live i
 of published research, so every phrase must be the one the relevant community actually publishes
 under. Vague or submission-specific wording here seats the wrong experts.
 
-Produce two things:
+The same strings are also sent, word for word, as search queries to the literature databases of
+several research communities — some engines match the words literally, others the meaning — and
+the papers they return decide the panel. A body of literature is found only when one of your
+strings uses the words its community publishes under, and a community that studies the same
+problem under another name is reached only when you name it. Extract everything that helps
+retrieval: every name each concept is published under, the problem stripped of its
+application, and the fields that study it under another name.
+
+Produce five things, in this order — each builds on the one before:
 
 - **The document — `title` and `abstract`.** Write the submission's scientific core as if it
   were a paper. `title`: one line naming problem and approach in standard vocabulary. `abstract`:
@@ -123,6 +131,34 @@ Produce two things:
     formula). Expand every non-universal acronym at first use.
   - **Core over story.** Center the methods and theory; mention the application domain in at
     most one clause, and only if it constrains the science.
+- **The problem formulation — `problemFormulation`.** The problem restated as a theorist from
+  another field would have to see it to recognize it as their own: ONE paragraph of 150-1,500
+  characters with every application word removed. State, in this order, what is given (the
+  observed data, objects, or known quantities), what is sought (the object, estimate,
+  distribution, decision, or guarantee to produce), which structure matters (a graph, a
+  sequence, a hierarchy, a symmetry, a factorization, a conditional-independence pattern), and
+  which constraints or criteria a solution must meet (exactness, scale, sample size,
+  computational budget, guarantees). Use the vocabulary of mathematics, statistics, and computer
+  science — random variables, distributions, operators, objectives, constraints — never the
+  application's own terms, and name a method only when the problem itself prescribes it. The
+  document rules above apply.
+- **The equivalent problems — `equivalentProblems`, 0-5 entries, strongest first.** Read the
+  formulation as an outsider and ask which other research communities solve a problem with the
+  same given, sought, and structure under a name of their own: the fields whose literature
+  would answer this problem although it never uses the document's vocabulary. Look beyond the
+  submission's own field — statistics, signal processing, information theory, statistical
+  physics, control, operations research, numerical analysis, and the sciences that model the
+  same objects are typical places — and never list the submission's own field. For each:
+  - `field`: the research field as its own community names it (2-80 characters, one line).
+  - `name`: the term of art under which that field studies the problem or its core method —
+    the phrase its paper titles use (3-120 characters, one line).
+  - `statement`: one or two self-contained sentences (40-400 characters) saying what the two
+    problems share — which part of the formulation corresponds to which object of that field.
+  - `confidence`: 0-1, honestly: about 0.9 for an established, documented equivalence, about
+    0.6 for a close analogy whose correspondence you can state, about 0.3 for a plausible link
+    you cannot vouch for.
+  List only correspondences you can state concretely: never pad the list, never list a field
+  merely because it uses similar tools, and return `[]` when you know of none.
 - **The facets — 3-8 entries, most central first.** Each facet is ONE concept the panel needs
   expertise in, and becomes its own vector. For each:
   - `name`: the concept's term of art — the 2-5 word phrase a survey title, textbook chapter, or
@@ -136,6 +172,18 @@ Produce two things:
     manifold."). The statement sharpens the vector — it must stay about the CONCEPT, never about
     the submission.
   - `relevance`: centrality to the submission's core, 0-1, consistent with the facet order.
+  - `kind`: the role the concept plays here — `method` (a technique, algorithm, or model family
+    used or needed), `theory` (a body of theory the problem lives in), `problem` (the problem
+    class or task itself), `object` (the kind of object, data, or system studied), or
+    `application` (the application domain).
+  - `aliases`: 0-5 other names under which the SAME concept is published, each itself a term
+    of art (3-80 characters, one line) that paper titles use: the established synonym, the
+    older or newer name, and above all the name another research community publishes the
+    concept under — the signal-processing name of a computer-vision concept, the
+    geostatistics name of a machine-learning one ("kriging" for Gaussian process regression).
+    Never a broader, narrower, or merely related concept, never a description, never a bare
+    acronym, never the name respelled (case, hyphenation, plural), never another facet's name
+    or alias; `[]` when the concept goes by one name only.
   - **Coverage.** Together the facets must span: the methods actually used or needed, the theory
     areas the problem lives in, and the problem class itself. The application domain gets a
     facet only when domain expertise must genuinely sit on the panel to judge the work — and
@@ -143,6 +191,14 @@ Produce two things:
   - **Distinct concepts.** No facet may be a rephrasing, broader/narrower rewording, or
     umbrella of another; when two candidates overlap, keep the one at the granularity the
     literature actually uses.
+- **The key terms — `keyTerms`, 0-12 phrases.** The one place the submitter's own wording is
+  kept: short phrases (2-80 characters, one line) copied character for character from the
+  structured input — preferring the submitter's own words as `context` and `question` carry
+  them — that name the concepts, methods, objects, or effects the submission is about,
+  including coinages and phrasings the facets translated into standard terms. Never correct,
+  expand, or reword a key term (the standard form belongs in a facet name or alias); never
+  take function words, whole sentences, file names, paths, or code identifiers; `[]` when the
+  input carries no such phrase.
 
 # Structured output
 Return a single JSON object with exactly these fields:
@@ -156,8 +212,9 @@ Return a single JSON object with exactly these fields:
 - `requestedOutputs`: the Step 7 entries in the order the submission raises them, `[]` when there
   are none.
 - `embeddingInput`: the Step 8 record —
-  `{ "title": "...", "abstract": "...", "facets": [ { "name": "...", "statement": "...", "relevance": 0.9 } ] }`
-  with 3-8 facets, most central first, every string obeying the Step 8 rules.
+  `{ "title": "...", "abstract": "...", "facets": [ { "name": "...", "statement": "...", "relevance": 0.9, "kind": "method", "aliases": ["..."] } ], "problemFormulation": "...", "equivalentProblems": [ { "field": "...", "name": "...", "statement": "...", "confidence": 0.6 } ], "keyTerms": ["..."] }`
+  with 3-8 facets, most central first, every string obeying the Step 8 rules. Every field is
+  always present: `aliases`, `equivalentProblems`, and `keyTerms` are `[]` when there are none.
 
 Rules:
 - Derive everything from the actual input; never copy from examples.
