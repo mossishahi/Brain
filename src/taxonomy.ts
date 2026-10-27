@@ -29,7 +29,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import {
   EMBEDDER_MANIFEST,
@@ -565,6 +565,75 @@ export interface TaxonomyEmbeddingsExport {
   readonly vectors: ReadonlyArray<readonly number[]>;
 }
 
+/**
+ * A precomputed neural node-vector index of one taxonomy revision, served by
+ * taxonomy_embeddings when a client names its `encoder`. Written by
+ * scripts/build-node-vectors.mjs as `<storeDir>/embeddings/<encoder>/<revision>.json`
+ * (the directory is `encodeURIComponent(encoder)`); served verbatim.
+ */
+export interface TaxonomyNeuralEmbeddingsExport {
+  readonly revision: number;
+  /** The encoder manifest (id, dim, version, models, pooling, formats, verification heads). */
+  readonly encoder: { readonly id: string; readonly dim: number; readonly [key: string]: unknown };
+  /** Node ids, parallel to the rows of the vectors. */
+  readonly ids: readonly string[];
+  readonly dim: number;
+  /** Row-major float32 little-endian vectors (ids.length x dim, L2-normalized), base64. */
+  readonly vectorsB64: string;
+  /** sha256 over the decoded float32 bytes. */
+  readonly vectorsSha256: string;
+  /** sha256 of the node texts the vectors were computed from (catalog/taxonomy-texts.json). */
+  readonly nodeTextsSha256: string;
+}
+
+/** Store directory name of an encoder id, or undefined when the id cannot name one. */
+export function encoderStoreName(encoder: string): string | undefined {
+  if (encoder.length === 0 || encoder.length > 200) return undefined;
+  const name = encodeURIComponent(encoder);
+  return name === "." || name === ".." ? undefined : name;
+}
+
+/** Parse and check one precomputed index file; undefined when it is not a valid index for (encoder, revision). */
+function readNeuralEmbeddings(
+  file: string,
+  encoder: string,
+  revision: number,
+): TaxonomyNeuralEmbeddingsExport | undefined {
+  let parsed: TaxonomyNeuralEmbeddingsExport;
+  try {
+    parsed = JSON.parse(readFileSync(file, "utf8")) as TaxonomyNeuralEmbeddingsExport;
+  } catch {
+    return undefined;
+  }
+  if (
+    parsed?.revision !== revision ||
+    parsed.encoder?.id !== encoder ||
+    !Array.isArray(parsed.ids) ||
+    !parsed.ids.every((id) => typeof id === "string") ||
+    !Number.isSafeInteger(parsed.dim) ||
+    parsed.dim < 1 ||
+    parsed.encoder.dim !== parsed.dim ||
+    typeof parsed.vectorsB64 !== "string" ||
+    typeof parsed.vectorsSha256 !== "string" ||
+    typeof parsed.nodeTextsSha256 !== "string" ||
+    !/^[0-9a-f]{64}$/.test(parsed.nodeTextsSha256)
+  ) {
+    return undefined;
+  }
+  const bytes = Buffer.from(parsed.vectorsB64, "base64");
+  if (bytes.length !== parsed.ids.length * parsed.dim * 4) return undefined;
+  if (createHash("sha256").update(bytes).digest("hex") !== parsed.vectorsSha256) return undefined;
+  return {
+    revision: parsed.revision,
+    encoder: parsed.encoder,
+    ids: parsed.ids,
+    dim: parsed.dim,
+    vectorsB64: parsed.vectorsB64,
+    vectorsSha256: parsed.vectorsSha256,
+    nodeTextsSha256: parsed.nodeTextsSha256,
+  };
+}
+
 export interface TaxonomyServiceOptions {
   /** The versioned seed shipped with the content (bundle catalog asset). */
   readonly seedPath: string;
@@ -585,6 +654,10 @@ export class TaxonomyService {
   private readonly suggestionsDir: string;
   private readonly embeddingsDir: string;
   private embeddingsCache: TaxonomyEmbeddingsExport | null = null;
+  private readonly neuralCache = new Map<
+    string,
+    { readonly revision: number; readonly stamp: string; readonly value: TaxonomyNeuralEmbeddingsExport }
+  >();
 
   constructor(options: TaxonomyServiceOptions) {
     const storeFile = join(options.storeDir, "taxonomy.json");
@@ -667,6 +740,36 @@ export class TaxonomyService {
     writeFileSync(file, `${JSON.stringify(built)}\n`, "utf8");
     this.embeddingsCache = built;
     return built;
+  }
+
+  /**
+   * The precomputed node vectors of `encoder` for the CURRENT revision, read
+   * from `<storeDir>/embeddings/<encoder>/<revision>.json` and checked (revision,
+   * encoder id, shape, vectors sha256); undefined when the store holds no
+   * valid index for that pair, in which case callers serve embeddings().
+   * Cached in memory per encoder until the revision or the file (inode, size, mtime) changes.
+   */
+  neuralEmbeddings(encoder: string): TaxonomyNeuralEmbeddingsExport | undefined {
+    const name = encoderStoreName(encoder);
+    if (name === undefined) return undefined;
+    const revision = this.graph.revision;
+    const file = join(this.embeddingsDir, name, `${revision}.json`);
+    // inode + size + mtime: a rebuilt file (written and renamed by the script) is always re-read,
+    // even on filesystems with coarse timestamps.
+    let stamp: string;
+    try {
+      const stats = statSync(file, { bigint: true });
+      stamp = `${stats.ino}:${stats.size}:${stats.mtimeNs}`;
+    } catch {
+      this.neuralCache.delete(encoder);
+      return undefined;
+    }
+    const cached = this.neuralCache.get(encoder);
+    if (cached && cached.revision === revision && cached.stamp === stamp) return cached.value;
+    const value = readNeuralEmbeddings(file, encoder, revision);
+    if (value) this.neuralCache.set(encoder, { revision, stamp, value });
+    else this.neuralCache.delete(encoder);
+    return value;
   }
 
   /**

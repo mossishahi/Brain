@@ -557,6 +557,14 @@ const TAXONOMY_TOOLS = [
             "The revision the client already has cached; when it matches the live " +
             "revision the payload is elided (unchanged: true).",
         },
+        encoder: {
+          type: "string",
+          description:
+            "Optional encoder id (e.g. specter2, bge-base-en-v1.5). When the server holds " +
+            "precomputed node vectors of that encoder for the live revision, the payload is " +
+            "{revision, encoder (manifest), ids, dim, vectorsB64 (float32 little-endian), " +
+            "vectorsSha256, nodeTextsSha256}; otherwise the default hash-ngram-v1 index is returned.",
+        },
       },
       additionalProperties: false,
     },
@@ -668,6 +676,19 @@ function createProtocolServer(
             return toolResult(taxonomy.tree(root));
           }
           case "taxonomy_embeddings": {
+            // Precomputed neural node vectors when the client names an encoder the
+            // store holds for the live revision; otherwise exactly the default index.
+            const encoder =
+              typeof args.encoder === "string" && args.encoder !== "" ? args.encoder : undefined;
+            const neural = encoder !== undefined ? taxonomy.neuralEmbeddings(encoder) : undefined;
+            if (neural) {
+              const knownNeural =
+                typeof args.knownRevision === "number" ? args.knownRevision : undefined;
+              if (knownNeural !== undefined && knownNeural === neural.revision) {
+                return toolResult({ revision: neural.revision, encoder: neural.encoder.id, unchanged: true });
+              }
+              return toolResult(neural);
+            }
             const embeddings = taxonomy.embeddings();
             const known =
               typeof args.knownRevision === "number" ? args.knownRevision : undefined;
