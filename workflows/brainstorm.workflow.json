@@ -1,7 +1,7 @@
 {
   "apiVersion": "brainstorm.workflow/v1",
   "name": "brainstorm",
-  "version": "0.28.0",
+  "version": "0.29.0",
   "description": "Multidisciplinary scientific panel: structure the submission (preprocessing reads everything and builds the structured input plus the per-file relation map; a separate reasoning stage then classifies it against the bundle input-type catalog — the single reference file that defines every type, its reviewing rubric, its output shape, and its outline — by the submitter's actual ask, never the domain narrative, offering a primary and an alternative reading plus the explicitly-or-unmistakably requested outputs, with a skippable countdown gate where the submitter confirms or revises the decision before any panel cost is incurred), annotate any attached code (a dedicated pass reads every code file and folds a one-line content summary into the shared file map), assemble an expert panel plus one deterministically woven interdisciplinary seat whose expertise is the space between the seated fields (a full member: it develops, is reviewed, and redevelops like every other seat), let every member work the submission in parallel in the shape the catalog maps its type to (delivering the chain of thought stepwise through the submit_step tool, four parts to a step so the size of a step is bounded by its shape, assembled by the runtime), review each member chain of thought step by step with every seat's walk running in parallel and isolated to its own state — commentors (the interdisciplinary seat commenting through its own roster-aware skill on the crossings between fields) and a chain-grounded judge may fault the current step or any earlier one, an anonymized objection ledger — scoped by the runtime to this position's rounds, the objections still unanswered, and a collapsed record of closed positions — carries every round's confirmed issues and each revision's runtime-computed change-set into the next round, and bounded redevelopment delivers a patch — the rewritten steps and the changed developed sections — that the host applies over the previous version, leaving untouched text byte-identical — audit the reviewed outputs across fields (novelty claims, contradictions, unexplored seams), then synthesize one final summary.",
   "params": {
     "panelSize": {
@@ -39,6 +39,289 @@
       "default": 4,
       "min": 1,
       "max": 10
+    },
+    "panelSizeMode": {
+      "description": "Panel size rule for seat-panel: \"auto\" seats k*, the first size of at least 2 whose next greedy seat would add less than gainStop times the total need weight, and \"fixed\" seats panelSize.",
+      "default": "auto"
+    },
+    "askUserToConfirmNeeds": {
+      "description": "When true, a skippable gate shows the classifier's needs before retrieval so the submitter can remove facets, aliases or equivalent problems and change their relevance or confidence; when false the pipeline never waits on the user.",
+      "default": false
+    },
+    "coreWeight": {
+      "description": "Weight of need 0, the core: the classifier's embedding title and abstract.",
+      "default": 1.0,
+      "min": 0,
+      "max": 1
+    },
+    "formulationWeight": {
+      "description": "Weight of the classifier's domain-free problem formulation as a need; 0 uses it for retrieval only.",
+      "default": 0.5,
+      "min": 0,
+      "max": 1
+    },
+    "equivalentProblemWeight": {
+      "description": "Weight factor of each equivalent problem as a need, multiplied by that problem's confidence; 0 uses equivalent problems for retrieval only.",
+      "default": 0.0,
+      "min": 0,
+      "max": 1
+    },
+    "sourceArxiv": {
+      "description": "Search arXiv (no key needed).",
+      "default": true
+    },
+    "sourceCrossref": {
+      "description": "Search Crossref and use it for DOI metadata (no key needed).",
+      "default": true
+    },
+    "sourceSemanticScholar": {
+      "description": "Use Semantic Scholar for search, statement queries and citations (key optional; the keyless pool is often exhausted).",
+      "default": true
+    },
+    "sourceOpenAlex": {
+      "description": "Use OpenAlex for search, statement queries and citations; it needs the host's OpenAlex key, and without the key the source is recorded as needs-key and never called.",
+      "default": true
+    },
+    "sourceEuropePmc": {
+      "description": "Search Europe PMC, the life-sciences literature index (no key needed).",
+      "default": false
+    },
+    "sourceCore": {
+      "description": "Search CORE, the open-access full-text index; it needs the host's CORE key, and without the key the source is recorded as needs-key and never called.",
+      "default": true
+    },
+    "sourceOpenCitations": {
+      "description": "Use OpenCitations for the citation hop only, DOI to DOI (no key needed; a token is optional).",
+      "default": true
+    },
+    "resultsPerCall": {
+      "description": "Results requested per search call.",
+      "default": 25,
+      "min": 1,
+      "max": 100
+    },
+    "maxCalls": {
+      "description": "Hard budget of search and detail calls per run, allocated in route order.",
+      "default": 150,
+      "min": 10,
+      "max": 600
+    },
+    "yearFrom": {
+      "description": "Earliest publication year retrieved; 0 means no date window.",
+      "default": 0,
+      "min": 0,
+      "max": 2100
+    },
+    "routeTitle": {
+      "description": "Query with the core title.",
+      "default": true
+    },
+    "routeFacetNames": {
+      "description": "Query with each facet name, as a quoted phrase where the source supports phrases.",
+      "default": true
+    },
+    "routeFacetAliases": {
+      "description": "Query with each alias of each facet.",
+      "default": true
+    },
+    "routePairs": {
+      "description": "Facet-pair queries (route F): \"off\", \"central\" (each facet paired with the most central other facet, the v1 rule) or \"all\" (every unordered facet pair).",
+      "default": "all"
+    },
+    "maxPairQueries": {
+      "description": "Pair queries kept, ranked by the product of the two facets' relevances.",
+      "default": 15
+    },
+    "routeStatements": {
+      "description": "Route B: send long-text queries (facet statements, the core abstract, the formulation and the equivalent-problem statements) to the semantic-capable sources only (Semantic Scholar, OpenAlex, CORE).",
+      "default": true
+    },
+    "routeEquivalents": {
+      "description": "Query every search source with each equivalent problem's name.",
+      "default": true
+    },
+    "routeKnn": {
+      "description": "Route C: query with the names of the topics nearest to each need in the topic-vector space.",
+      "default": true
+    },
+    "knnK": {
+      "description": "Nearest topics taken per need in route C.",
+      "default": 5,
+      "min": 1,
+      "max": 50
+    },
+    "knnHopK": {
+      "description": "Nearest topics added for each topic found in route C (a second hop); 0 disables the hop.",
+      "default": 0,
+      "min": 0,
+      "max": 20
+    },
+    "knnKeywords": {
+      "description": "Upstream keywords of each route-C topic issued as extra queries.",
+      "default": 0,
+      "min": 0,
+      "max": 10
+    },
+    "knnMaxQueries": {
+      "description": "Cap on route-C queries, ranked by the best cosine times max(need weight, 0.25) over the needs.",
+      "default": 20
+    },
+    "routeCitations": {
+      "description": "Route D, from round 2: fetch references and citations of the highest-evidence papers from the available citation-capable sources (OpenAlex, Semantic Scholar, OpenCitations).",
+      "default": true
+    },
+    "citationSeeds": {
+      "description": "Papers seeded per run in route D, those with the highest evidence mass after round 1.",
+      "default": 10
+    },
+    "citationLimit": {
+      "description": "Maximum references and maximum citations fetched per route-D seed.",
+      "default": 25
+    },
+    "citationDirections": {
+      "description": "Citation directions fetched in route D: \"references\", \"citations\" or \"both\".",
+      "default": "both"
+    },
+    "routeFeedback": {
+      "description": "Route E, from round 2: pseudo-relevance feedback that issues phrases mined from each need's top evidence papers as keyword queries to all search sources.",
+      "default": true
+    },
+    "feedbackSeeds": {
+      "description": "Top evidence papers per need used for route-E phrase extraction.",
+      "default": 10
+    },
+    "feedbackTerms": {
+      "description": "New route-E phrases kept per need, at most 20 in total.",
+      "default": 5
+    },
+    "routeKeyTerms": {
+      "description": "Query with each key term copied verbatim from the submission.",
+      "default": false
+    },
+    "maxRounds": {
+      "description": "Retrieval rounds: round 1 runs the seed plan and each later round repeats routes D and E from the new evidence.",
+      "default": 2,
+      "min": 1,
+      "max": 3
+    },
+    "minNewShare": {
+      "description": "Retrieval stops after a round that adds fewer than this share of new eligible papers.",
+      "default": 0.1
+    },
+    "relevanceScreen": {
+      "description": "When true, the run's chat model on route \"balanced\" judges every eligible paper on-topic or off-topic in batches of 40, and off-topic papers are excluded from the evidence and logged.",
+      "default": false
+    },
+    "encoder": {
+      "description": "Text encoder for needs, papers and topic vectors: \"specter2\", \"bge-base-en-v1.5\", \"hash-ngram-v1\" or \"openrouter:<model id>\" (the last needs the host's OpenRouter key).",
+      "default": "specter2"
+    },
+    "minAbstractChars": {
+      "description": "Minimum abstract length, in characters, for a paper to be eligible.",
+      "default": 200
+    },
+    "maxPapers": {
+      "description": "Cap on eligible papers, keeping those with the highest reciprocal-rank-fusion scores.",
+      "default": 1000
+    },
+    "topicsPerPaper": {
+      "description": "Topics each paper is placed on (m), weighted by their similarity margins.",
+      "default": 3
+    },
+    "papersPerNeed": {
+      "description": "Evidence papers kept per need (K): the eligible papers most similar to it.",
+      "default": 20
+    },
+    "weakPlacementQuantile": {
+      "description": "Share of papers with the lowest best-topic similarity that are flagged as weak placements.",
+      "default": 0.05
+    },
+    "minSupport": {
+      "description": "Minimum number of evidence papers placed on a topic for the topic to become a candidate seat.",
+      "default": 2
+    },
+    "saturationShare": {
+      "description": "Evidence share of a need at which a topic's affinity to that need saturates (theta).",
+      "default": 0.3
+    },
+    "maxAffinity": {
+      "description": "Affinity of a topic that saturates a need (a_max), kept below 1 so a second seat on a heavy need still adds coverage.",
+      "default": 0.8
+    },
+    "seatsPerSubfield": {
+      "description": "Maximum seats per subfield; 0 means no subfield cap.",
+      "default": 0
+    },
+    "seatsPerField": {
+      "description": "Maximum seats per field; 0 means ceil(panelSize/2).",
+      "default": 0
+    },
+    "gainStop": {
+      "description": "Share of the total need weight below which the next seat's coverage gain ends the panel in auto size mode (epsilon).",
+      "default": 0.05
+    },
+    "criticalWeight": {
+      "description": "Minimum need weight for a need to count as critical, which gives it anchored candidates, the rescue and the k_cov target.",
+      "default": 0.5
+    },
+    "criticalCoverage": {
+      "description": "Coverage every critical need must reach for k_cov, the reported coverage-target panel size.",
+      "default": 0.75
+    },
+    "anchors": {
+      "description": "Create a facet-anchored candidate for each critical facet that no topic candidate covers to anchorThreshold.",
+      "default": true
+    },
+    "anchorThreshold": {
+      "description": "Affinity a topic candidate must reach on a critical facet for that facet to count as covered without an anchor.",
+      "default": 0.4
+    },
+    "anchorAffinity": {
+      "description": "Affinity of a facet-anchored candidate to its own facet.",
+      "default": 0.6
+    },
+    "rescueUncoveredNeeds": {
+      "description": "After selection, a critical need whose coverage after k* seats is below anchorThreshold gets its anchored seat while fewer than panelSize seats are listed, caps notwithstanding.",
+      "default": true
+    },
+    "shareAlarm": {
+      "description": "Evidence share of a single source above which a source alarm is raised.",
+      "default": 0.6
+    },
+    "thinNeed": {
+      "description": "Own-query share below which a need's evidence is flagged as thin.",
+      "default": 0.25
+    },
+    "hubShare": {
+      "description": "Share of the papers above which a topic among their top placements is flagged as a hub.",
+      "default": 0.5
+    },
+    "gamifiedReview": {
+      "description": "Use independent probability reports with verified factual premises, committee admission, arithmetic-mean decisions, and a private critic balance. Standard review is unchanged when off.",
+      "default": false
+    },
+    "gameDecisionThreshold": {
+      "description": "In game review, block the current step when the arithmetic mean of admitted probabilities is at least this threshold.",
+      "default": 0.5,
+      "min": 0,
+      "max": 1
+    },
+    "gameInitialPoints": {
+      "description": "Initial balance per critic in game review. -1 selects 100 times the confirmed panel size; a nonnegative value sets an explicit balance, including zero. A negative resulting balance permanently disables future criticism only.",
+      "default": -1,
+      "min": -1
+    },
+    "gameDecisionRule": {
+      "description": "How y is decided for a game review round. \"chair-decisive\" sets y=1 exactly when the committee chair labels at least one admitted report decisive. \"committee-mean\" sets y=1 exactly when the arithmetic mean of admitted probabilities is at least gameDecisionThreshold.",
+      "default": "chair-decisive"
+    },
+    "gameLeaveOneOut": {
+      "description": "Under \"committee-mean\", score each admitted critic against the label the other admitted reports produce; a lone admitted critic is unscored. Ignored under \"chair-decisive\", where y is already independent of every report.",
+      "default": true
+    },
+    "gameInventedBadgePenalty": {
+      "description": "In game review, reject a critic report that cites a badge [F:n] never issued in the run's fact table, or, when the fact table deletes refuted and revoked badges, one deleted from it before the report was requested, and record -175, the lowest score a round can produce, against that critic's private balance. Badges that appear in the reviewed chain or the task input are exempt. When false, rejection carries no penalty.",
+      "default": true
     }
   },
   "root": {
@@ -117,6 +400,36 @@
           ]
         },
         "skippable": true
+      },
+      {
+        "kind": "condition",
+        "id": "maybe-confirm-needs",
+        "if": {
+          "ref": "params.askUserToConfirmNeeds",
+          "equals": true
+        },
+        "then": {
+          "kind": "humanGate",
+          "id": "confirm-needs",
+          "gate": {
+            "title": "Confirm the needs",
+            "prompt": "Review the needs the panel will be composed for before any literature is retrieved. Approve them as-is, or trim them: remove facets, aliases, or equivalent problems, and adjust the facets' relevance or the equivalent problems' confidence (at least three facets stay). Left unanswered, the needs proceed as classified after a short countdown.",
+            "show": "classification.embeddingInput",
+            "actions": [
+              {
+                "id": "approve",
+                "description": "Proceed with the needs as classified."
+              },
+              {
+                "id": "edit",
+                "description": "Remove facets, aliases, or equivalent problems, or change their relevance or confidence, then proceed with the edited needs.",
+                "edits": "classification.embeddingInput",
+                "editRule": "needs"
+              }
+            ]
+          },
+          "skippable": true
+        }
       },
       {
         "kind": "activity",
@@ -211,100 +524,86 @@
         }
       },
       {
-        "kind": "agent",
-        "id": "build-pool",
-        "notes": "Part one of the former decomposer: literature retrieval, full author enumeration, verbatim profile interests, term unification. Returns the expertise pool in which every member carries its origins (who stated it, on which paper) and its distinct-people count. No tree, no seating.",
-        "skill": "pool-builder",
-        "route": "reasoning",
-        "bind": {
-          "input": {
-            "ref": "input",
-            "omit": [
-              "files"
-            ]
-          },
-          "files": "usefulFiles.files"
-        },
-        "output": {
-          "key": "pool",
-          "schema": "pool"
-        }
-      },
-      {
         "kind": "activity",
-        "id": "match-taxonomy",
-        "notes": "Deterministic orchestrator step, no model call: the HYBRID matching lane. Pillars first — one taxonomy_resolve round-trip per pool member against the LIVE shared taxonomy (exact name/alias match, untouchable). Then the semantic lane over the registry-served node-embedding index: still-unmatched terms are scored by cosine plus a small active-region boost warmed by the classifier's facets and the exact-match landings; an unambiguous score above the served threshold auto-matches, everything else carries its scored top candidates to the placer. Fail-safe: no served index or a conformance-failing local embedder turns the lane off and matching behaves exactly as before. Output carries every member's match or candidates, the unmatched projection for the placer, the lane status, and the taxonomy revision answered from.",
-        "handler": "taxonomy.match",
+        "id": "retrieve-literature",
+        "handler": "literature.retrieve",
         "bind": {
-          "pool": "pool",
           "classification": "classification",
-          "maxMembers": "params.maxPoolMembers"
-        },
-        "output": {
-          "key": "poolMatches",
-          "schema": "poolMatches"
-        }
-      },
-      {
-        "kind": "agent",
-        "id": "place-fields",
-        "notes": "Part two of the former decomposer: for the members deterministic matching could not resolve, read the bound taxonomy outline — the full domain/field skeleton expanded around the members' candidate landings, rendered deterministically by the match step from the run's pinned taxonomy — and decide each member's canonical name and existing parent (or report it already present under another spelling), fetching any cut branch through the taxonomy-access capability where the slice is not enough. Decisions only — recording happens in the next step.",
-        "skill": "placer",
-        "route": "reasoning",
-        "bind": {
           "input": {
             "ref": "input",
             "omit": [
               "files"
             ]
           },
-          "unmatched": "poolMatches.unmatched",
-          "outline": "poolMatches.placerOutline"
+          "config": "params"
         },
         "output": {
-          "key": "placements",
-          "schema": "placements"
+          "key": "literature",
+          "schema": "literature"
+        }
+      },
+      {
+        "kind": "condition",
+        "id": "maybe-screen-literature",
+        "if": {
+          "ref": "params.relevanceScreen",
+          "equals": true
+        },
+        "then": {
+          "kind": "agent",
+          "id": "screen-literature",
+          "skill": "literature-screener",
+          "route": "balanced",
+          "bind": {
+            "input": {
+              "ref": "input",
+              "omit": [
+                "files"
+              ]
+            },
+            "classification": "classification",
+            "papers": "literature.screenItems"
+          },
+          "output": {
+            "key": "literatureScreen",
+            "schema": "literatureScreen"
+          }
+        },
+        "else": {
+          "kind": "activity",
+          "id": "skip-screen-literature",
+          "handler": "literature.noScreen",
+          "bind": {
+            "literature": "literature"
+          },
+          "output": {
+            "key": "literatureScreen",
+            "schema": "literatureScreen"
+          }
         }
       },
       {
         "kind": "activity",
-        "id": "submit-decisions",
-        "notes": "Deterministic orchestrator step: send a copy of the run's decision for every pool member (matched position, new placement, or already-present resolution) to the registry's append-only suggestion queue and record the receipt. Suggestions are queued, never applied here.",
-        "handler": "taxonomy.suggest",
+        "id": "compose-panel",
+        "handler": "panel.compose",
         "bind": {
-          "matches": "poolMatches",
-          "placements": "placements",
-          "maxMembers": "params.maxPoolMembers"
+          "literature": "literature",
+          "screen": "literatureScreen",
+          "config": "params"
         },
         "output": {
-          "key": "suggestionReceipt",
-          "schema": "suggestionReceipt"
+          "key": "panelEvidence",
+          "schema": "panelEvidence"
         }
       },
       {
         "kind": "activity",
-        "id": "bridge-experts",
-        "notes": "TEMPORARY until the pool-based seating design lands: deterministically fold matched positions and placement decisions into the legacy experts tree (the pool's literature grounding riding through) so panel.select and everything downstream keep working unchanged.",
-        "handler": "experts.bridge",
+        "id": "seat-panel",
+        "handler": "panel.seat",
         "bind": {
-          "pool": "pool",
-          "matches": "poolMatches",
-          "placements": "placements",
-          "maxDepartments": "params.maxDepartments"
-        },
-        "output": {
-          "key": "experts",
-          "schema": "experts"
-        }
-      },
-      {
-        "kind": "activity",
-        "id": "select-panel",
-        "notes": "Provider-neutral deterministic runtime transform, no model call. The registered panel.select handler mixes every department/umbrella/topic node into one queue ordered by count x relevance, seats the highest while capacity remains, and prefers the more specific node when a descendant would seat itself; see the handler's own contract in catalog/activity-handlers.json for the authoritative algorithm.",
-        "handler": "panel.select",
-        "bind": {
-          "experts": "experts",
-          "panelSize": "params.panelSize"
+          "evidence": "panelEvidence",
+          "panelSize": "params.panelSize",
+          "panelSizeMode": "params.panelSizeMode"
         },
         "output": {
           "key": "panel",
@@ -394,230 +693,624 @@
         "body": {
           "kind": "forEach",
           "id": "review-steps",
-          "notes": "Walk the member's chain step by step. The chain's LENGTH is invariant: a redevelopment rewrites steps in place (the host carries every step the patch does not name) but never changes the step count, so this loop runs exactly input.cotSteps times. Advancing past a position means no demonstrable flaw currently stands anywhere in steps 1..position.",
+          "notes": "Walk the member's chain step by step. The chain's LENGTH is invariant: a redevelopment rewrites steps in place (the host carries every step the patch does not name) but never changes the step count, so this loop runs exactly input.cotSteps times. Each position closes with the selected strategy's decision; exhaustion, and a game round without admissible reports, can advance with unresolved issues and never certify that the reasoning is sound.",
           "items": "ideas[member.id].cot",
           "itemVar": "cotStep",
           "indexVar": "stepIndex",
           "mode": "sequential",
           "body": {
-            "kind": "repeatUntil",
-            "id": "review-round",
-            "notes": "One iteration = one review round at the current walk position: gather comments (each targeting the current step or any earlier one), judge over the actual chain, and redevelop if the judge did not Pass. Bounded by the maxReviewRounds param — the loop compiles to that param's declared ceiling and exits on the runtime-stamped reviews[member.id].finalRound flag, so the budget is declared in exactly ONE place. onExhausted=proceed is the backstop forced pass. reviews[member.id].allowedVerdicts is computed by the runtime from bundle.verdicts.sequencing and this position's previous round (a Build may not immediately follow a Build); reviews[member.id].record is the seat's anonymized objection ledger SCOPED to what is still actionable, refreshed every round — this position's rounds verbatim, objections an earlier position ran out of rounds to settle carried whole (standing), and closed positions collapsed to what may not be re-opened (settled/clean). All review state is seat-qualified so two members' walks never collide.",
-            "maxIterations": "params.maxReviewRounds",
-            "onExhausted": "proceed",
-            "until": {
-              "any": [
-                {
-                  "ref": "reviews[member.id].current.decision.verdict",
-                  "equals": "Pass"
-                },
-                {
-                  "ref": "reviews[member.id].finalRound",
-                  "equals": true
-                }
-              ]
+            "kind": "condition",
+            "id": "dispatch-review-strategy",
+            "notes": "The immutable per-run gamifiedReview setting selects the complete review strategy. The false branch is the existing review round unchanged.",
+            "if": {
+              "ref": "params.gamifiedReview",
+              "equals": true
             },
-            "body": {
-              "kind": "sequence",
-              "id": "review-round-body",
-              "steps": [
-                {
-                  "kind": "forEach",
-                  "id": "gather-comments",
-                  "notes": "Every panel member except the thinker comments in parallel. Commentors see chain steps 1..stepIndex (never the developed paper), the anonymized objection ledger, and the thinker's per-step working notes for the same steps (the runtime-captured thinking behind each step's current text — confidential to the board: the thinker is never told they are read, so no comment may quote or hint at them; they raise suspicions to verify, never verdicts). A commentor may fault the current step or any earlier one — the comment's `step` field names the target. The panel's interdisciplinary seat comments through its own skill (roster-aware, covering the areas between the seated fields); every disciplinary seat uses the standard commentor skill.",
-                  "items": "panel.members",
-                  "itemVar": "commentor",
-                  "exclude": "member",
-                  "mode": "parallel",
-                  "body": {
-                    "kind": "condition",
-                    "id": "dispatch-comment",
-                    "if": {
-                      "ref": "commentor.seat",
-                      "equals": "interdisciplinary"
+            "then": {
+              "kind": "repeatUntil",
+              "id": "game-review-round",
+              "notes": "Game review at one walk position: independent two-field reports, committee claim-level admission with a decisiveness label per report, host decision under params.gameDecisionRule and durable private balances. A negative balance permanently disables future criticism only; thinking continues. For y=1 and remaining repair rounds, the dedicated reviser receives only the anonymous admitted arguments that the decision rule selects. No admitted report closes the position unresolved with y=null; the round cap never changes that label. Standard review remains separately selectable.",
+              "maxIterations": "params.maxReviewRounds",
+              "onExhausted": "proceed",
+              "until": {
+                "any": [
+                  {
+                    "ref": "reviews[member.id].current.decision.verdict",
+                    "equals": "Pass"
+                  },
+                  {
+                    "ref": "reviews[member.id].finalRound",
+                    "equals": true
+                  },
+                  {
+                    "ref": "reviews[member.id].current.gameSettlement.status",
+                    "equals": "no-valid-reports"
+                  }
+                ]
+              },
+              "body": {
+                "kind": "sequence",
+                "id": "game-review-round-body",
+                "steps": [
+                  {
+                    "kind": "activity",
+                    "id": "game-apply-fact-updates",
+                    "notes": "Fact updates before the round's critics are dispatched: when the fact table has deleted a badge this seat's chain or developed output cites, wait for the seat's reconsideration task, started at the deletion, and merge its revision with the redevelopment merge, so this round reviews the reconsidered chain. A merge changes no verdict, repair, score or balance, and the chain does not change again before the next round starts.",
+                    "handler": "facts.mergeChain",
+                    "bind": {
+                      "idea": "ideas[member.id]"
                     },
-                    "then": {
-                      "kind": "agent",
-                      "id": "comment-step-bridge",
-                      "notes": "The interdisciplinary seat's comment: same verdicts, same evidence discipline, but its field is the space between the seated members — it receives the full roster and reviews the crossings between fields, never re-litigating a point inside one field's own lane.",
-                      "skill": "interdisciplinary-commentor",
-                      "route": "reasoning",
-                      "bind": {
-                        "input": {
-                          "ref": "input",
-                          "omit": [
-                            "files",
-                            "cotSteps"
-                          ]
-                        },
-                        "files": "usefulFiles.files",
-                        "department": "commentor.department",
-                        "umbrella": "commentor.umbrella",
-                        "subfields": "commentor.subfields",
-                        "roster": "panel.members",
-                        "chain": {
-                          "ref": "ideas[member.id].cot",
-                          "through": "stepIndex"
-                        },
-                        "currentStep": "stepIndex",
-                        "history": "reviews[member.id].record",
-                        "thoughts": {
-                          "ref": "thoughts[member.id]",
-                          "through": "stepIndex"
-                        },
-                        "verdictOptions": "reviews[member.id].allowedVerdicts",
-                        "verdictCatalog": "bundle.verdicts.verdicts",
-                        "type": "input.type",
-                        "shape": "bundle.inputTypes.shapes[input.type]"
-                      },
-                      "output": {
-                        "key": "reviews[member.id].current.comments[commentor.id]",
-                        "schema": "commentParts"
-                      }
-                    },
-                    "else": {
-                      "kind": "agent",
-                      "id": "comment-step",
-                      "skill": "commentor",
-                      "route": "reasoning",
-                      "bind": {
-                        "input": {
-                          "ref": "input",
-                          "omit": [
-                            "files",
-                            "cotSteps"
-                          ]
-                        },
-                        "files": "usefulFiles.files",
-                        "department": "commentor.department",
-                        "umbrella": "commentor.umbrella",
-                        "subfields": "commentor.subfields",
-                        "shape": "bundle.inputTypes.shapes[input.type]",
-                        "chain": {
-                          "ref": "ideas[member.id].cot",
-                          "through": "stepIndex"
-                        },
-                        "currentStep": "stepIndex",
-                        "history": "reviews[member.id].record",
-                        "thoughts": {
-                          "ref": "thoughts[member.id]",
-                          "through": "stepIndex"
-                        },
-                        "verdictOptions": "reviews[member.id].allowedVerdicts",
-                        "verdictCatalog": "bundle.verdicts.verdicts",
-                        "type": "input.type"
-                      },
-                      "output": {
-                        "key": "reviews[member.id].current.comments[commentor.id]",
-                        "schema": "commentParts"
-                      }
+                    "output": {
+                      "key": "reviews[member.id].factUpdate",
+                      "schema": "factUpdateMerge"
                     }
                   },
-                  "maxConcurrency": 12
-                },
-                {
-                  "kind": "agent",
-                  "id": "judge-step",
-                  "notes": "One judgement over all comments of this round, grounded in the chain itself: the judge reads steps 1..stepIndex, verifies every comment against the actual step text, checks the ledger's earlier objections against the last revision's change-set, and returns the de-duplicated issues[] repair signal. fastPassUnanimous: a round in which EVERY commentor passed is recorded as a fast pass by the runtime — a passing comment may carry no evidence, so a unanimous round holds nothing to weigh and no repair signal to compose, and the judge is not convened; the recorded decision's reason names the fast pass.",
-                  "skill": "judge",
-                  "route": "reasoning",
-                  "fastPassUnanimous": true,
-                  "bind": {
-                    "input": {
-                      "ref": "input",
-                      "omit": [
-                        "files",
-                        "cotSteps"
-                      ]
-                    },
-                    "files": "usefulFiles.files",
-                    "board": "panel.members",
-                    "chain": {
-                      "ref": "ideas[member.id].cot",
-                      "through": "stepIndex"
-                    },
-                    "comments": "reviews[member.id].current.comments",
-                    "currentStep": "stepIndex",
-                    "history": "reviews[member.id].record",
-                    "verdictOptions": "reviews[member.id].allowedVerdicts",
-                    "verdictCatalog": "bundle.verdicts.verdicts",
-                    "type": "input.type",
-                    "shape": "bundle.inputTypes.shapes[input.type]",
-                    "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]",
-                    "typeGuidance": "bundle.inputTypes.guidance[input.type]"
-                  },
-                  "output": {
-                    "key": "reviews[member.id].current.decision",
-                    "schema": "judgeDecisionParts"
-                  },
-                  "reviewPhase": "judging"
-                },
-                {
-                  "kind": "condition",
-                  "id": "maybe-redevelop",
-                  "notes": "Redevelop only when the judge did not Pass AND a redevelopment budget remains. Both conditions read runtime state — the round budget lives solely in the maxReviewRounds param, never as a literal here.",
-                  "if": {
-                    "all": [
-                      {
-                        "ref": "reviews[member.id].current.decision.verdict",
-                        "notEquals": "Pass"
+                  {
+                    "kind": "forEach",
+                    "id": "gather-game-comments",
+                    "notes": "Every eligible critic independently sees the reviewed prefix, useful attachments, its own private feedback and balance, and supreme-judge consultations scoped to a starting fact snapshot plus its own verified submissions. Other critics’ reports, scores, histories, new facts, and thinker repair notes are withheld. The runtime skips permanently disabled critics without changing panel membership or thinking assignments.",
+                    "items": "panel.members",
+                    "itemVar": "commentor",
+                    "exclude": "member",
+                    "mode": "parallel",
+                    "body": {
+                      "kind": "condition",
+                      "id": "dispatch-game-comment",
+                      "if": {
+                        "ref": "commentor.seat",
+                        "equals": "interdisciplinary"
                       },
-                      {
-                        "ref": "reviews[member.id].finalRound",
-                        "notEquals": true
+                      "then": {
+                        "kind": "agent",
+                        "id": "game-comment-step-bridge",
+                        "skill": "game-interdisciplinary-commentor",
+                        "route": "reasoning",
+                        "bind": {
+                          "input": {
+                            "ref": "input",
+                            "omit": [
+                              "files",
+                              "cotSteps"
+                            ]
+                          },
+                          "files": "usefulFiles.files",
+                          "department": "commentor.department",
+                          "umbrella": "commentor.umbrella",
+                          "subfields": "commentor.subfields",
+                          "roster": "panel.members",
+                          "chain": {
+                            "ref": "ideas[member.id].cot",
+                            "through": "stepIndex"
+                          },
+                          "currentStep": "stepIndex",
+                          "type": "input.type",
+                          "shape": "bundle.inputTypes.shapes[input.type]"
+                        },
+                        "output": {
+                          "key": "reviews[member.id].current.gameCritiques[commentor.id]",
+                          "schema": "gameCritique"
+                        }
+                      },
+                      "else": {
+                        "kind": "agent",
+                        "id": "game-comment-step",
+                        "skill": "game-commentor",
+                        "route": "reasoning",
+                        "bind": {
+                          "input": {
+                            "ref": "input",
+                            "omit": [
+                              "files",
+                              "cotSteps"
+                            ]
+                          },
+                          "files": "usefulFiles.files",
+                          "department": "commentor.department",
+                          "umbrella": "commentor.umbrella",
+                          "subfields": "commentor.subfields",
+                          "shape": "bundle.inputTypes.shapes[input.type]",
+                          "chain": {
+                            "ref": "ideas[member.id].cot",
+                            "through": "stepIndex"
+                          },
+                          "currentStep": "stepIndex",
+                          "type": "input.type"
+                        },
+                        "output": {
+                          "key": "reviews[member.id].current.gameCritiques[commentor.id]",
+                          "schema": "gameCritique"
+                        }
                       }
-                    ]
+                    },
+                    "maxConcurrency": 12
                   },
-                  "then": {
+                  {
+                    "kind": "activity",
+                    "id": "game-apply-report-updates",
+                    "notes": "Fact updates before the committee chair: wait for the reconsideration tasks of this round's reports that cite a badge the fact table deleted after the report was requested, put each revised report in place of the original, with the deletion epoch its revision was requested at, and remove each withdrawn report. A report the chair already has is handled after it, by game-apply-late-report-updates.",
+                    "handler": "facts.mergeGameReports",
+                    "bind": {
+                      "critiques": "reviews[member.id].current.gameCritiques"
+                    },
+                    "output": {
+                      "key": "reviews[member.id].current.factReportUpdate",
+                      "schema": "factUpdateMerge"
+                    }
+                  },
+                  {
                     "kind": "agent",
-                    "id": "redevelop-idea",
-                    "notes": "The reviser delivers a PATCH: the steps the confirmed issues implicate (at any position) through submit_step, and the developed sections its repair changed. It receives its own previous output to revise rather than regenerating it. The host carries every step and section the patch does not name, so untouched text is byte-identical by construction; the runtime — never the model — then computes the touched/untouched change-set by exact comparison, records it in the ledger, and the next round re-reviews at the same walk position with that change-set in view.",
-                    "skill": "redeveloper",
+                    "id": "chair-step",
+                    "notes": "Check the support and relevance of submitted justifications, classify every submitted critic once, and reconcile admissible arguments into a readable decision and y. No independent critique of every step and no unanimous-report shortcut. A null label means there is no admissible report, not that the step is sound.",
+                    "skill": "committee-chair",
                     "route": "reasoning",
                     "bind": {
                       "input": {
                         "ref": "input",
                         "omit": [
-                          "files"
+                          "files",
+                          "cotSteps"
                         ]
                       },
                       "files": "usefulFiles.files",
-                      "department": "member.department",
-                      "umbrella": "member.umbrella",
-                      "subfields": "member.subfields",
-                      "board": "panel.members",
-                      "chain": "ideas[member.id].cot",
-                      "previousOutput": "ideas[member.id].output",
-                      "feedback": {
-                        "ref": "reviews[member.id].current.decision",
-                        "pick": [
-                          "verdict",
-                          "reason",
-                          "suggestion",
-                          "evidence",
-                          "issues"
-                        ]
+                      "chain": {
+                        "ref": "ideas[member.id].cot",
+                        "through": "stepIndex"
                       },
+                      "comments": "reviews[member.id].current.gameCritiques",
                       "currentStep": "stepIndex",
-                      "history": "reviews[member.id].record",
-                      "totalSteps": "input.cotSteps",
                       "type": "input.type",
                       "shape": "bundle.inputTypes.shapes[input.type]",
-                      "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]"
+                      "typeGuidance": "bundle.inputTypes.guidance[input.type]"
                     },
                     "output": {
-                      "key": "reviews[member.id].current.revision",
-                      "schema": "redevelopmentPatchParts"
+                      "key": "reviews[member.id].current.gameChair",
+                      "schema": "gameCommitteeDecision"
                     },
-                    "reviewPhase": "redeveloping"
+                    "reviewPhase": "judging"
+                  },
+                  {
+                    "kind": "activity",
+                    "id": "game-apply-late-report-updates",
+                    "notes": "Fact updates for reports the committee chair already had: wait for the reconsideration tasks of this round's reports whose cited badge the fact table deleted while they were with the chair, put each revised report in place, remove each withdrawn one, and set reassess when either happened. The round's reports close here; a report left unchanged is settled as it stands.",
+                    "handler": "facts.mergeLateGameReports",
+                    "bind": {
+                      "critiques": "reviews[member.id].current.gameCritiques"
+                    },
+                    "output": {
+                      "key": "reviews[member.id].current.factLateUpdate",
+                      "schema": "factUpdateMerge"
+                    }
+                  },
+                  {
+                    "kind": "condition",
+                    "id": "maybe-game-chair-reassess",
+                    "notes": "Assess the round again only when a report the chair already had was revised or withdrawn after a fact-table deletion: one extra chair call, with the round's reports as the late merge left them. Its decision replaces the first assessment, which the round record keeps.",
+                    "if": {
+                      "ref": "reviews[member.id].current.factLateUpdate.reassess",
+                      "equals": true
+                    },
+                    "then": {
+                      "kind": "agent",
+                      "id": "game-chair-reassess",
+                      "notes": "The committee chair's re-assessment of this round: the same task as chair-step, with the reports as they now stand. Approvals already granted in this round for an unchanged report and badge are returned again without a new check; a round whose reports were all withdrawn still convenes the chair once, to record that no report is left.",
+                      "skill": "committee-chair",
+                      "route": "reasoning",
+                      "bind": {
+                        "input": {
+                          "ref": "input",
+                          "omit": [
+                            "files",
+                            "cotSteps"
+                          ]
+                        },
+                        "files": "usefulFiles.files",
+                        "chain": {
+                          "ref": "ideas[member.id].cot",
+                          "through": "stepIndex"
+                        },
+                        "comments": "reviews[member.id].current.gameCritiques",
+                        "currentStep": "stepIndex",
+                        "type": "input.type",
+                        "shape": "bundle.inputTypes.shapes[input.type]",
+                        "typeGuidance": "bundle.inputTypes.guidance[input.type]"
+                      },
+                      "output": {
+                        "key": "reviews[member.id].current.gameChair",
+                        "schema": "gameCommitteeDecision"
+                      },
+                      "reviewPhase": "judging"
+                    }
+                  },
+                  {
+                    "kind": "activity",
+                    "id": "game-settle",
+                    "notes": "Host verification and arithmetic: validate actual supreme-judge approval receipts, report and reviewed-version binding, current badge hashes, justified support, and approved conditions; honor the committee's claim-level assessment, including supported reasoning with no badges. Compute y under params.gameDecisionRule: under chair-decisive, y=1 exactly when an admitted report is labelled decisive; under committee-mean, y=1 exactly when the admitted arithmetic mean reaches the configured threshold. Record S=25-100(q-y_i)^2 against each critic's scoring label y_i and R=2*S_i-mean(other scored S), with S for a lone scored critic and null scores for rejected reports, except that under params.gameInventedBadgePenalty a report citing a badge never issued in the run's fact table, or, when the fact table deletes refuted and revoked badges, one deleted from it before the report was requested, other than one in the reviewed chain or the task input, is rejected and records -175, the floor score; a badge deleted after the report was requested rejects the report without a score, a deleted badge quoted from the reviewed chain or the task input is admissible evidence, and a report its critic withdrew after a deletion has no row. Under committee-mean with params.gameLeaveOneOut, y_i is the label the other admitted reports produce and a lone admitted critic is unscored; otherwise y_i=y. Add scores once to private balances; below zero disables future criticism, never thinking. Send only the anonymous admitted arguments that the decision rule selects to redevelopment when y=1.",
+                    "handler": "review.committeeSettle",
+                    "bind": {
+                      "critiques": "reviews[member.id].current.gameCritiques",
+                      "chair": "reviews[member.id].current.gameChair",
+                      "chain": {
+                        "ref": "ideas[member.id].cot",
+                        "through": "stepIndex"
+                      }
+                    },
+                    "output": {
+                      "key": "reviews[member.id].current.gameSettlement",
+                      "schema": "gameSettlement"
+                    }
+                  },
+                  {
+                    "kind": "condition",
+                    "id": "maybe-game-redevelop",
+                    "notes": "Repair only a chair-confirmed major flaw while a round remains. Rejected reports and null labels cause no invented repair task or membership change, and no score penalty other than the settlement's invented-badge or deleted-badge penalty.",
+                    "if": {
+                      "all": [
+                        {
+                          "ref": "reviews[member.id].current.gameSettlement.y",
+                          "equals": 1
+                        },
+                        {
+                          "ref": "reviews[member.id].finalRound",
+                          "notEquals": true
+                        }
+                      ]
+                    },
+                    "then": {
+                      "kind": "agent",
+                      "id": "game-redevelop-idea",
+                      "notes": "The reviser delivers a PATCH: the steps the confirmed issues implicate (at any position) through submit_step, and the developed sections its repair changed. It receives its own previous output to revise rather than regenerating it. The host carries every step and section the patch does not name, so untouched text is byte-identical by construction; the runtime — never the model — then computes the touched/untouched change-set by exact comparison, records it in the ledger, and the next round re-reviews at the same walk position with that change-set in view.",
+                      "skill": "game-redeveloper",
+                      "route": "reasoning",
+                      "bind": {
+                        "input": {
+                          "ref": "input",
+                          "omit": [
+                            "files"
+                          ]
+                        },
+                        "files": "usefulFiles.files",
+                        "department": "member.department",
+                        "umbrella": "member.umbrella",
+                        "subfields": "member.subfields",
+                        "board": "panel.members",
+                        "chain": "ideas[member.id].cot",
+                        "previousOutput": "ideas[member.id].output",
+                        "currentStep": "stepIndex",
+                        "totalSteps": "input.cotSteps",
+                        "type": "input.type",
+                        "shape": "bundle.inputTypes.shapes[input.type]",
+                        "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]",
+                        "repairArguments": "reviews[member.id].current.gameSettlement.repairArguments"
+                      },
+                      "output": {
+                        "key": "reviews[member.id].current.revision",
+                        "schema": "redevelopmentPatchParts"
+                      },
+                      "reviewPhase": "redeveloping"
+                    }
                   }
-                }
-              ]
+                ]
+              },
+              "seat": "member.id"
             },
-            "seat": "member.id"
+            "else": {
+              "kind": "repeatUntil",
+              "id": "review-round",
+              "notes": "One iteration = one review round at the current walk position: gather comments (each targeting the current step or any earlier one), judge over the actual chain, and redevelop if the judge did not Pass. Bounded by the maxReviewRounds param — the loop compiles to that param's declared ceiling and exits on the runtime-stamped reviews[member.id].finalRound flag, so the budget is declared in exactly ONE place. onExhausted=proceed is the backstop forced pass. reviews[member.id].allowedVerdicts is computed by the runtime from bundle.verdicts.sequencing and this position's previous round (a Build may not immediately follow a Build); reviews[member.id].record is the seat's anonymized objection ledger SCOPED to what is still actionable, refreshed every round — this position's rounds verbatim, objections an earlier position ran out of rounds to settle carried whole (standing), and closed positions collapsed to what may not be re-opened (settled/clean). All review state is seat-qualified so two members' walks never collide.",
+              "maxIterations": "params.maxReviewRounds",
+              "onExhausted": "proceed",
+              "until": {
+                "any": [
+                  {
+                    "ref": "reviews[member.id].current.decision.verdict",
+                    "equals": "Pass"
+                  },
+                  {
+                    "ref": "reviews[member.id].finalRound",
+                    "equals": true
+                  }
+                ]
+              },
+              "body": {
+                "kind": "sequence",
+                "id": "review-round-body",
+                "steps": [
+                  {
+                    "kind": "activity",
+                    "id": "apply-fact-updates",
+                    "notes": "Fact updates before the round's commentors are dispatched: when the fact table has deleted a badge this seat's chain or developed output cites, wait for the seat's reconsideration task, started at the deletion, and merge its revision with the redevelopment merge, so this round reviews the reconsidered chain. A merge changes no verdict or repair, and the chain does not change again before the next round starts.",
+                    "handler": "facts.mergeChain",
+                    "bind": {
+                      "idea": "ideas[member.id]"
+                    },
+                    "output": {
+                      "key": "reviews[member.id].factUpdate",
+                      "schema": "factUpdateMerge"
+                    }
+                  },
+                  {
+                    "kind": "forEach",
+                    "id": "gather-comments",
+                    "notes": "Every panel member except the thinker comments in parallel. Commentors see chain steps 1..stepIndex (never the developed paper) and the anonymized objection ledger, and may SEARCH the thinker's working notes through the notes-access capability (thinkerNotes stamps the scope: this seat, through stepIndex). The notes are the complete runtime-captured thinking behind the chain — the first pass and every repair since — read in full through the tool rather than pasted into the prompt, where a per-step slice used to arrive cut at 20,000 characters. Confidential to the board: the thinker is never told they are read, so no comment may quote or hint at them; they raise suspicions to verify, never verdicts. A commentor may fault the current step or any earlier one — the comment's `step` field names the target. The panel's interdisciplinary seat comments through its own skill (roster-aware, covering the areas between the seated fields); every disciplinary seat uses the standard commentor skill.",
+                    "items": "panel.members",
+                    "itemVar": "commentor",
+                    "exclude": "member",
+                    "mode": "parallel",
+                    "body": {
+                      "kind": "condition",
+                      "id": "dispatch-comment",
+                      "if": {
+                        "ref": "commentor.seat",
+                        "equals": "interdisciplinary"
+                      },
+                      "then": {
+                        "kind": "agent",
+                        "id": "comment-step-bridge",
+                        "notes": "The interdisciplinary seat's comment: same verdicts, same evidence discipline, but its field is the space between the seated members — it receives the full roster and reviews the crossings between fields, never re-litigating a point inside one field's own lane.",
+                        "skill": "interdisciplinary-commentor",
+                        "route": "reasoning",
+                        "bind": {
+                          "input": {
+                            "ref": "input",
+                            "omit": [
+                              "files",
+                              "cotSteps"
+                            ]
+                          },
+                          "files": "usefulFiles.files",
+                          "department": "commentor.department",
+                          "umbrella": "commentor.umbrella",
+                          "subfields": "commentor.subfields",
+                          "roster": "panel.members",
+                          "chain": {
+                            "ref": "ideas[member.id].cot",
+                            "through": "stepIndex"
+                          },
+                          "currentStep": "stepIndex",
+                          "history": "reviews[member.id].record",
+                          "verdictOptions": "reviews[member.id].allowedVerdicts",
+                          "verdictCatalog": "bundle.verdicts.verdicts",
+                          "type": "input.type",
+                          "shape": "bundle.inputTypes.shapes[input.type]"
+                        },
+                        "thinkerNotes": {
+                          "seat": "member.id",
+                          "through": "stepIndex"
+                        },
+                        "output": {
+                          "key": "reviews[member.id].current.comments[commentor.id]",
+                          "schema": "commentParts"
+                        }
+                      },
+                      "else": {
+                        "kind": "agent",
+                        "id": "comment-step",
+                        "skill": "commentor",
+                        "route": "reasoning",
+                        "bind": {
+                          "input": {
+                            "ref": "input",
+                            "omit": [
+                              "files",
+                              "cotSteps"
+                            ]
+                          },
+                          "files": "usefulFiles.files",
+                          "department": "commentor.department",
+                          "umbrella": "commentor.umbrella",
+                          "subfields": "commentor.subfields",
+                          "shape": "bundle.inputTypes.shapes[input.type]",
+                          "chain": {
+                            "ref": "ideas[member.id].cot",
+                            "through": "stepIndex"
+                          },
+                          "currentStep": "stepIndex",
+                          "history": "reviews[member.id].record",
+                          "verdictOptions": "reviews[member.id].allowedVerdicts",
+                          "verdictCatalog": "bundle.verdicts.verdicts",
+                          "type": "input.type"
+                        },
+                        "thinkerNotes": {
+                          "seat": "member.id",
+                          "through": "stepIndex"
+                        },
+                        "output": {
+                          "key": "reviews[member.id].current.comments[commentor.id]",
+                          "schema": "commentParts"
+                        }
+                      }
+                    },
+                    "maxConcurrency": 12
+                  },
+                  {
+                    "kind": "activity",
+                    "id": "apply-comment-updates",
+                    "notes": "Fact updates before the judge: wait for the reconsideration tasks of this round's comments that cite a badge the fact table deleted after the comment was requested, put each revised comment in place of the original, and remove each withdrawn comment. The unanimous fast pass is decided on the merged comments. A comment the judge already has is handled after it, by apply-late-comment-updates.",
+                    "handler": "facts.mergeComments",
+                    "bind": {
+                      "comments": "reviews[member.id].current.comments"
+                    },
+                    "output": {
+                      "key": "reviews[member.id].current.factReportUpdate",
+                      "schema": "factUpdateMerge"
+                    }
+                  },
+                  {
+                    "kind": "agent",
+                    "id": "judge-step",
+                    "notes": "One judgement over all comments of this round, grounded in the chain itself: the judge reads steps 1..stepIndex, verifies every comment against the actual step text, checks the ledger's earlier objections against the last revision's change-set, and returns the de-duplicated issues[] repair signal. fastPassUnanimous: a round in which EVERY commentor passed is recorded as a fast pass by the runtime — a passing comment may carry no evidence, so a unanimous round holds nothing to weigh and no repair signal to compose, and the judge is not convened; the recorded decision's reason names the fast pass.",
+                    "skill": "judge",
+                    "route": "reasoning",
+                    "fastPassUnanimous": true,
+                    "bind": {
+                      "input": {
+                        "ref": "input",
+                        "omit": [
+                          "files",
+                          "cotSteps"
+                        ]
+                      },
+                      "files": "usefulFiles.files",
+                      "board": "panel.members",
+                      "chain": {
+                        "ref": "ideas[member.id].cot",
+                        "through": "stepIndex"
+                      },
+                      "comments": "reviews[member.id].current.comments",
+                      "currentStep": "stepIndex",
+                      "history": "reviews[member.id].record",
+                      "verdictOptions": "reviews[member.id].allowedVerdicts",
+                      "verdictCatalog": "bundle.verdicts.verdicts",
+                      "type": "input.type",
+                      "shape": "bundle.inputTypes.shapes[input.type]",
+                      "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]",
+                      "typeGuidance": "bundle.inputTypes.guidance[input.type]"
+                    },
+                    "output": {
+                      "key": "reviews[member.id].current.decision",
+                      "schema": "judgeDecisionParts"
+                    },
+                    "reviewPhase": "judging"
+                  },
+                  {
+                    "kind": "activity",
+                    "id": "apply-late-comment-updates",
+                    "notes": "Fact updates for comments the judge already had: wait for the reconsideration tasks of this round's comments whose cited badge the fact table deleted while they were with the judge, put each revised comment in place, remove each withdrawn one, and set reassess when either happened. The round's comments close here.",
+                    "handler": "facts.mergeLateComments",
+                    "bind": {
+                      "comments": "reviews[member.id].current.comments"
+                    },
+                    "output": {
+                      "key": "reviews[member.id].current.factLateUpdate",
+                      "schema": "factUpdateMerge"
+                    }
+                  },
+                  {
+                    "kind": "condition",
+                    "id": "maybe-judge-reassess",
+                    "notes": "Decide the round again only when a comment the judge already had was revised or withdrawn after a fact-table deletion: one extra judge call, none when the merged comments fast-pass, with the round's comments as the late merge left them. Its decision replaces the first one, which the round record keeps.",
+                    "if": {
+                      "ref": "reviews[member.id].current.factLateUpdate.reassess",
+                      "equals": true
+                    },
+                    "then": {
+                      "kind": "agent",
+                      "id": "judge-reassess",
+                      "notes": "The judge's re-decision of this round: the same task as judge-step, with the comments as they now stand.",
+                      "skill": "judge",
+                      "route": "reasoning",
+                      "fastPassUnanimous": true,
+                      "bind": {
+                        "input": {
+                          "ref": "input",
+                          "omit": [
+                            "files",
+                            "cotSteps"
+                          ]
+                        },
+                        "files": "usefulFiles.files",
+                        "board": "panel.members",
+                        "chain": {
+                          "ref": "ideas[member.id].cot",
+                          "through": "stepIndex"
+                        },
+                        "comments": "reviews[member.id].current.comments",
+                        "currentStep": "stepIndex",
+                        "history": "reviews[member.id].record",
+                        "verdictOptions": "reviews[member.id].allowedVerdicts",
+                        "verdictCatalog": "bundle.verdicts.verdicts",
+                        "type": "input.type",
+                        "shape": "bundle.inputTypes.shapes[input.type]",
+                        "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]",
+                        "typeGuidance": "bundle.inputTypes.guidance[input.type]"
+                      },
+                      "output": {
+                        "key": "reviews[member.id].current.decision",
+                        "schema": "judgeDecisionParts"
+                      },
+                      "reviewPhase": "judging"
+                    }
+                  },
+                  {
+                    "kind": "condition",
+                    "id": "maybe-redevelop",
+                    "notes": "Redevelop only when the judge did not Pass AND a redevelopment budget remains. Both conditions read runtime state — the round budget lives solely in the maxReviewRounds param, never as a literal here.",
+                    "if": {
+                      "all": [
+                        {
+                          "ref": "reviews[member.id].current.decision.verdict",
+                          "notEquals": "Pass"
+                        },
+                        {
+                          "ref": "reviews[member.id].finalRound",
+                          "notEquals": true
+                        }
+                      ]
+                    },
+                    "then": {
+                      "kind": "agent",
+                      "id": "redevelop-idea",
+                      "notes": "The reviser delivers a PATCH: the steps the confirmed issues implicate (at any position) through submit_step, and the developed sections its repair changed. It receives its own previous output to revise rather than regenerating it. The host carries every step and section the patch does not name, so untouched text is byte-identical by construction; the runtime — never the model — then computes the touched/untouched change-set by exact comparison, records it in the ledger, and the next round re-reviews at the same walk position with that change-set in view.",
+                      "skill": "redeveloper",
+                      "route": "reasoning",
+                      "bind": {
+                        "input": {
+                          "ref": "input",
+                          "omit": [
+                            "files"
+                          ]
+                        },
+                        "files": "usefulFiles.files",
+                        "department": "member.department",
+                        "umbrella": "member.umbrella",
+                        "subfields": "member.subfields",
+                        "board": "panel.members",
+                        "chain": "ideas[member.id].cot",
+                        "previousOutput": "ideas[member.id].output",
+                        "feedback": {
+                          "ref": "reviews[member.id].current.decision",
+                          "pick": [
+                            "verdict",
+                            "reason",
+                            "suggestion",
+                            "evidence",
+                            "issues"
+                          ]
+                        },
+                        "currentStep": "stepIndex",
+                        "history": "reviews[member.id].record",
+                        "totalSteps": "input.cotSteps",
+                        "type": "input.type",
+                        "shape": "bundle.inputTypes.shapes[input.type]",
+                        "shapeGuide": "bundle.inputTypes.shapeGuides[input.type]"
+                      },
+                      "output": {
+                        "key": "reviews[member.id].current.revision",
+                        "schema": "redevelopmentPatchParts"
+                      },
+                      "reviewPhase": "redeveloping"
+                    }
+                  }
+                ]
+              },
+              "seat": "member.id"
+            }
           }
         },
         "maxConcurrency": 13
+      },
+      {
+        "kind": "activity",
+        "id": "apply-fact-updates-after-review",
+        "notes": "Fact updates after every walk has ended: wait for the reconsideration tasks of seats whose chain or developed output cites a badge the fact table deleted, and merge each revision with the redevelopment merge before the bridge audit reads the outputs.",
+        "handler": "facts.mergeIdeas",
+        "bind": {
+          "ideas": "ideas"
+        },
+        "output": {
+          "key": "factUpdates",
+          "schema": "factUpdateMerge"
+        }
       },
       {
         "kind": "agent",
@@ -647,6 +1340,19 @@
         "output": {
           "key": "bridge",
           "schema": "bridgeReport"
+        }
+      },
+      {
+        "kind": "activity",
+        "id": "apply-fact-updates-before-synthesis",
+        "notes": "Last fact updates before the synthesis: merge every remaining reconsideration of a seat's chain and developed output, then close the run's fact updates; a later deletion is still recorded with its notice but starts no task.",
+        "handler": "facts.closeUpdates",
+        "bind": {
+          "ideas": "ideas"
+        },
+        "output": {
+          "key": "factUpdates",
+          "schema": "factUpdateMerge"
         }
       },
       {

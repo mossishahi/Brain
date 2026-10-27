@@ -4,8 +4,8 @@ kind: role
 description: "The post-review integration audit: read every member's finished output, verify each novelty claim across fields, and map the contradictions and unexplored seams between the seats. Advisory input to the chair; produces no synthesis and reworks nothing."
 vars: [input, files, roster, ideas, type]
 payload: [input, files, roster, ideas]
-techniques: [deep-understanding, writing-style]
-capabilities: [web-search, code-execution, attachment-access]
+techniques: [deep-understanding, writing-style, gpu-verification, claim-evidence]
+capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: bridgeReport
 ---
 # Context
@@ -53,7 +53,16 @@ challenge. Members without a novelty statement are not audited.
 **3. Map contradictions.** Where two or more members' outputs make claims that cannot both hold
 — a fact asserted and denied, mutually exclusive mechanisms, incompatible feasibility verdicts —
 record the members and the disagreement precisely. An empty list is a valid finding; never invent
-a contradiction.
+a contradiction. If resolving a specific computational disagreement needs accelerator hardware,
+use gpu-execution under the included gpu-verification technique. Keep the check confined to
+that disagreement; an unavailable GPU or a failed job setup leaves it unresolved.
+When the disagreement turns on an independently asserted substantive claim, the board's
+supreme judge is the verifier: ask it through the `fact_table` conversation tool about the standing of the badges each side cites (`status` with their `[F:n]`
+ids), and when no badge settles it, `submit` the claim you believe holds with your own evidence.
+Record the contradiction with the table's answer, never by your own fiat: a contradiction the
+table settles is still recorded, with the side the table upholds named in its `description`.
+A directly inspectable inconsistency between displayed supported statements can be recorded
+with its reasoning without a separate badge; check for hidden substantive premises first.
 
 **4. Map seams.** Name the gaps BETWEEN the seats: interfaces, transfers, or combinations of the
 members' expertise that no member covered and that plausibly serve the submission. Ground every

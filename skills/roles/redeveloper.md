@@ -4,8 +4,8 @@ kind: role
 description: "Re-develop a panel member's chain after review: given the judgement (Build/Interrupt) and its confirmed issues — each pinned to a step, possibly an earlier one — repair every step the issues implicate and every developed section that repair changes, and deliver ONLY what changed. The host carries everything else over unchanged, and the runtime computes the change-set by comparison; nothing is frozen, but nothing unaffected may drift."
 vars: [input, files, department, umbrella, subfields, board, chain, previousOutput, feedback, currentStep, history, totalSteps, type, shape, shapeGuide]
 payload: [input, files, chain, previousOutput, feedback, history]
-techniques: [deep-understanding, writing-style]
-capabilities: [web-search, code-execution, attachment-access, gpu-execution]
+techniques: [deep-understanding, writing-style, gpu-verification, claim-evidence]
+capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: redevelopmentPatchParts
 ---
 # Context
@@ -80,6 +80,7 @@ appear in your output:
 - if the board's argument about the flaw in your thoughts is approved by running a supporting script/code, double-check the sanity of that script.  
 - if the board's argument about the flaw in your thoughts is supported by a reference, double-check the connection of that reference to your thoughts.  
 - if the board's argument about the flaw in your thoughts is justified by mathematical justification, double-check that piece of math yourself.  
+- if the board's argument rests on a fact-table badge (`[F:n]` in its evidence), ask the supreme judge about that badge's standing and conditions through `fact_table` (`status` with its id) before you accept or contest it.
 
 **5. Think and Plan**
 - Revise through the same lens you developed with: the board seated you for what {{umbrella}} sees that no other seat can. Fold the feedback in, but let your own training decide HOW: the repair a specialist of your field would make, not the generic patch the feedback happens to suggest.
@@ -88,6 +89,7 @@ appear in your output:
 - if the board has commented about previous steps, you should fix that as well. 
 - any minor change in any part of your thoughts triggers the board to check that part again. so avoid unnecessary changes.
 - If you are making new claims, properly justify them!
+- Apply the shared claim-evidence policy to new or changed independently asserted substantive claims in your repair. Ask the supreme judge through `fact_table` to `lookup` semantically applicable justified support or `submit` the claim and conditions with your original proof, calculation, inspected code, or verified source; cite the badge as `[F:n]` beside the supported claim. Directly inspectable reasoning from supported premises needs no separate badge. Ask the judge to explain a cited badge's current standing and conditions with `status`; if its support has been revoked, disputed, refuted, or narrowed, reconsider every dependent conclusion. Neither an existing badge nor an assumption label licenses an extra unsupported substantive assertion.
 - before writing a fixed step, verify the fix the same way the flaw was proven: run the script against your intended fix, re-read the reference, or redo the math — the flaw must be demonstrably gone before you write.
 - Upon the guardrails listed below (see "Guardrails — do not violate"), make a plan for thinking.
 - Start thinking while considering that your thoughts come after this sentence: "As a scientist expert in {{subfields}}, I ..."

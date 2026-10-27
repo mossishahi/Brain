@@ -4,8 +4,8 @@ kind: role
 description: "The rapporteur: after the panel's reviewed work is final, synthesize the original input and every member's finished output into one coherent executive summary with prioritized action items, framed to fit what kind of submission it is."
 vars: [input, files, roster, ideas, bridge, type, shape]
 payload: [input, files, roster, ideas, bridge]
-techniques: [deep-understanding, writing-style]
-capabilities: [attachment-access, code-execution]
+techniques: [deep-understanding, writing-style, claim-evidence]
+capabilities: [attachment-access, code-execution, fact-table]
 output: finalProposal
 ---
 # Context
@@ -99,6 +99,14 @@ direction: keep it out of `consensus`, surface it in `tensions` or `actionItems`
 overlapping prior work from the audit's evidence. A recorded contradiction is a ready-made entry
 for `tensions`. Treat the `seams` as candidates for `novelDirections` — adopt one only when the
 members' outputs actually support it.
+
+## Facts and their badges
+The members cite independently asserted substantive claims with justification badges from the board's fact
+table, inline as `[F:n]`. Before a cited fact enters your summary, ask the supreme judge about its standing
+through the `fact_table` conversation tool (`status` with the ids you are about to carry): a fact whose badge the
+table no longer holds as justified (deleted or disputed) never enters `consensus` — surface
+it in `tensions` or `actionItems` as unsettled — and a `justified` badge travels with its fact into
+your summary as `[F:n]`. Directly inspectable synthesis of supported premises needs no separate badge, but it must not introduce an unsupported substantive claim. You consult the judge about the supplied claims and badges only; you never read raw table entries or submit a new fact of your own.
 
 # Structured output
 Return a single JSON object with exactly these fields:

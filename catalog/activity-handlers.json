@@ -136,6 +136,142 @@
         "outputField": "members",
         "maxItemsFromInput": "maxSeats"
       }
+    },
+    "literature.retrieve": {
+      "description": "Deterministic orchestrator step, no model call: Steps 1-5 of the paper-based panel composition (spec v2). Needs: need 0 is the core (embedding title + abstract, document mode, weight coreWeight), every facet is a need at its relevance (name + statement, query mode), and the domain-free problem formulation (document mode) and each equivalent problem (name + statement, query mode) are needs at formulationWeight and equivalentProblemWeight x confidence when those weights are above 0 — weight-0 entries still feed retrieval. Round 1 issues, in route order, the core title, the facet names (quoted phrases where the source supports them), their aliases, facet pairs (routePairs; at most maxPairQueries, ranked by the product of the two relevances), the equivalent-problem names and, when routeKeyTerms is on, the submitter's verbatim key terms to every enabled search source; route B sends the statement queries (facet statements, core abstract, formulation, equivalent-problem statements) to the semantic-capable sources only; route C embeds every need with the run's encoder and queries the names of its knnK nearest taxonomy topics (optional knnHopK second hop and knnKeywords upstream keywords, at most knnMaxQueries, ranked by cosine x max(need weight, 0.25)). Each call names ONE source (arXiv, Crossref, Semantic Scholar, OpenAlex, Europe PMC, CORE), so every source's own ranking is kept; a source switched off is recorded disabled, a key-gated source without its host key needs-key (OpenAlex is never called keyless), and a source whose first call fails with 429/401/403 unavailable for the rest of the run. Records merge into papers by any shared identifier (DOI, arXiv id, PMID, Semantic Scholar, OpenAlex or CORE id) or an equal normalized title within one year; Crossref peer-review, component and other non-paper records are dropped at normalization; reciprocal-rank fusion counts at most the best rank per (query, source); papers with an abstract shorter than minAbstractChars are excluded and the eligible set is capped at maxPapers by RRF. Eligible papers are embedded (title + abstract, document mode) and placed on their topicsPerPaper most similar topics with margin weights; the lowest weakPlacementQuantile of best similarities is flagged weak, and hub topics (among the top placements of more than hubShare of the papers) are flagged. Rounds 2 to maxRounds expand from the round's evidence: route D fetches the references and/or citations (citationDirections, at most citationLimit each) of the citationSeeds papers with the highest evidence mass from the available citation-capable sources (OpenAlex, Semantic Scholar, OpenCitations) and resolves missing abstracts by id before eligibility; route E issues feedbackTerms pseudo-relevance-feedback phrases per need (20 in total) mined from each need's feedbackSeeds top evidence papers as keyword queries to every search source; a round that adds fewer than minNewShare new eligible papers, or the maxCalls budget (allocated in route order), ends retrieval. Every query records its route, round and own need, every paper the routes and rounds that found it, every call its source, outcome and counts; screenItems carries the eligible papers (abstract cut to 600 characters) for the optional relevance screen. The encoder is the one the encoder param names, with node vectors served by the registry or computed from catalog/taxonomy-texts.json and cached; without a neural encoder the step falls back to hash-ngram-v1 and records it, and without web access it returns an empty record noting \"no web access\". Retrieval depends on the sources' state at run time, so the record is not reproducible across time; given the same web cache it is identical.",
+      "deterministic": true,
+      "inputs": {
+        "classification": { "kind": "artifact", "schema": "taskClassification" },
+        "input": { "kind": "artifact", "schema": "processorOutput" },
+        "config": { "kind": "params" }
+      },
+      "outputSchema": "literature"
+    },
+    "literature.noScreen": {
+      "description": "Deterministic stand-in for the relevance screen, no model call: when relevanceScreen is off the workflow's condition routes here instead of the literature-screener role, and the step returns the empty screen {decisions: [], skipped: \"relevance screen off\"}, so panel.compose always reads one literatureScreen artifact and keeps every eligible paper.",
+      "deterministic": true,
+      "inputs": {
+        "literature": { "kind": "artifact", "schema": "literature" }
+      },
+      "outputSchema": "literatureScreen"
+    },
+    "panel.compose": {
+      "description": "Deterministic orchestrator step, no model call: Steps 6-11 of the paper-based panel composition (spec v2) over the retrieved literature. Papers the relevance screen judged off-topic are dropped and counted. Evidence: for every need, its papersPerNeed most similar eligible papers with margin weights omega (uniform when every margin is 0), each topic's evidence share P(t|f) from those papers' placements, and the share found by the need's own queries (thin below thinNeed). Candidates: every topic placed by at least minSupport evidence papers, with affinity a(t,f) = maxAffinity x min(1, P(t|f) / saturationShare) and evidence mass M(t) = sum over needs of w_f P(t|f); with anchors on, every critical facet (weight at least criticalWeight) that no topic covers to anchorThreshold gets a facet-anchored candidate (its strongest subfield, affinity anchorAffinity to that facet only). Selection: a lazy greedy maximizes the weighted need coverage F(S) = sum over needs of w_f (1 - prod over seats of (1 - a(j,f))) up to panelSize seats under the field cap (seatsPerField, 0 = ceil(panelSize/2)) and the optional subfield cap (seatsPerSubfield, 0 = none), ties broken by M, then topic before anchor, then id, filling up to 2 seats by M when fewer than 2 have a positive gain; every pick records its gain, F/W, per-need coverage and contributions and its runner-up with that one's fresh gain, and every candidate a cap drops is recorded with its gain at that moment. Size: k* is the first size of at least 2 whose next gain falls below gainStop x W, and k_cov the first size that covers every critical need to criticalCoverage; with rescueUncoveredNeeds, each critical need still below anchorThreshold after k* seats gets its anchored seat appended while fewer than panelSize seats are listed, caps notwithstanding, and the rescue is recorded. Seats are listed in greedy order (a topic seat: its field, subfield and topic; an anchored seat: its subfield's field, the subfield and the facet name) with the needs they cover and their exemplar papers; flags record the source shares (alarm above shareAlarm), thin needs, anchored seats, failed sources, screened-out papers and weak placements, and the determinism hash covers the greedy trace, the seats and the rounded topic shares. With no eligible paper, the evidence falls back to label-only shares (the margin-weighted 5 topics nearest each need) and is flagged. Numbers are rounded to 6 decimals and every tie has an explicit key, so the same literature and screen always give the same record.",
+      "deterministic": true,
+      "inputs": {
+        "literature": { "kind": "artifact", "schema": "literature" },
+        "screen": { "kind": "artifact", "schema": "literatureScreen" },
+        "config": { "kind": "params" }
+      },
+      "outputSchema": "panelEvidence"
+    },
+    "panel.seat": {
+      "description": "Deterministic seating from the composed evidence, no model call: take the first k seats of the evidence record's greedy order — k = kStar when panelSizeMode is \"auto\" and panelSize when it is \"fixed\", never more than the seats listed and never fewer than 2 — and copy each seat's id, department, umbrella and subfields into the existing panel artifact, so panel.weave, the confirmation gate and every member downstream run unchanged. The seats beyond k stay in the evidence record, in greedy order, for the gate's add-next-seat action.",
+      "deterministic": true,
+      "inputs": {
+        "evidence": { "kind": "artifact", "schema": "panelEvidence" },
+        "panelSize": { "kind": "positiveInteger" },
+        "panelSizeMode": { "kind": "param" }
+      },
+      "outputSchema": "panel",
+      "bounds": {
+        "outputField": "members",
+        "maxItemsFromInput": "panelSize"
+      }
+    },
+    "review.gameSettle": {
+      "description": "Deterministic observational scoring and repair adaptation for a game review round. Check exact critic/admission IDs, preserve the chair label and readable reason, hash the reviewed prefix, compute the base and peer-adjusted Brier scores for admitted critics, leave rejected scores null, and produce the existing repair signal. With no admitted reports the label remains null and the round is unresolved. Scores never impose penalties or change panel membership.",
+      "deterministic": true,
+      "inputs": {
+        "critiques": {
+          "kind": "artifactCollection",
+          "schema": "gameCritique"
+        },
+        "chair": {
+          "kind": "artifact",
+          "schema": "gameChairDecision"
+        },
+        "chain": {
+          "kind": "artifact",
+          "schema": "brainIdeaParts"
+        }
+      },
+      "outputSchema": "gameSettlement"
+    },
+    "review.committeeSettle": {
+      "description": "Check committee admission against actual persisted supreme-judge approval receipts bound to each report and reviewed version, including current badge hashes, justified support, and the approved conditions and target. Supported direct reasoning with no cited badges remains permitted. Decide y under the run's decision rule: under chair-decisive, y=1 exactly when an admitted report is labelled decisive; under committee-mean, y=1 exactly when the mean of admitted probabilities reaches the configured threshold; no admitted reports is unresolved. Settle admitted base and peer-adjusted Brier scores once into private balances against each critic's scoring label; under committee-mean with leave-one-out, that label comes from the other admitted reports and a lone admitted critic is unscored. Rejected reports have no score or balance change, except that when the run enables the invented-badge penalty, a report citing a badge never issued in the run's fact table, or, when the fact table deletes refuted and revoked badges, one deleted from it before the report was requested, other than one in the reviewed chain or the task input, is rejected and records -175 against its critic's balance; a badge deleted after the report was requested rejects the report without a score, a deleted badge quoted from the reviewed chain or the task input is admissible evidence, and a report its critic withdrew after a deletion is not settled. A balance below zero permanently disables future critic assignments only. Supply only anonymized admitted arguments to redevelopment when the decision blocks the step: those labelled decisive under chair-decisive, those at or above the threshold under committee-mean. The runtime supplies the confirmed panel, the critic task input and per-run game settings.",
+      "deterministic": true,
+      "inputs": {
+        "critiques": {
+          "kind": "artifactCollection",
+          "schema": "gameCritique"
+        },
+        "chair": {
+          "kind": "artifact",
+          "schema": "gameCommitteeDecision"
+        },
+        "chain": {
+          "kind": "artifact",
+          "schema": "brainIdeaParts"
+        }
+      },
+      "outputSchema": "gameSettlement"
+    },
+    "facts.mergeChain": {
+      "description": "Orchestrator step that makes no model call itself: at the start of a review round, wait for the seat's reconsideration task that a deletion from the fact table started, check that every step and section it rewrites is unchanged since the task began (one re-run on the current chain otherwise), and return the revision, which the fold merges into the seat's chain and developed output with the redevelopment merge. A seat without a pending task gets an empty merge. The journaled output is the record: replay folds it again and never waits.",
+      "deterministic": true,
+      "inputs": {
+        "idea": { "kind": "artifact", "schema": "brainIdeaParts" }
+      },
+      "outputSchema": "factUpdateMerge"
+    },
+    "facts.mergeGameReports": {
+      "description": "Orchestrator step that makes no model call itself: before the committee chair, wait for the reconsideration tasks of this round's game reports that cite a badge deleted after they were requested, and return each decision: a revised report, with the deletion epoch its revision was requested at, replaces the original; a withdrawn report leaves the round; an unchanged one stays. The journaled output is the record: replay folds it again and never waits.",
+      "deterministic": true,
+      "inputs": {
+        "critiques": { "kind": "artifactCollection", "schema": "gameCritique" }
+      },
+      "outputSchema": "factUpdateMerge"
+    },
+    "facts.mergeLateGameReports": {
+      "description": "Orchestrator step that makes no model call itself: after the committee chair, wait for the reconsideration tasks of this round's game reports whose cited badge was deleted while they were with the chair, return each decision as facts.mergeGameReports does, and set reassess when a report was revised or withdrawn, so that the chair assesses the round again. The round's reports close here. The journaled output is the record: replay folds it again and never waits.",
+      "deterministic": true,
+      "inputs": {
+        "critiques": { "kind": "artifactCollection", "schema": "gameCritique" }
+      },
+      "outputSchema": "factUpdateMerge"
+    },
+    "facts.mergeComments": {
+      "description": "Orchestrator step that makes no model call itself: before the judge, wait for the reconsideration tasks of this round's comments that cite a badge deleted after they were requested, and return each decision: a revised comment replaces the original; a withdrawn comment leaves the round; an unchanged one stays. The journaled output is the record: replay folds it again and never waits.",
+      "deterministic": true,
+      "inputs": {
+        "comments": { "kind": "artifactCollection", "schema": "commentParts" }
+      },
+      "outputSchema": "factUpdateMerge"
+    },
+    "facts.mergeLateComments": {
+      "description": "Orchestrator step that makes no model call itself: after the judge, wait for the reconsideration tasks of this round's comments whose cited badge was deleted while they were with the judge, return each decision as facts.mergeComments does, and set reassess when a comment was revised or withdrawn, so that the judge decides the round again. The round's comments close here. The journaled output is the record: replay folds it again and never waits.",
+      "deterministic": true,
+      "inputs": {
+        "comments": { "kind": "artifactCollection", "schema": "commentParts" }
+      },
+      "outputSchema": "factUpdateMerge"
+    },
+    "facts.mergeIdeas": {
+      "description": "Orchestrator step that makes no model call itself: after every walk has ended, wait for the reconsideration tasks of seats whose chain or developed output cites a deleted badge, and return each revision, which the fold merges with the redevelopment merge. The journaled output is the record: replay folds it again and never waits.",
+      "deterministic": true,
+      "inputs": {
+        "ideas": { "kind": "artifactCollection", "schema": "brainIdeaParts" }
+      },
+      "outputSchema": "factUpdateMerge"
+    },
+    "facts.closeUpdates": {
+      "description": "Orchestrator step that makes no model call itself: as facts.mergeIdeas, then close the run's fact updates, so that a later deletion is recorded with its notice but starts no task. The journaled output is the record: replay folds it again and never waits.",
+      "deterministic": true,
+      "inputs": {
+        "ideas": { "kind": "artifactCollection", "schema": "brainIdeaParts" }
+      },
+      "outputSchema": "factUpdateMerge"
     }
   }
 }
