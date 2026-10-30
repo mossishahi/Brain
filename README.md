@@ -88,6 +88,15 @@ This stamps the workflow's bundle version, hashes the source into a git tree (yo
 staging area are untouched), commits it with the previous release as parent, and tags it. The
 notes become the release metadata consumers see.
 
+GitHub Actions can publish a reviewed request by committing
+`.github/releases/content.json` on `main` with exactly four fields: `bundle`,
+`version` (plain semver), `notes`, and `appRevision` (the full 40-character
+Brain-app commit SHA). The **Publish content** workflow also supports a manual
+run of that same committed request. It checks out the pinned app, builds both
+repositories, and runs `publish-bundle` with the app's full candidate suite and
+receipt check. Only after those checks pass does it push the one annotated
+release tag. It never advances a branch or replaces an existing release.
+
 Serving: the registry server materializes `.registry-store/` (gitignored) from the release tags
 at startup, and rescans on a TTL — a freshly pushed tag appears in the served `index.json`
 (versions, `latest`, per-version release notes) within a minute, and connected MCP clients get a

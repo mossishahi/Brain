@@ -1,0 +1,6 @@
+{
+  "bundle": "brainstorm",
+  "version": "0.30.0",
+  "appRevision": "7d78ecc929d3d664ab32128514a2fe660cd30737",
+  "notes": "Make provider thinking summaries optional while retaining authored argument steps and complete review workflows."
+}

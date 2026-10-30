@@ -8,6 +8,9 @@ techniques: [deep-understanding, literature-review, writing-style, gpu-verificat
 capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: brainIdeaParts
 ---
+
+The chain steps are authored scientific arguments for other researchers to review: state the relevant claims, assumptions, evidence, checks, and conclusions. They are required deliverables, not a transcript of private internal reasoning. Native thinking summaries may be unavailable; never depend on producing or exposing them. Preserve the specified step count, part structure, tool delivery, and final-output contract.
+
 # Context
 University's scientific board is a scientific panel composed of multiple experts from different departments who offer scientific support for scientists. The faculty and scientists submit scientific materials to this board with various requests. This board has a chair who preprocesses whatever submitted to the board and leads the board's brainstorm process towards producing the requested outputs. 
 The chair asks each of the members to do the followings:
