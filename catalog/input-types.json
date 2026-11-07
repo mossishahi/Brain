@@ -2,7 +2,7 @@
   "version": "0.6.0",
   "types": {
     "unverified claim": {
-      "description": "A single declarative statement whose truth is in question: the submitter's own hypothesis, a step in their own derivation, or an error they believe they have found in existing work. Choose when the submission asserts something checkable and wants to know whether it holds, rather than asking for it to be developed further.",
+      "description": "Choose when the ask is to check one asserted, testable statement, hypothesis, or alleged error. A question inviting a new method is not an asserted claim. Standard deliverable: the precise claim, an evidence-based verdict, and its implications.",
       "shape": "verification",
       "guidance": "A good step gathers or reasons about evidence that actually bears on the claim under examination. A bad step is a restatement of confidence without new evidence, evidence that does not address the specific claim, or a verdict reached before the evidence a prior step promised to gather has actually been produced.",
       "outline": {
@@ -15,7 +15,7 @@
       }
     },
     "research proposal": {
-      "description": "A worked-out plan that states both WHAT will be done and HOW — objectives plus methodology, protocol, experimental design, or system design — and that has not yet been executed or built. Choose when the submission is a plan awaiting a decision to commit resources, not a finished study (that is completed work) and not an unworked idea (that is a research idea).",
+      "description": "Choose when an unexecuted plan already specifies objectives and methodology, and the ask is to assess that plan before committing resources. A request to invent the method is not a worked-out plan. Standard deliverable: soundness and feasibility assessment, required changes, and warranted alternatives.",
       "shape": "feasibility",
       "guidance": "A good step judges one concrete aspect of the plan (importance, hypothesis logic, methodology soundness, replicability, or pre-specified tests) against the plan as actually written, not against an idealized redesign. A bad step invents requirements the plan never claimed to meet, or declares it unworkable without naming the specific obstacle.",
       "outline": {
@@ -30,7 +30,7 @@
       }
     },
     "completed work": {
-      "description": "A finished artifact that already exists in full: a paper or manuscript, a model, a dataset, a codebase, or a written argument. Choose when the submission is done rather than planned, and the whole of it is on the table — not one specific claim inside it (that is an unverified claim) and not a plan yet to run (that is a research proposal).",
+      "description": "Choose when a finished artifact is provided for a whole-work review, rather than a single claim check or a fix to ongoing work. Standard deliverable: artifact summary, strengths, specific issues, recommendation, and prioritized improvements.",
       "shape": "critique",
       "guidance": "A good step names a specific, locatable strength or weakness with enough detail that the author could act on it. A bad step is a generic quality remark ('could be clearer') with no specific location or fix, or an issue whose severity is overstated relative to its actual impact on the work's central claim.",
       "outline": {
@@ -43,7 +43,7 @@
       }
     },
     "research obstacle": {
-      "description": "The submitter's own in-progress work — a method, derivation, codebase, or system design — is stuck at a specific technical obstacle, and the ask is a diagnosis and a way past it. Choose when the deliverable is a fix. The submission may narrate experiments, failed attempts, and partial results at length, but those are evidence about the blockage, not the object of study: what the submitter asks for outweighs what the submission mostly describes. A request to get unstuck is a research obstacle even when most of the text reports the submitter's own results (which alone would read as an empirical result) or documents the system built so far (which alone would read as completed work).",
+      "description": "Choose when the input establishes that the submitter's own ongoing work is blocked at a specific technical obstacle and asks for diagnosis and a fix. General shortcomings of an existing method do not establish this condition. Standard deliverable: obstacle framing, grounded diagnosis, prior attempts, candidate fixes, recommendation, validation plan, and residual risks.",
       "shape": "solution",
       "guidance": "A good step sharpens the causal diagnosis or advances a fix that respects every constraint and failed attempt the submission reports. A bad step re-proposes an attempt the submission already reported as failed without saying what is different this time, contradicts a stated constraint, or offers generic advice that could have been given without reading the submission.",
       "outline": {
@@ -57,7 +57,7 @@
       }
     },
     "empirical result": {
-      "description": "The submitter's own specific result, measurement, dataset pattern, or observation, whose meaning is unclear. Choose when the object is a particular finding the submitter obtained themselves — not a general topic (that is an established concept or a research area) and not someone else's finished work (that is completed work). When the results are reported only as evidence that the submitter's method is stuck and the ask is a way past the blockage, that is a research obstacle, not an empirical result.",
+      "description": "Choose when the ask is to interpret a particular observation or measurement the submitter obtained. Results used as evidence for a requested fix belong to research obstacle instead. Standard deliverable: candidate interpretations, most likely explanation, confidence, validity threats, and implications.",
       "shape": "interpretation",
       "guidance": "A good step proposes a reading that is genuinely consistent with the observation and states what would distinguish it from rival readings. A bad step jumps to the most dramatic explanation without ruling out mundane ones (measurement error, confound, sampling artifact) first.",
       "outline": {
@@ -70,7 +70,7 @@
       }
     },
     "research area": {
-      "description": "A topic, field, or set of competing approaches to be mapped rather than advanced: what already exists, how the approaches relate, and which one fits a given situation. Choose when the submission asks about the state of existing work rather than putting forward something new.",
+      "description": "Choose when the requested endpoint is a map or assessment of existing work, including comparison or selection among existing approaches. A literature review serving a requested new contribution is preparatory work, not this endpoint. Standard deliverable: landscape, consensus, frontier, gaps, and comparisons or recommendations when requested.",
       "shape": "survey",
       "guidance": "A good step places a work or approach accurately relative to the others already mapped, with a correct claim about what it does or does not cover. A bad step misattributes a contribution, omits a work that changes the comparison's balance, or asserts a consensus that the collected works do not actually support.",
       "outline": {
@@ -82,7 +82,7 @@
       }
     },
     "established concept": {
-      "description": "A settled, textbook-level concept, method, or result the submitter wants to understand. Choose when nothing of the submitter's own is being investigated, checked, or judged, and the answer already exists in the literature — the submission exists so the panel can teach it.",
+      "description": "Choose when the ask is to learn a settled concept or method, with no original work to investigate or judge. Standard deliverable: motivation, intuition, formal explanation, worked example, misconceptions, and connections.",
       "shape": "explanation",
       "guidance": "A good step increases understanding at exactly the right level for what has been established so far — building on, not repeating, the previous step. A bad step is technically correct but skips the intuition, uses an inaccurate analogy, or introduces a term before it is needed.",
       "outline": {
@@ -95,7 +95,7 @@
       }
     },
     "open problem": {
-      "description": "A formally posed problem whose statement is already crisp and whose solution is missing: a named theorem or conjecture, a construction target, an algorithmic challenge, a bound to establish. Choose when the submission hands the panel an exact target to prove, disprove, construct, or bound, and the statement itself needs no inventing — only resolving.",
+      "description": "Choose when a precise formal target and its conditions are already specified for proof, disproof, construction, or bounding. A broad design goal that still needs its criteria defined is insufficient. Standard deliverable: known results, attempted resolution, verification, status, remaining gaps, and significance.",
       "shape": "resolution",
       "guidance": "A good step is a valid logical or constructive move that strictly follows from the hypothesis and prior steps — a correct inference, a legitimate case split, a sound bound. A bad step contains a gap, an unjustified leap, a hidden assumption that is not literally given, or a construction that does not actually satisfy the stated conditions.",
       "outline": {
@@ -110,7 +110,7 @@
       }
     },
     "research idea": {
-      "description": "A sketched idea, mechanism, method, goal, or direction the submitter puts forward but has not worked out — including a bridge between two fields, or a question read as an invitation to propose how to investigate it. Choose when there is no finished artifact to review, no formally posed target to solve, and no single claim whose truth is in question: the submission exists to be built into a full contribution. This is the residual default — it is listed last, and is chosen only once every category above has been ruled out.",
+      "description": "Choose when the ask is to develop an unworked idea, mechanism, method, or research direction into a contribution. This is the residual default after applying the earlier eligibility criteria. Standard deliverable: a developed proposal with abstract, introduction, method, discussion, and conclusion.",
       "shape": "paper",
       "guidance": "A good step advances the idea with a concrete, checkable claim, mechanism, or design decision — not a restatement of the input. A bad step is vague, contradicts an earlier step, ignores a closer prior work, or overlooks a flaw a reviewer in this field would catch immediately.",
       "outline": {
