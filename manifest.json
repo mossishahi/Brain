@@ -1,0 +1,293 @@
+{
+  "schemaVersion": "content-registry-manifest/v1",
+  "bundle": "brainstorm",
+  "version": "0.31.0",
+  "runtimeProtocol": "brainstorm.workflow/v1",
+  "minAppVersion": "0.2.90",
+  "entrypoints": {
+    "workflow": "workflows/brainstorm.workflow.json",
+    "controls": [
+      "routes/model-routes.json",
+      "capabilities/capabilities.json",
+      "catalog/activity-handlers.json",
+      "catalog/input-types.json",
+      "catalog/verdicts.json",
+      "catalog/departments.json",
+      "catalog/taxonomy.json",
+      "catalog/taxonomy-texts.json",
+      "catalog/fact-table.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "bundle.json",
+      "sha256": "c38050b065053bf187fe2c2f18e82e797bd8b07378c75b157a37082ecf0664e5",
+      "bytes": 520,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "capabilities/capabilities.json",
+      "sha256": "2d12132a02835407e0034479c60ee46ce86910455a7eec2a53d78f60d6513812",
+      "bytes": 9322,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "catalog/activity-handlers.json",
+      "sha256": "8e32730964cd25f1a5ca9ed9d3c7faa5c30d69748c1100af0c7e83cb19b92154",
+      "bytes": 26223,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "catalog/departments.json",
+      "sha256": "e765d2e26438ef78abc0c2405f890de61c896dfd3bbb98d7c89250ef7d5e839c",
+      "bytes": 3953,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "catalog/fact-table.json",
+      "sha256": "29228e2381905629cc9d2f5bcb3b257b53d091e7935537764fc31fb2b47217e5",
+      "bytes": 4937,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "catalog/input-types.json",
+      "sha256": "8853a09e730c1aec97e32024d9c5d4fbcfa75bd45589d71d771c4de8a98b4fa6",
+      "bytes": 20671,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "catalog/taxonomy-texts.json",
+      "sha256": "83fc45d25a11c67eede162fd3a09f6e6a9e1d65dd4fefa1c6091e81205069005",
+      "bytes": 3052254,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "catalog/taxonomy.json",
+      "sha256": "5b1670ec74d9c5929efed1e14ae3e6b63a7f9b4792f8236e3705bfdf754f6fbc",
+      "bytes": 823776,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "catalog/verdicts.json",
+      "sha256": "2c1b67e353e0223e8ded309e04cb9959c450b6b28b854b51c62c7b7ea006c2b0",
+      "bytes": 2309,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "routes/model-routes.json",
+      "sha256": "370c99f5bfb7edf4aeee410465c50709e023dfca18f1ab6638db04153b4b39b9",
+      "bytes": 716,
+      "mediaType": "application/json"
+    },
+    {
+      "path": "skills/roles/brain.md",
+      "sha256": "3b94cb85eba8fdb82ce2dc7554a4b38d932be75e5f52028b6fb7dc49d0e954ec",
+      "bytes": 11654,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/chair.md",
+      "sha256": "e350bdd1d5ed1609d3abbde384e3eec33d699a5d8c1cddbe43a639ca94d42ec0",
+      "bytes": 9719,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/classifier.md",
+      "sha256": "195c5e6af5c5defcc7b762e2d98ccd2d2fdba37bf413a8e5f9c4bcf5d08a76e3",
+      "bytes": 7748,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/code-annotator.md",
+      "sha256": "0f895c99c10ddcb6438943fa7edb3d2d864e2333c2fc9600b180d56f935636f6",
+      "bytes": 3721,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/commentor.md",
+      "sha256": "b62662018d12493fa1745598ded6c937007303416f95816a51d3000d6548d10e",
+      "bytes": 15464,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/committee-chair.md",
+      "sha256": "3319a1bce14d1e2515b35698b4a23dcf1a7b58be43faa4ba344b2274e7986488",
+      "bytes": 9986,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/game-commentor.md",
+      "sha256": "f4c02de38ff830d56b0d7ef341b3350fa89551894106bba0ac82f5c5880fe582",
+      "bytes": 1241,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/game-interdisciplinary-commentor.md",
+      "sha256": "9e3162006759961a7f3e783228a28b24fe4f4a8b64d4bdb4c5f723f39368762b",
+      "bytes": 1499,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/game-redeveloper.md",
+      "sha256": "a905907cd7e1a4c4110af500a3b21864fd54d7cb2a9e3128f4aeb75c033f8c27",
+      "bytes": 6051,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/integrator.md",
+      "sha256": "209ad3b11bd5bfb05049132e5f823e187346f6670fda6e8cd49f4c0667e88572",
+      "bytes": 6136,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/interdisciplinary-commentor.md",
+      "sha256": "047746d3775cb3f75e6144b1a6ba0de75b804b107375d59477d20ecb31ae9169",
+      "bytes": 17036,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/judge.md",
+      "sha256": "8a4e6862025a8e0cf87f2d3a76e6c03878338221aaef01e4c679b284cda8e67f",
+      "bytes": 15966,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/literature-screener.md",
+      "sha256": "4875248b26b2d7c976823959c0544ad195864658cd16bdbfdeeec14c8b7fe3ea",
+      "bytes": 5343,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/placer.md",
+      "sha256": "5973589504e64d725a4126bd55aac59d8c6f56a08ab8f0cd6d33ffe067a94078",
+      "bytes": 11898,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/pool-builder.md",
+      "sha256": "dcc2a21a018c216b9ce06e8ed95c4101945176ade606b4470c7a5841e1b4a51a",
+      "bytes": 10001,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/processor.md",
+      "sha256": "06510a4f8c01c6c496eca2802569935eb0ed3e2ddda6ac1c6162ed9dc442ed01",
+      "bytes": 6158,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/reconsider-chain.md",
+      "sha256": "1db1c229fd9f9017c0748cff0e844e024db858819cba572bc8c11642bd568e97",
+      "bytes": 3913,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/reconsider-comment.md",
+      "sha256": "9b0fdc44f1e37c20fcd2e89a56642e3439841a579a9592716414a19f304cd7e0",
+      "bytes": 3136,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/reconsider-game-report.md",
+      "sha256": "62d6ba27c8789da4e3ad9c65f377b58f526054980e094a6c005a5310febfb608",
+      "bytes": 3182,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/redeveloper.md",
+      "sha256": "f04fe385b9c7c5b2e5b1001add97766863a305bba37a97230325081a21c99c3a",
+      "bytes": 17607,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/revoker.md",
+      "sha256": "de4d35e1e869996ae7a6341749f0b9c9252f3a37f59b79234d03f8303d54ceec",
+      "bytes": 4255,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/supreme_judge_consult.md",
+      "sha256": "96aee146debc9812622bbe649168dd531b923166bcdbfd7cf270e814777bfea9",
+      "bytes": 4393,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/roles/supreme_judge.md",
+      "sha256": "9b9b4440b26d1521d12d7512d9853d8068238453b087dbae002b5b7ec9e014c3",
+      "bytes": 7274,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/academic-profile-lookup.md",
+      "sha256": "9963b37b78352bf6ac9277b731a1d691ddae53b9eaae87ed872904bef113b1c6",
+      "bytes": 2704,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/claim-evidence.md",
+      "sha256": "ac068638c73d1881639a7703252eaa5ff6c85cabad741fd46800f1cc7c78e7dc",
+      "bytes": 5285,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/deep-understanding.md",
+      "sha256": "f9367e35c887084aebd599796a4eee9e90d5f209a00f1689b70d53543123c1e5",
+      "bytes": 2694,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/fact-update.md",
+      "sha256": "9ea8615c34d254de75493c02f546651ad09c7fe65e0ead868fba3c67a9e9bdac",
+      "bytes": 2378,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/field-match.md",
+      "sha256": "2323e6effec43871a868a500ef5f31736d5eb131d5d53b4b3e38c86d2a3de08a",
+      "bytes": 3159,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/field-placement.md",
+      "sha256": "b61ad859d49505bfe6e69c01cf9d5f0b817ba411f6cbc3b6206b214102f22d27",
+      "bytes": 3564,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/game-review.md",
+      "sha256": "f65d77bb36500bfdadcbfc1083b75da2cb20994e5adbb411de99b774a6e86478",
+      "bytes": 7424,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/gpu-verification.md",
+      "sha256": "5348dd13c69cd3c239bd92bb37987aba07e18585fa11a5f52e8d7403002a32b0",
+      "bytes": 2833,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/literature-review.md",
+      "sha256": "76b210708b8a3e6a51318e608ae0efcd152f650c219178b97cff15d0995e1a43",
+      "bytes": 7262,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/term-unification.md",
+      "sha256": "83a2a7c16c9b4e18fb3452e1ff590303ca7fe95bf8b7246fc0c75b76a6273807",
+      "bytes": 5255,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "skills/techniques/writing-style.md",
+      "sha256": "57d990203f0393c5f713c511c499373ad3a44c1a92eacedd3ecb9a01b5449345",
+      "bytes": 3432,
+      "mediaType": "text/markdown"
+    },
+    {
+      "path": "workflows/brainstorm.workflow.json",
+      "sha256": "60ed34833bef5c482c35d2908a61ce1e3795c30ab05c2be9886d5cda0db5a9fb",
+      "bytes": 71059,
+      "mediaType": "application/json"
+    }
+  ]
+}

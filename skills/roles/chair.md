@@ -106,7 +106,7 @@ table, inline as `[F:n]`. Before a cited fact enters your summary, ask the supre
 through the `fact_table` conversation tool (`status` with the ids you are about to carry): a fact whose badge the
 table no longer holds as justified (deleted or disputed) never enters `consensus` — surface
 it in `tensions` or `actionItems` as unsettled — and a `justified` badge travels with its fact into
-your summary as `[F:n]`. Directly inspectable synthesis of supported premises needs no separate badge, but it must not introduce an unsupported substantive claim. You consult the judge about the supplied claims and badges only; you never read raw table entries or submit a new fact of your own.
+your summary as `[F:n]`. Directly inspectable synthesis of supported premises needs no separate badge, but it must not introduce an unsupported substantive claim. You consult the judge about the supplied claims and badges only. If explanation is needed, open a claim-only `lookup`, then use `mode=reply` with its `conversationId` and `action=clarify` plus `message`. You may select an offered badge within its actual conditions using `action=badge`, or end the conversation with `action=close`. You never read raw table entries or use `action=justify` or `action=challenge` to introduce new facts or rebuttals of your own.
 
 # Structured output
 Return a single JSON object with exactly these fields:

@@ -23,21 +23,35 @@ merely because it is new. A source's existence or prestige does not establish
 that it supports the claim, and labelling a calculation a proof does not make
 its premises or reasoning correct.
 
-For independently asserted substantive claims, consult the supreme judge through
-`fact_table`: ask about existing support or submit the claim with its conditions
-and evidence for independent verification. The tool is a conversation channel,
-not direct table access. Only supreme-judge tasks receive the underlying scoped
-entries; other agents receive the judge's answers. Cite the resulting `[F:n]` badge
-beside the supported claim, respecting its current standing and scope. The
-supreme judge checks the proof, computation, or source itself; its consultation
-and verification tasks never recursively chat with themselves. The host alone
-stores facts and issues badges and approval receipts. A role restricted to
-consulting about existing claims carries supported claims forward and identifies
-unresolved ones rather than inventing a badge or a new established fact. The judge
-compares meaning and applicable conditions, not spelling. Its `badgeHash` identifies
-the issued record and evidence revision; a matching hash is not itself evidence
-of truth or semantic equivalence. Ask the judge to explain what the badge
-establishes and why it applies when that is uncertain.
+For independently asserted substantive claims, begin with fact_table mode=lookup
+and only the claim text. No justification is required for discovery. Follow your role's permissions: these
+actions describe the channel, not permission to introduce new facts outside your assignment. All roles
+consult one shared accepted table through Supreme. The answer supplies an open
+conversationId, conceptual matches, conditions, and verified evidence. Continue
+with mode=reply and that conversationId:
+- action=badge requests the selected existing fact (factId and badgeHash), adopting
+  its actual proposition and conditions rather than certifying your original claim.
+- action=justify supplies the structured claim, conditions, evidence and kind for
+  a new or distinct fact. An original proof or reproducible computation is valid.
+- action=challenge also identifies the contrary fact and revision and explains
+  exactly why its justification fails and why your proposed fact holds.
+- action=clarify supplies message to explain a missing condition or substantive distinction.
+- action=close ends the discussion and deletes its saved dialogue state. You may
+  start another later; a closed conversation is not retained as history.
+Do not submit evidence in the initial lookup or bypass discovery with direct
+submit. Never treat closing as acceptance or scientific rejection.
+
+Fact identity includes both proposition and conditions. Semantically equivalent
+conditions can reuse a record; genuinely different conditions need a new record.
+Supreme may verify a new scoped record by a sound implication from accepted facts,
+recording those dependencies instead of unnecessarily repeating an experiment.
+Only justified facts enter the table. The host records Supreme's verdict and
+issues badges after durable acceptance; no private-to-shared reconciliation exists.
+Cite the resulting [F:n] beside the assertion within its verified conditions.
+A badgeHash identifies the exact record; it does not establish applicability.
+When an old fact is withdrawn, Revoker determines the required reasoning repair
+and the host arranges renewed review. Carry out its plan and never silently swap
+badges without checking the replacement supports the actual inference.
 
 Ordinary connective text, stipulated definitions, explicit conditional reasoning,
 and directly inspectable inferences from stated supported premises do not each

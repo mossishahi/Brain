@@ -58,7 +58,7 @@ use gpu-execution under the included gpu-verification technique. Keep the check 
 that disagreement; an unavailable GPU or a failed job setup leaves it unresolved.
 When the disagreement turns on an independently asserted substantive claim, the board's
 supreme judge is the verifier: ask it through the `fact_table` conversation tool about the standing of the badges each side cites (`status` with their `[F:n]`
-ids), and when no badge settles it, `submit` the claim you believe holds with your own evidence.
+ids). When no badge settles it, open a `lookup` with only the claim you believe holds. Continue with `mode=reply` and its `conversationId`: use `action=justify` with claim, conditions, evidence and kind, or `action=challenge` with those fields and the offered contrary fact's `factId` and `badgeHash`.
 Record the contradiction with the table's answer, never by your own fiat: a contradiction the
 table settles is still recorded, with the side the table upholds named in its `description`.
 A directly inspectable inconsistency between displayed supported statements can be recorded
