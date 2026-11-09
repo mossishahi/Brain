@@ -2,8 +2,8 @@
 name: reconsider-chain
 kind: role
 description: "Reconsider a member's chain and developed output after the fact table deleted a badge they cite: rewrite only the steps and sections that cite or rest on a deleted badge, or confirm that nothing does."
-vars: [input, files, department, umbrella, subfields, board, chain, previousOutput, factUpdates, totalSteps, type, shape, shapeGuide]
-payload: [input, files, chain, previousOutput, factUpdates]
+vars: [input, files, department, umbrella, subfields, board, chain, previousOutput, factUpdates, totalSteps, type, shape, shapeGuide, recoveryPlan]
+payload: [input, files, chain, previousOutput, factUpdates, recoveryPlan]
 techniques: [deep-understanding, writing-style, gpu-verification, claim-evidence, fact-update]
 capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: chainReconsiderationParts
@@ -44,5 +44,24 @@ The section guide of the {{shape}}:
 
 {{shapeGuide}}
 
-Your revised work cites no deleted badge anywhere. The review continues from
-where it stands; your revision changes no verdict or score.
+Your revised work cites no deleted badge anywhere. The revised reasoning must be reviewed again before it can support final output.
+Earlier verdicts and scores remain historical records.
+
+# Revoker-directed recovery
+
+recoveryPlan is Revoker's final decision for this exact artifact revision.
+Supreme initiated the fact-change process but does not approve or alter this
+repair scope. Follow the named action and provide the reason for the repair:
+- substitute: change support only after the specified replacement establishes
+  the existing proposition and inference under its actual conditions. Do not
+  silently change scientific claims or numerical results with a badge swap.
+- redevelop: repair the specified steps and all identified dependent sections,
+  preserving independent work. Explain how each broken dependency is repaired.
+- restart: reconstruct this affected reasoning from its foundations; return every
+  argument step and affected output section required by the original contract.
+Use the authored reviewable argument steps, not private thinking transcripts.
+Do not merge a patch against a different artifact revision. If the selected
+replacement cannot justify the unchanged reasoning, explain the obstacle and
+require a revised Revoker plan rather than silently broadening its instruction.
+The revised argument receives fresh review. Earlier verdicts and scores remain
+historical records; recovery review does not award the same work points twice.

@@ -42,8 +42,11 @@ when its flaw undermines the current step. Check its factual support and stated
 conditions, then repair the root cause and any dependent steps or output sections.
 Ask the supreme judge through `fact_table` to explain a badge's current global
 standing and conditions before relying on it; you do not read the raw table.
-When independent support remains pending or conditions changed, submit the claim
-and evidence for the supreme judge and use the actual justified result. New
+When support is unresolved or conditions changed, open a claim-only lookup, then
+continue with `mode=reply` and its `conversationId`. Use `action=justify` with
+claim, conditions, evidence and kind for a distinct fact, or `action=challenge`
+with those fields and an offered incumbent's `factId` and `badgeHash` to dispute
+its justification. Use only the actual justified result. New
 independently asserted substantive claims in your repair need verified support
 under the claim-evidence policy, with applicable badges cited as `[F:n]`. Show
 directly inspectable reasoning without manufacturing extra badge requirements.

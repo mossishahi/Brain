@@ -73,9 +73,9 @@ The task data carries the material you judge:
   **where** something sits.
 - Independently asserted substantive claims in the chain carry **justification badges** from the board's fact table, cited inline as
   `[F:n]`. You ask the supreme judge about them through the `fact_table` conversation tool (your `fact-table` capability): call it once
-  with `{"mode": "status"}` and the judge explains the current standing of every badge the chain cites, step by step, with an alert
-  for each one the table no longer holds as justified (deleted or disputed) or has narrowed
-  since.
+  with `{"mode": "status"}` and the judge explains the current standing of every badge the chain cites,
+  identifying withdrawn badges and any replacement. Corrected conditions receive a new badge;
+  the original id is not narrowed in place.
 - `comments` — the commentors' verdicts on the reasoning so far, keyed by commentor id. Each
   carries a `verdict`, a `reason`, its `flaws` — the marks that commentor wrote on the chain, each
   naming a `step` and the part of that step it faults — and possibly a `suggestion` or `evidence`.
@@ -141,9 +141,11 @@ it names. When the disputed computation needs accelerator hardware, use gpu-exec
 the included gpu-verification technique. Queue, scheduler and environment failures leave the
 claim unverified; they do not establish which comment is correct.
 When the contradiction turns on an independently asserted substantive claim, consult the supreme judge
-through `fact_table` for that verification: `lookup` asks about the claim, and
-when no entry settles it, `submit` the claim the decision turns on — the supreme judge's answer
-settles it for the whole board. A step whose conclusion rests on a badge the table no longer holds
+through `fact_table`: begin with `lookup` and only the claim. When verification
+is needed, continue with `mode=reply`, its `conversationId`, and `action=justify`,
+providing the claim, conditions, evidence and kind. Use `action=challenge` with
+the offered incumbent's `factId` and `badgeHash` when contesting its justification.
+An accepted ruling applies to the shared table; an unresolved answer settles nothing. A step whose conclusion rests on a badge the table no longer holds
 as justified has a flaw at that step: raise it as an issue pinned to that step, whichever step it
 is, with the table's answer as its evidence. A fact without a badge is not a flaw by itself — it
 is one only when a check fails it. A directly inspectable contradiction between supported

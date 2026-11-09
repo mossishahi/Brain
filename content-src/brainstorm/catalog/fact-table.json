@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0",
-  "accessMode": "supreme-mediated/v1",
+  "version": "0.3.0",
+  "accessMode": "supreme-dialogue/v2",
   "consultation": {
     "skill": "supreme_judge_consult",
     "route": "reasoning",
@@ -27,29 +27,34 @@
       "skill": "reconsider-comment",
       "route": "reasoning",
       "output": "commentReconsideration"
+    },
+    "revoker": {
+      "skill": "revoker",
+      "route": "reasoning",
+      "output": "revokerPlan"
     }
   },
   "cases": {
-    "justified": "The supreme judge finds an existing justified entry whose meaning and verified conditions cover the requested claim, even when the wording differs. The judge explains equivalence or the supporting implication, names the actual entry, and the host returns its current badge and revision hash; no new entry is needed. A narrower result never silently licenses a broader claim.",
+    "justified": "The same proposition under semantically equivalent conditions already has a justified record. Return that record and its verified justification; different conditions require a new record, even when an existing result proves it by implication.",
     "justified-new": "The supreme judge's own check confirms the claim under the conditions stated. A new badge enters the table under those conditions, and the submitter cites it.",
-    "narrowed": "The claim holds, but only under narrower conditions than stated. A badge for the narrowed claim enters the table; the submitter restates its claim within those conditions and revisits every step that needed the broader one.",
-    "conflict": "The claim contradicts an entry of the table that stands, or one the evidence cannot tell apart from it. No badge is given, and the submitter reconsiders every step it meant to build on the claim. Two claims the evidence cannot tell apart are both disputed, and nobody may rely on either.",
+    "narrowed": "The submitted claim is verified only under narrower conditions. Issue a new record with the precise corrected proposition and conditions. Never change an accepted record in place; withdraw an overbroad incumbent and initialize Revoker when necessary.",
+    "conflict": "The claim contradicts accepted evidence under overlapping conditions. Explain the counter-fact and its justification; the sender may adopt it or substantively challenge it. No unverified or unresolved claim is inserted as a fact.",
     "refuted": "The supreme judge's own check shows the claim false under the conditions stated. Nothing enters the table; the submitter drops it and everything that rests on it.",
     "unverified": "The claim could not be checked with the supreme judge's capabilities or within its time. No badge is given: obtain checkable evidence or keep the claim unresolved. It may scope an explicitly conditional argument, but calling it an assumption does not establish that it holds or justify an unconditional conclusion.",
     "not-a-fact": "There is no independently asserted substantive fact to verify: for example, a nonfactual opinion or design preference, ordinary connective reasoning, or a statement about the review process. Directly inspectable reasoning can stand without its own badge. Mathematical claims, derivations, and familiar background are not categorically excluded; verify a substantive checkable result using its proof, computation, or source."
   },
   "methods": {
     "re-executed": "The supreme judge ran the computation itself with its code-execution capability, at the claimed conditions, and read the result from the output its own script printed.",
-    "source-quoted": "The supreme judge read the source itself — the attached file at the cited path and line, or the work at a locator that resolves — and quotes the passage that states the fact.",
-    "record-match": "The supreme judge matched the value against the board's own record — the structured input or an attached record — read by itself.",
+    "source-quoted": "The supreme judge read the source itself \u2014 the attached file at the cited path and line, or the work at a locator that resolves \u2014 and quotes the passage that states the fact.",
+    "record-match": "The supreme judge matched the value against the board's own record \u2014 the structured input or an attached record \u2014 read by itself.",
     "judgement-only": "The supreme judge independently checked the proof, derivation, or argument without an execution or external source, and records the reasoning and conditions that establish the claim. A rigorous original proof is valid evidence; this method is not permission to certify an unsupported assertion.",
     "none": "Nothing was checked."
   },
   "resolutions": {
     "incumbent-stands": "The entry in the table holds and the submitted claim does not: the ruling is a conflict, and the entry is unchanged.",
-    "incumbent-revoked": "The supreme judge's check shows the entry in the table is wrong and the submitted claim holds: the entry is deleted from the table and the claim's new badge replaces it. Every member whose work cites the deleted entry receives the ruling's explanation at once and is asked to reconsider that work.",
-    "both-narrowed": "Both hold, each under its own conditions: the entry keeps narrower conditions from now on, and the submitted claim gets its own badge under its conditions.",
-    "disputed": "The evidence cannot tell the entry and the claim apart: both are marked disputed, and nobody may rely on either until a later ruling settles it."
+    "incumbent-revoked": "The check establishes that the incumbent is flawed and the replacement is justified. Atomically withdraw the incumbent and insert the replacement. Initialize Revoker to decide affected reasoning repairs and renewed review; Supreme does not choose the repair scope.",
+    "both-narrowed": "Both propositions hold under separately verified conditions. Supply a fully justified replacement for the overbroad incumbent; withdraw it and create that new scoped record, separately from the incoming fact. Each replacement keeps its own badge and verified conditions; no in-place narrowing.",
+    "disputed": "Available evidence cannot settle the contradiction and undermines the incumbent justification. Withdraw reliance on that incumbent and initialize Revoker; keep the unresolved incoming claim outside the accepted table. Do not force a winner or insert pending factual rows."
   },
   "limits": {
     "submissionsPerTask": 6,

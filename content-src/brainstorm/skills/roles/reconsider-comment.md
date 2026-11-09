@@ -2,8 +2,8 @@
 name: reconsider-comment
 kind: role
 description: "Reconsider a submitted review comment after the fact table deleted a badge it cites, before the round's decision stands: revise it, withdraw it, or confirm that it stands."
-vars: [input, files, department, umbrella, subfields, shape, chain, currentStep, type, comment, factUpdates, verdictOptions, verdictCatalog]
-payload: [input, files, chain, currentStep, comment, factUpdates, verdictOptions]
+vars: [input, files, department, umbrella, subfields, shape, chain, currentStep, type, comment, factUpdates, verdictOptions, verdictCatalog, recoveryPlan]
+payload: [input, files, chain, currentStep, comment, factUpdates, verdictOptions, recoveryPlan]
 techniques: [deep-understanding, literature-review, writing-style, gpu-verification, claim-evidence, fact-update]
 capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: commentReconsideration
@@ -33,3 +33,22 @@ Return `commentReconsideration`:
   permitted set, from:
 
 {{verdictCatalog}}
+
+# Revoker-directed recovery
+
+recoveryPlan is Revoker's final decision for this exact artifact revision.
+Supreme initiated the fact-change process but does not approve or alter this
+repair scope. Follow the named action and provide the reason for the repair:
+- substitute: change support only after the specified replacement establishes
+  the existing proposition and inference under its actual conditions. Do not
+  silently change scientific claims or numerical results with a badge swap.
+- redevelop: repair the specified steps and all identified dependent sections,
+  preserving independent work. Explain how each broken dependency is repaired.
+- restart: reconstruct this affected reasoning from its foundations; return every
+  argument step and affected output section required by the original contract.
+Use the authored reviewable argument steps, not private thinking transcripts.
+Do not merge a patch against a different artifact revision. If the selected
+replacement cannot justify the unchanged reasoning, explain the obstacle and
+require a revised Revoker plan rather than silently broadening its instruction.
+The revised argument receives fresh review. Earlier verdicts and scores remain
+historical records; recovery review does not award the same work points twice.

@@ -39,9 +39,11 @@ an unavailable tool or failed allocation does not demonstrate a scientific flaw.
 Apply the shared claim-evidence policy. Independently asserted substantive claims
 need verified support, whether supplied as your own proof or calculation or as a
 checked source. Consult the supreme judge through `fact_table` about existing
-`[F:n]` badges, or submit a claim and its evidence when it needs verification. Lookup and
+[F:n] badges. Start with claim-only lookup and provide justification only in a
+follow-up reply when needed, as specified in claim-evidence. Lookup and
 status calls are questions to the judge, not direct access to table entries;
-use `message` to ask why the support applies despite different wording. Cite each
+use a follow-up `reply` with the `conversationId`, `action=clarify` and `message`
+to ask whether support applies despite different wording. Cite each
 applicable badge beside the claim it supports and explain the inference under its
 conditions. Directly inspectable reasoning from stated
 supported premises needs no extra badge, and a report can contain no badges when
@@ -54,9 +56,11 @@ the required support.
 The fact table verifies supporting facts; it does not decide whether the current
 reasoning step has a major flaw.
 
-The supreme judge's answers to your consultations are scoped to the round's
-starting facts and your own verified submissions. Other critics' new findings
-are withheld during independent review, including in follow-up conversations.
+All critics consult the same current Supreme-verified fact table. Accepted
+scientific findings are shared immediately. Reports, probabilities, scores,
+identities and conversations stay private: independent judgment does not mean
+isolated evidence discovery. Use current fact revisions and follow Revoker's
+repair instructions if a supporting fact changes.
 
 # Two-field report
 
@@ -71,8 +75,8 @@ argument must stand on its content. No additional report fields are permitted.
 # Decision, score, and your private balance
 
 The committee chair assesses which claims need verification, including implicit
-premises, and checks their support and inference. Pending private facts are
-checked against the combined global evidence before admission. The chair also
+premises, and checks their support and inference. Shared facts need no second
+publication check; the chair still checks each badge's exact use. The chair also
 labels each argument `decisive`, `not-decisive`, or `invalid`. An argument is
 decisive when it holds under its verified conditions and, left unresolved,
 changes the correctness of the requested solution. The run's decision rule then
