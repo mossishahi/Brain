@@ -10,8 +10,9 @@
  *      --no-app-check note below);
  *   1. stamps the workflow's `version` field in the source with the new
  *      bundle version;
- *   2. hashes the source tree into a git tree object (via a temporary index,
- *      leaving your branch and staging area untouched);
+ *   2. hashes the source tree into a git tree object, including the exact
+ *      verified candidate manifest (via a temporary index, leaving your
+ *      branch and staging area untouched);
  *   3. commits that tree with the previous release as parent, and tags it —
  *      the tag annotation's subject line becomes the release notes served in
  *      the registry index;
@@ -41,6 +42,7 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { confirmSuiteRanCandidate, RECEIPT_FILE } from "./lib/receipt.mjs";
+import { buildReleaseTree } from "./lib/release-tree.mjs";
 
 const [bundle, version] = process.argv.slice(2);
 const notesFlagIndex = process.argv.indexOf("--notes");
@@ -167,6 +169,7 @@ if (skipAppCheck) {
   );
 }
 const appDir = skipAppCheck ? undefined : locateApp();
+let verifiedManifestText;
 if (!skipAppCheck && !appDir) {
   throw new Error(
     "no app checkout found at ../app — pass --app <dir>, or --no-app-check to publish " +
@@ -258,6 +261,7 @@ if (appDir) {
     // Inside the try on purpose, so the store still exists and its path can be
     // compared through symlinks before the finally removes it.
     confirmSuiteRanCandidate({ receiptPath, store, bundle, version, root });
+    verifiedManifestText = readFileSync(join(store, "bundles", bundle, version, "manifest.json"), "utf8");
   } finally {
     rmSync(store, { recursive: true, force: true });
   }
@@ -276,16 +280,11 @@ for (const file of readdirSync(workflowsDir)) {
   writeFileSync(path, text.replace(`"version": "${declared}"`, `"version": "${version}"`));
 }
 
-// 2-3. Hash the source tree, commit with the previous release as parent, tag.
-const scratch = mkdtempSync(join(tmpdir(), "brain-publish-"));
-let tree;
-try {
-  const env = { ...process.env, GIT_INDEX_FILE: join(scratch, "index") };
-  execFileSync("git", ["-C", root, `--work-tree=${sourceDir}`, "add", "-A"], { env });
-  tree = execFileSync("git", ["-C", root, "write-tree"], { encoding: "utf8", env }).trim();
-} finally {
-  rmSync(scratch, { recursive: true, force: true });
-}
+// 2-3. Include the verified manifest, commit with the previous release as
+// parent, tag. Rechecking the exact snapshot rejects edits made while the
+// suite was running. Embedding metadata also makes publication independent
+// of the registry host's installed manifest-generator version.
+const tree = buildReleaseTree({ repo: root, sourceDir, bundle, version, verifiedManifestText });
 const subject = notes ?? `${bundle}@${version}`;
 const parent = latest ? git(["rev-parse", `${bundle}/v${latest}^{commit}`]) : undefined;
 const commit = git([

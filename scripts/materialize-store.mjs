@@ -4,9 +4,9 @@
  *
  * Releases are annotated git tags named `<bundle>/v<semver>`. For every tag
  * missing from the store, this extracts the tagged tree into
- * `<store>/bundles/<bundle>/<version>/`, ensures a manifest exists (legacy
- * imported artifacts carry one; source-built releases carry a bundle.json
- * that a manifest is generated from), and rewrites `<store>/index.json`
+ * `<store>/bundles/<bundle>/<version>/`, ensures a manifest exists (new
+ * releases carry the verified manifest; older source-built releases carry
+ * a bundle.json that a manifest is generated from), and rewrites `<store>/index.json`
  * from the full tag list — versions ascending, `latest` highest, and each
  * version's release notes taken from the tag annotation's subject line.
  *
