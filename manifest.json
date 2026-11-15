@@ -1,9 +1,9 @@
 {
   "schemaVersion": "content-registry-manifest/v1",
   "bundle": "brainstorm",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "runtimeProtocol": "brainstorm.workflow/v1",
-  "minAppVersion": "0.2.90",
+  "minAppVersion": "0.2.93",
   "entrypoints": {
     "workflow": "workflows/brainstorm.workflow.json",
     "controls": [
@@ -21,14 +21,14 @@
   "files": [
     {
       "path": "bundle.json",
-      "sha256": "c38050b065053bf187fe2c2f18e82e797bd8b07378c75b157a37082ecf0664e5",
+      "sha256": "5805cdc7b4e33a3df7f7fdc55084c6ffbb4216dabf7ff05a73aec1c0eaf18ff6",
       "bytes": 520,
       "mediaType": "application/json"
     },
     {
       "path": "capabilities/capabilities.json",
-      "sha256": "2d12132a02835407e0034479c60ee46ce86910455a7eec2a53d78f60d6513812",
-      "bytes": 9322,
+      "sha256": "fe1939d5b048113dfc9c059ba08b4a4fb81502760f4aa3ef300c829789a24fc6",
+      "bytes": 9728,
       "mediaType": "application/json"
     },
     {
@@ -81,14 +81,14 @@
     },
     {
       "path": "skills/roles/brain.md",
-      "sha256": "3b94cb85eba8fdb82ce2dc7554a4b38d932be75e5f52028b6fb7dc49d0e954ec",
-      "bytes": 11654,
+      "sha256": "55c68bad92089310b2045f193a229bc5142d9eecf5e57d2162ff8f6f9ad817c9",
+      "bytes": 12250,
       "mediaType": "text/markdown"
     },
     {
       "path": "skills/roles/chair.md",
-      "sha256": "e350bdd1d5ed1609d3abbde384e3eec33d699a5d8c1cddbe43a639ca94d42ec0",
-      "bytes": 9719,
+      "sha256": "f4fa83706e1564c2114029215765769716653815f76dd51ecc4501b4a2e9419c",
+      "bytes": 10301,
       "mediaType": "text/markdown"
     },
     {
@@ -111,8 +111,8 @@
     },
     {
       "path": "skills/roles/committee-chair.md",
-      "sha256": "3319a1bce14d1e2515b35698b4a23dcf1a7b58be43faa4ba344b2274e7986488",
-      "bytes": 9986,
+      "sha256": "d430d9549e4448fc7ac608d11cc9e51ba8619b50f1052d9b2c5a0d973b5a966b",
+      "bytes": 10485,
       "mediaType": "text/markdown"
     },
     {
@@ -129,14 +129,14 @@
     },
     {
       "path": "skills/roles/game-redeveloper.md",
-      "sha256": "a905907cd7e1a4c4110af500a3b21864fd54d7cb2a9e3128f4aeb75c033f8c27",
-      "bytes": 6051,
+      "sha256": "406b1eb3a908bec39ace54fcc73571cd4a25e9fe1196279abcd6214706fa57f0",
+      "bytes": 6550,
       "mediaType": "text/markdown"
     },
     {
       "path": "skills/roles/integrator.md",
-      "sha256": "209ad3b11bd5bfb05049132e5f823e187346f6670fda6e8cd49f4c0667e88572",
-      "bytes": 6136,
+      "sha256": "eb8afc64485b0f798cb8373f2576c4b7cdf755ed23f44755abaf6931f97aec75",
+      "bytes": 7217,
       "mediaType": "text/markdown"
     },
     {
@@ -147,8 +147,8 @@
     },
     {
       "path": "skills/roles/judge.md",
-      "sha256": "8a4e6862025a8e0cf87f2d3a76e6c03878338221aaef01e4c679b284cda8e67f",
-      "bytes": 15966,
+      "sha256": "7127cca91b5ee09ea2d5b876a7d33a113b5ecbbeac96f2cd72d69da7bb7cfcf4",
+      "bytes": 16465,
       "mediaType": "text/markdown"
     },
     {
@@ -177,8 +177,8 @@
     },
     {
       "path": "skills/roles/reconsider-chain.md",
-      "sha256": "1db1c229fd9f9017c0748cff0e844e024db858819cba572bc8c11642bd568e97",
-      "bytes": 3913,
+      "sha256": "b111acae9a754880bb1151e0361c63b4e021b1b428016197d4730072d20e5f7b",
+      "bytes": 4412,
       "mediaType": "text/markdown"
     },
     {
@@ -195,8 +195,8 @@
     },
     {
       "path": "skills/roles/redeveloper.md",
-      "sha256": "f04fe385b9c7c5b2e5b1001add97766863a305bba37a97230325081a21c99c3a",
-      "bytes": 17607,
+      "sha256": "1d99f005ae081f21c78e15519181ef89b91a69f84a9a663b599cd8d22b59ba71",
+      "bytes": 18106,
       "mediaType": "text/markdown"
     },
     {
@@ -213,8 +213,8 @@
     },
     {
       "path": "skills/roles/supreme_judge.md",
-      "sha256": "9b9b4440b26d1521d12d7512d9853d8068238453b087dbae002b5b7ec9e014c3",
-      "bytes": 7274,
+      "sha256": "ee82c2a5e512f4074e73ec923c915e067f214cbf8818ed6b59afb23854e01240",
+      "bytes": 7773,
       "mediaType": "text/markdown"
     },
     {
@@ -267,8 +267,8 @@
     },
     {
       "path": "skills/techniques/literature-review.md",
-      "sha256": "76b210708b8a3e6a51318e608ae0efcd152f650c219178b97cff15d0995e1a43",
-      "bytes": 7262,
+      "sha256": "7f6646cef87a1ec9d6f7e1086d4dd00f903dee5acff77d1e292fd89a3f7d4dab",
+      "bytes": 7157,
       "mediaType": "text/markdown"
     },
     {
@@ -285,8 +285,8 @@
     },
     {
       "path": "workflows/brainstorm.workflow.json",
-      "sha256": "60ed34833bef5c482c35d2908a61ce1e3795c30ab05c2be9886d5cda0db5a9fb",
-      "bytes": 71059,
+      "sha256": "cc18af0e6c9d6f9f5680402acd01d8a914f2f8726cf0378902a688afefcb8c15",
+      "bytes": 71417,
       "mediaType": "application/json"
     }
   ]

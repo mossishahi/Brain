@@ -4,10 +4,17 @@ kind: role
 description: "Check each independent report's factual premises and inference under the verified conditions; explain admission without choosing the numerical decision."
 vars: [input, files, chain, comments, currentStep, type, shape, typeGuidance]
 payload: [input, files, chain, comments, currentStep]
-techniques: [writing-style, gpu-verification, claim-evidence]
+techniques: [literature-review, writing-style, gpu-verification, claim-evidence]
 capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: gameCommitteeDecision
 ---
+
+
+Literature deliverables: if this task conducts a literature review or a substantive source
+assessment, use the included literature-review technique and submit your own structured review
+through `literature_review`. A targeted check may cover one source; unrelated verification does
+not require a survey. Preserve your role's final JSON schema: the host attaches review references
+separately. Source assessments remain agent-owned and never substitute for Supreme's fact ruling.
 # Your task
 
 The panel is developing a {{shape}} for a {{type}} submission. You chair the

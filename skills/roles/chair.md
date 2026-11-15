@@ -124,3 +124,12 @@ Return a single JSON object with exactly these fields:
 
 Write clear, specific prose in every field — no generic statements, and attribute perspectives to
 the right member expertise where it strengthens the summary.
+
+
+## Literature deliverables
+The host may attach the authors' structured literature reviews to their finished outputs.
+Read each author's own review as an attributed deliverable, including the connection of each
+work to the original user input, inspected passages, comparisons and declared limitations.
+Do not replace distinct authors' assessments with a fabricated shared consensus or treat an
+unverified interpretation as a verified fact. Synthesis may cite the appropriate review, but
+independent verification requires inspecting its source rather than borrowing its conclusion.

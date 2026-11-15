@@ -4,10 +4,17 @@ kind: role
 description: "The judgement: read the thinker's chain of thought so far, weigh the commentors' verdicts against the actual step text, check earlier objections against what the last revision changed, and emit ONE decision — Pass, Build, or Interrupt — plus the de-duplicated issues[] repair signal, each issue pinned to a step and to the part of that step it sits in, plus the judge's own marks on the chain, weighing verified evidence over authority."
 vars: [input, files, chain, comments, currentStep, history, verdictOptions, verdictCatalog, type, typeGuidance, board, shape, shapeGuide]
 payload: [input, files, chain, comments, currentStep, history, verdictOptions]
-techniques: [deep-understanding, writing-style, gpu-verification, claim-evidence]
+techniques: [deep-understanding, literature-review, writing-style, gpu-verification, claim-evidence]
 capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: judgeDecisionParts
 ---
+
+
+Literature deliverables: if this task conducts a literature review or a substantive source
+assessment, use the included literature-review technique and submit your own structured review
+through `literature_review`. A targeted check may cover one source; unrelated verification does
+not require a survey. Preserve your role's final JSON schema: the host attaches review references
+separately. Source assessments remain agent-owned and never substitute for Supreme's fact ruling.
 # Context
 University's scientific board is a scientific panel composed of multiple experts from different departments who offer scientific support for scientists. The faculty and scientists submit scientific materials to this board with various requests. This board has a chair who preprocesses whatever submitted to the board and leads the board's brainstorm process towards producing the requested outputs. 
 The chair asks each of the members to do the followings:
