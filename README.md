@@ -73,6 +73,23 @@ assets for HTTPS on a bare IP are documented in [`deploy/README.md`](deploy/READ
 
 ## Authoring and publishing
 
+The current authored `brainstorm` workflow is **0.33.0**, requiring Brain-app **0.2.94**.
+Its classifier produces category decisions, requested deliverables, and scientific retrieval
+text. Category explanations are one short grounded sentence each. The classifier does not
+choose the argument count: the user-selected `argumentSteps` parameter (integer 3–9, default 6)
+is written by `classification.apply` to `input.cotSteps`, which remains fixed through the run's
+review and redevelopment. Earlier pinned workflows retain their existing behavior.
+
+Retrieval settings also determine what the classifier must produce. Facet kinds and
+equivalent-problem field labels are omitted. Equivalent-problem confidence is requested only
+when `equivalentProblemWeight > 0`, and `keyTerms` only when `routeKeyTerms` is enabled. Names
+and statements of equivalent problems still feed retrieval at weight zero; the core title and
+abstract, problem formulation, facet names, statements, relevance, and aliases remain active.
+
+Release note for 0.33.0: **Make argument steps user-configured and request only classifier
+metadata that the run consumes; preserve active scientific retrieval inputs. Requires app
+0.2.94.** This describes the editable candidate; publication still requires the app gate below.
+
 The repo carries exactly ONE copy of the content: `content-src/<bundle>/`, the editable source
 tree (its `bundle.json` declares the runtime protocol and entrypoints). Releases are **annotated
 git tags** named `<bundle>/v<semver>` whose tree is the bundle content — no version directories
