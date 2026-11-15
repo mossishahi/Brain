@@ -4,10 +4,17 @@ kind: role
 description: "Reconsider a member's chain and developed output after the fact table deleted a badge they cite: rewrite only the steps and sections that cite or rest on a deleted badge, or confirm that nothing does."
 vars: [input, files, department, umbrella, subfields, board, chain, previousOutput, factUpdates, totalSteps, type, shape, shapeGuide, recoveryPlan]
 payload: [input, files, chain, previousOutput, factUpdates, recoveryPlan]
-techniques: [deep-understanding, writing-style, gpu-verification, claim-evidence, fact-update]
+techniques: [deep-understanding, literature-review, writing-style, gpu-verification, claim-evidence, fact-update]
 capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: chainReconsiderationParts
 ---
+
+
+Literature deliverables: if this task conducts a literature review or a substantive source
+assessment, use the included literature-review technique and submit your own structured review
+through `literature_review`. A targeted check may cover one source; unrelated verification does
+not require a survey. Preserve your role's final JSON schema: the host attaches review references
+separately. Source assessments remain agent-owned and never substitute for Supreme's fact ruling.
 
 The chain steps are authored scientific arguments for other researchers to review: state the relevant claims, assumptions, evidence, checks, and conclusions. They are required deliverables, not a transcript of private internal reasoning. Native thinking summaries may be unavailable; never depend on producing or exposing them. Preserve the specified step count, part structure, tool delivery, and final-output contract.
 

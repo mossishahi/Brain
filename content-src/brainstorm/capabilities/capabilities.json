@@ -1,14 +1,15 @@
 {
-  "version": "0.6.0",
+  "version": "0.7.0",
   "capabilities": {
     "web-search": {
-      "description": "Query the public web and scholarly indexes (e.g. Semantic Scholar, Google Scholar, arXiv, ORCID, OpenAlex) and read the resulting pages.",
-      "contract": "The runtime must give the agent a way to issue search queries and retrieve result content, and every result the agent cites must carry a resolvable URL or DOI.",
+      "description": "Query the public web and scholarly indexes, read result pages, and inspect accessible paper full text with page/section evidence references.",
+      "contract": "The runtime must provide search, page retrieval and paper reading (open/read/search/page_image), preserve the inspected source version and passage locators, and return task-scoped evidence-delivery receipts. Every cited work needs a resolvable URL or DOI. Access failures and incomplete text extraction must be explicit; metadata or an abstract must never be reported as inspected full text.",
       "operations": [
         "web.search",
-        "web.fetch"
+        "web.fetch",
+        "web.paper.read"
       ],
-      "whenUnavailable": "Do NOT claim to have searched; state explicitly that web search was unavailable and rely only on existing context and your training knowledge. Do not fabricate URLs or DOIs."
+      "whenUnavailable": "Do NOT claim to have searched or inspected unavailable source text. Record the actual access limitation in the agent-owned literature review, use accessible sources or supplied evidence when available, and leave unsupported source interpretations unresolved. Do not fabricate URLs, DOIs, passage locators or receipts."
     },
     "code-execution": {
       "description": "Run short, self-contained scripts in a sandboxed interpreter with common numeric libraries available. The sandbox adds nothing of its own: standard output contains exactly what the script prints, in exactly the structure the script prints it \u2014 so print the values a checker needs as one clearly structured final line, and quote that output verbatim wherever evidence asks for a result. A failed run comes back to you, the submitter, as a bug report: debug it from the returned stderr/stdout, fix your script, and rerun \u2014 reruns are safe.",

@@ -4,10 +4,17 @@ kind: role
 description: "Repair a member's reasoning using only the committee's admitted, anonymous high-probability arguments, preserving every unaffected step and output section."
 vars: [input, files, department, umbrella, subfields, board, chain, previousOutput, repairArguments, currentStep, totalSteps, type, shape, shapeGuide]
 payload: [input, files, chain, previousOutput, repairArguments]
-techniques: [deep-understanding, writing-style, gpu-verification, claim-evidence]
+techniques: [deep-understanding, literature-review, writing-style, gpu-verification, claim-evidence]
 capabilities: [web-search, code-execution, attachment-access, gpu-execution, fact-table]
 output: redevelopmentPatchParts
 ---
+
+
+Literature deliverables: if this task conducts a literature review or a substantive source
+assessment, use the included literature-review technique and submit your own structured review
+through `literature_review`. A targeted check may cover one source; unrelated verification does
+not require a survey. Preserve your role's final JSON schema: the host attaches review references
+separately. Source assessments remain agent-owned and never substitute for Supreme's fact ruling.
 
 The chain steps are authored scientific arguments for other researchers to review: state the relevant claims, assumptions, evidence, checks, and conclusions. They are required deliverables, not a transcript of private internal reasoning. Native thinking summaries may be unavailable; never depend on producing or exposing them. Preserve the specified step count, part structure, tool delivery, and final-output contract.
 

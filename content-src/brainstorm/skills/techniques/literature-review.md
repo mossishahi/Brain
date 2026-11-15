@@ -1,100 +1,98 @@
 ---
 name: literature-review
 kind: technique
-description: "Establish, for a given research input, what already exists: a trusted literature map, the chronological ordering of the relevant works, their citation graph, and an explicit is-this-already-solved assessment — conducted from the using agent's own scientific vantage (department, field, working areas — filled per agent by the runtime) when one is declared, as an interface review of the literature BETWEEN fields when the vantage is an interdisciplinary seat spanning several fields, or as a general review aimed at the submission's own area when the vantage lines are empty; carried as working material that the caller positions its own contribution against."
-vars: [department, umbrella, subfields]
+description: "Produce an agent-owned, structured literature-review deliverable: inspect relevant sources, explain each work's relationship to the original submission, and assess what the inspected evidence resolves or leaves open. Persist the review through literature_review before relying on it in a completed result."
+vars: []
+deliverables: [literatureReviewV1]
 capabilities: [web-search]
 ---
 # Technique: Literature Review
 
-You are executing this technique as part of a larger task: before developing anything, map what
-already exists. The result is a structured **literature map** you keep as working material and
-consult throughout your task — especially when claiming novelty.
+Every invocation produces a saved, reviewable `literatureReviewV1` deliverable through
+`literature_review`. It is part of your output, not private working material and not merely a
+bibliography. The host attaches your submitted reviews to your result. Do not duplicate their
+full JSON inside a role's final result or add fields that its result schema does not accept.
 
-## The vantage — read first
-The runtime fills these three lines for the agent executing this technique. They are always
-YOUR OWN seat — never another member's, never the thinker's, never the submitter's:
+## Scope and ownership
 
-- department: {{department}}
-- field: {{umbrella}}
-- working areas: {{subfields}}
+Begin from the ORIGINAL user submission and its requested outputs, not just the latest critique,
+a rewritten research question, or your preferred method. The tool supplies the original input
+requirements with stable IDs and text; copy that list exactly into `scope.inputRequirements`.
+State this review's particular question and your own scientific vantage in `scope`. Use the
+expertise declared by your role; an interdisciplinary seat examines interfaces between its
+fields. An unseated role states its task-specific vantage. Never impersonate another seat.
 
-**When the lines above carry a vantage**, this review is conducted from it, never from nowhere:
-you search as a researcher of that field whose working areas are those named. Every real
-literature review is written from somewhere — declaring the vantage is what makes the bias honest
-and the map deep: an aimed search surfaces the works a generalist sweep never finds, and reads
-each one the way a working scientist of those areas would read it. The vantage controls where
-you AIM, never what you ADMIT:
+Aim searches using that vantage's vocabulary and standards, but admit relevant evidence from
+any field. Connect each included work to the original input, including why an initially promising
+work does not apply. A targeted source check can contain one work. A broader landscape or novelty
+review needs enough evidence to support its scope; there is no mandatory paper count or search
+quota. A single fact check does not require an unrelated full survey.
 
-- **Aim from inside.** Phrase every query in the vantage's own terms of art — the exact
-  vocabulary of the working areas first, the field's broader phrasings second — and direct it at
-  the venues, benchmarks, and author communities where these areas publish.
-- **Admit what returns.** Record whatever an aimed search honestly surfaces, including a decisive
-  work from another field, and read it through the vantage: what it means FOR these areas.
-  Never drop a result to keep the map pure — and never widen the aim into a survey of fields that
-  are not yours.
-- **Judge by the vantage's standards.** Relevance, strength of result, credibility of venue,
-  seriousness of baseline: assess them as that field assesses them, and let each work's
-  relation line say so.
+Each review and every interpretation belongs to its author. The host may cache source bytes and
+metadata, but it does not merge agents' assessments into a shared bibliography or treat one
+agent's review as another's independent reading. A review is not a fact badge. Substantive claims
+still follow the shared claim-evidence policy, with Supreme as the sole fact authority. Supreme
+must independently inspect evidence when verifying a claim and must not recursively call itself.
 
-**When the vantage is an interdisciplinary seat** — its field names the space BETWEEN several
-fields rather than one of them (an interdisciplinary department, a field line spanning named
-disciplines, working areas that are interfaces) — this review is an INTERFACE review: the
-literature you map is the literature between the named fields, not any single field's own.
-The same aim/admit discipline applies, sharpened to the seams:
+## Read evidence before interpreting it
 
-- **Aim at the interfaces.** For each pair of the named fields whose interface plausibly bears
-  on the input, derive at least one facet that combines the two vocabularies — the phenomenon as
-  one field names it joined with the method or object as the other names it — and direct it at
-  the venues, communities, and author groups that publish across those fields. Do not spend
-  facets on any single field's interior; its own seat covers that.
-- **Admit what returns, from either side.** A decisive single-field work still enters the map —
-  read for what it means AT the interface: what it licenses, blocks, or settles for a crossing.
-- **Judge by the interface's standards.** Where an interface community exists, assess relevance,
-  strength, and venue credibility by its norms; where none exists yet, record a work as settling
-  a cross-field point only when it would satisfy BOTH parent fields' standards, and say so in
-  its relation line.
+1. Derive search facets from the input and your expertise. Record actual queries and sources;
+   never claim a search was performed when it was not. Follow relevant older foundational works
+   as well as recent results. Stop when additional searches no longer change the assessment, or
+   record why coverage remains incomplete.
+2. Resolve each paper's identity from an actual retrieved source. Preserve its exact title and
+   known authors, year, venue, URL/DOI and inspected version; use null for unknown metadata.
+   Never invent a citation, version, retrieval receipt, or page number.
+3. Use `paper_read` to open accessible full text, then read/search the sections needed to assess
+   the method, results and assumptions. Use page images when equations, tables, figures or text
+   extraction require visual inspection. Reading an abstract is not reading a proof or method.
+4. Record the host-issued document, receipt and segment IDs plus their page/section locator in
+   `inspected.evidence`. An open/metadata response alone does not establish passage inspection.
+   Set `inspected.level` to the scope actually inspected. Relevant sections are often sufficient;
+   do not claim `full-text` unless the full text was actually delivered and inspected. Identify
+   the retrieved source revision/hash in `source.version` for section/full-text assessments.
+5. If access is blocked or extraction is incomplete, try an accessible official version,
+   repository copy or user-provided source where appropriate. Record version differences.
+   Metadata-only or abstract-only records must disclose this in `accessLimitations`; do not
+   extrapolate uninspected assumptions, proofs, experiments or conclusions. Missing access is
+   uncertainty, never evidence that no relevant work exists.
 
-**When the lines above are empty**, no vantage is declared and this is a GENERAL review: aim
-your queries at the submission's own area — the field the input itself belongs to — phrase them
-in that area's standard vocabulary, and judge relevance, strength, and venue credibility by that
-area's norms. General means unseated, never shallow: every guard and every procedure step below
-applies unchanged.
+## Required draft for every review
 
-## Guards — do not violate
-- **No invented papers.** Every work you record must come from an actual search result and carry a
-  resolvable URL or DOI. If you cannot point to where you found it, it does not go in the map.
-- **Trusted sources only.** Peer-reviewed venues, arXiv/bioRxiv/medRxiv preprints, and established
-  publishers. No blog posts, news articles, or social media.
-- **Run every search yourself, inside this same task.** Do not delegate the review; stay within
-  about 15 queries total, using your web-search capability.
-- **Verbatim metadata.** Titles, authors, years, and venues exactly as the source states them.
+Call `literature_review` to begin the scoped review if it is not already open. Save progress
+incrementally; a saved draft is not a completed review. Use the supplied schema rather than
+inventing a final-output field. Every work in `works` contains:
 
-## Procedure
-1. **Facets.** From the research input (question, context, assumptions), derive the search facets
-   from inside your vantage — or, in a general review, from inside the submission's own area:
-   the core phenomenon as that field names it, plus at least one synonym phrasing also in use;
-   the method angle and the application angle in the same vocabulary; and, when a vantage is
-   declared, one facet per working area that makes the input visible to that area. Add no facet
-   whose purpose is coverage of a field outside the review's aim.
-2. **Search to saturation.** Query scholarly indexes across the facets, prioritizing the last
-   10-15 years but following older foundational works when newer ones point to them. Keep searching
-   until two consecutive queries surface no new relevant work, or you reach the ~15-query cap.
-   Collect the relevant works — typically 10-20; fewer only if the area is genuinely sparse (note
-   that in your assessment).
-3. **Record each work** with: a short id slug, title, authors, year, venue, URL, a one-line
-   relation (what this work does relative to the topic), and an honest judgement of how much of the
-   input it already covers: `no`, `partially`, or `substantially`.
-4. **Timeline.** Order the collected works chronologically and make lineage visible where you know
-   it ("extends X", "first to do Y").
-5. **Citation graph.** Note which collected works cite which (only edges between collected works),
-   and identify the root(s) — foundational, most cited within the set — and the frontier — recent
-   works nothing in the set cites.
-6. **Solved-or-open assessment.** Answer explicitly, judged against the collected works only:
-   - status: `open`, `partially solved`, or `solved`;
-   - the 2-3 works closest to the input;
-   - the open gap: precisely what remains that none of the collected works does. If the status is
-     `solved`, state which work solves it — you must know this before developing anything.
+- `source`: exact identity and inspected version.
+- `inspected`: the access level, delivered evidence references and access limitations.
+- `method` and `results`: what the inspected source actually establishes; explicitly state what
+  is unknown when the available material cannot establish the method or result.
+- `conditions` and `limitations`: assumptions, domain and material qualifications. An empty list
+  means no item was identified in the inspected material, never proof that none exists.
+- `relevance`: at least one original requirement ID, a relationship (`solves`,
+  `partially-addresses`, `supports`, `contradicts`, `background` or `not-applicable`), and a
+  concrete justification. Explain how the source's objects, assumptions, result and limitations
+  connect to what the user asked. Shared words or a matching title are not a justification.
+- `intendedUse`: for example baseline, supporting evidence, counterexample or context, with the
+  intended comparison stated explicitly. `uncertainties` records unresolved reading or evidence.
 
-Carry this map through the rest of your task: everything you develop must be positioned against
-it, and any novelty statement you produce must name the closest works from this map.
+Complete `search` with executed queries, coverage and limitations. Complete `synthesis` with
+closest collected work IDs, findings, comparisons and remaining gaps. Make chronological lineage
+visible when supported; record citation relationships only when inspected evidence establishes
+them. Distinguish an author-stated limitation from your inference. Compare compatible conditions;
+do not declare your treatment novel merely because its vocabulary or application differs.
+
+The solved/open assessment is relative to the reviewed evidence and original input. An existing
+solution is a valid finding. A lack of retrieved evidence supports `undetermined`, not a claim of
+novelty. No relevant works is a valid explicit result after an honest search. Inaccessible sources
+or unresolved decisive questions produce `incomplete`, with the missing evidence in `statusReason`.
+
+Submit the completed structured review through `literature_review`. Validation checks structure
+and evidence provenance, not scientific truth. Fix the reported defect in the saved draft without
+restarting the research or fabricating a value to satisfy the schema. Every actual invocation
+must end with a submitted review, including an honest incomplete or no-relevant-works record.
+
+Before developing a completed contribution, submit the review that establishes its closest
+existing approaches and comparison. You may explore provisional ideas while evidence is missing,
+but do not use unsupported source interpretations to establish a final claim. Later reading that
+changes the assessment creates your own revised review; do not silently reuse outdated conclusions.
