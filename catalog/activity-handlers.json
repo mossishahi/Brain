@@ -2,11 +2,12 @@
   "version": "0.3.0",
   "handlers": {
     "classification.apply": {
-      "description": "Deterministic orchestrator step: fold the classifier's primary decision into the structured input — type and cotSteps written in, requestedOutputs replaced (omitted when empty) — and return the merged record that replaces `input` for every later task. The file map rides through unchanged; the confirmation gate downstream may overwrite type and requestedOutputs with the submitter's choice.",
+      "description": "Deterministic orchestrator step: fold the classifier's primary type and requestedOutputs (omitted when empty) into the structured input, and write the user-configured argumentSteps integer to input.cotSteps. The classifier does not choose the argument count. Return the merged record that replaces input for every later task. The file map rides through unchanged; the confirmation gate downstream may overwrite type and requestedOutputs with the submitter's choice.",
       "deterministic": true,
       "inputs": {
         "input": { "kind": "artifact", "schema": "processorOutput" },
         "classification": { "kind": "artifact", "schema": "taskClassification" },
+        "argumentSteps": { "kind": "positiveInteger" },
         "maxFiles": { "kind": "positiveInteger" }
       },
       "outputSchema": "processorOutput",

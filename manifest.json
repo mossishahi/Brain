@@ -1,9 +1,9 @@
 {
   "schemaVersion": "content-registry-manifest/v1",
   "bundle": "brainstorm",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "runtimeProtocol": "brainstorm.workflow/v1",
-  "minAppVersion": "0.2.93",
+  "minAppVersion": "0.2.94",
   "entrypoints": {
     "workflow": "workflows/brainstorm.workflow.json",
     "controls": [
@@ -21,7 +21,7 @@
   "files": [
     {
       "path": "bundle.json",
-      "sha256": "5805cdc7b4e33a3df7f7fdc55084c6ffbb4216dabf7ff05a73aec1c0eaf18ff6",
+      "sha256": "43253dad229116e3eabf3aff33a86da0780b82a4c88c5c815732604bc375c24b",
       "bytes": 520,
       "mediaType": "application/json"
     },
@@ -33,8 +33,8 @@
     },
     {
       "path": "catalog/activity-handlers.json",
-      "sha256": "8e32730964cd25f1a5ca9ed9d3c7faa5c30d69748c1100af0c7e83cb19b92154",
-      "bytes": 26223,
+      "sha256": "06337e175c7c15bfdda853901da2c001cb0b79b859e5a03e5846249ae7fbbd51",
+      "bytes": 26349,
       "mediaType": "application/json"
     },
     {
@@ -93,8 +93,8 @@
     },
     {
       "path": "skills/roles/classifier.md",
-      "sha256": "195c5e6af5c5defcc7b762e2d98ccd2d2fdba37bf413a8e5f9c4bcf5d08a76e3",
-      "bytes": 7748,
+      "sha256": "40696c77acfc2886485b183f989eeb4d29d9a811f98b69f2826c43ac7d4b9818",
+      "bytes": 8378,
       "mediaType": "text/markdown"
     },
     {
@@ -153,8 +153,8 @@
     },
     {
       "path": "skills/roles/literature-screener.md",
-      "sha256": "4875248b26b2d7c976823959c0544ad195864658cd16bdbfdeeec14c8b7fe3ea",
-      "bytes": 5343,
+      "sha256": "4794bc1ee8f44b1c7326855acdb10276010c69498695769ddc872b93dd2a1a07",
+      "bytes": 5369,
       "mediaType": "text/markdown"
     },
     {
@@ -285,8 +285,8 @@
     },
     {
       "path": "workflows/brainstorm.workflow.json",
-      "sha256": "cc18af0e6c9d6f9f5680402acd01d8a914f2f8726cf0378902a688afefcb8c15",
-      "bytes": 71417,
+      "sha256": "a9fc08b89eb875292751ff8d95f46d900428997e244bdbd8c981c6c1901d0951",
+      "bytes": 72057,
       "mediaType": "application/json"
     }
   ]

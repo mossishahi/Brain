@@ -26,8 +26,8 @@ The task data carries:
   composed for: the core `title` and `abstract`, and the `facets`, each a concept with its `name`,
   `statement` and `relevance` (and, when present, `aliases`: the names other communities publish
   the concept under). When present, `problemFormulation` restates the problem without application
-  words, `equivalentProblems` name fields that study the same or an analogous problem under
-  another name, and `keyTerms` are the submitter's own words.
+  words, `equivalentProblems` describe the same or an analogous problem under another name,
+  and `keyTerms`, when their retrieval route is enabled, are the submitter's own words.
 - `papers` — the papers to judge, each with its `pid`, `title` and `abstract` (the first 600
   characters of the abstract; an excerpt that stops mid-sentence was cut, not left unfinished by
   its authors).
